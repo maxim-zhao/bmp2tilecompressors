@@ -1,58 +1,59 @@
-#include <windows.h>
 #include <vector>
+#include <cstdint>
 
 using namespace std;
 
-typedef vector<unsigned char> buffer;
+typedef vector<uint8_t> buffer;
 
 #define MAX_RUN_SIZE 0x7f
 #define RLE_MASK 0x00
 #define RAW_MASK 0x80
 
 // Forward declares
-int compress(char* source, unsigned int sourceLen, char* dest, unsigned int destLen, unsigned int interleaving);
-//int decompress(char* source, int sourceLen, char* dest, int destLen, int interleaving);
-void deinterleave(buffer& buf, int interleaving);
-//void interleave(buffer* buf, int interleaving);
-//int decompress_plane(buffer* buf, char** src);
+uint32_t compress(uint8_t* source, unsigned int sourceLen, uint8_t* dest, unsigned int destLen, unsigned int interleaving);
+//int decompress(uint8_t* source, int sourceLen, uint8_t* dest, int destLen, int interleaving);
+void deinterleave(buffer& buf, uint32_t interleaving);
+//void interleave(buffer* buf, uint32_t interleaving);
+//int decompress_plane(buffer* buf, uint8_t** src);
 void compress_plane(buffer& dest, buffer::const_iterator src, buffer::const_iterator srcEnd);
 
-extern "C" __declspec(dllexport) char* getName()
+extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
 	// Generally, the name of the game it was REd from
 	return "Phantasy Star RLE";
 }
 
-extern "C" __declspec(dllexport) char* getExt()
+extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
 	return "pscompr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, char* dest, int destLen)
+extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destLen)
 {
 	// Compress tiles
-	return compress(source, numTiles * 32, dest, destLen, 4);
+	return (int)compress(source, numTiles * 32, dest, destLen, 4);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(char* source, int width, int height, char* dest, int destLen)
+extern "C" __declspec(dllexport) int compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)
 {
 	// Compress tilemap
-	return compress(source, width * height * 2, dest, destLen, 2);
+	return (int)compress(source, width * height * 2, dest, destLen, 2);
 }
 /*
-extern "C" __declspec(dllexport) int decompressTiles(char* source, int sourceLen, char* dest, int destLen)
+extern "C" __declspec(dllexport) int decompressTiles(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
 {
 	return decompress(source, sourceLen, dest, destLen, 4);
 }
 
-extern "C" __declspec(dllexport) int decompressTilemap(char* source, int sourceLen, char* dest, int destLen)
+extern "C" __declspec(dllexport) int decompressTilemap(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
 {
 	return decompress(source, sourceLen, dest, destLen, 4);
 }
 */
-int compress(char* source, unsigned int sourceLen, char* dest, unsigned int destLen, unsigned int interleaving)
+
+uint32_t compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen, uint32_t interleaving)
 {
 	// Compress sourceLen bytes from source to dest;
 	// return length, or 0 if destLen is too small, or -1 if there is an error
@@ -68,7 +69,7 @@ int compress(char* source, unsigned int sourceLen, char* dest, unsigned int dest
 	bufDest.reserve(destLen);
 
 	// Compress each plane in turn
-	int bitplanesize = sourceLen / interleaving;
+	int32_t bitplanesize = (int32_t)(sourceLen / interleaving);
 	for (buffer::const_iterator it = bufSource.begin(); it != bufSource.end(); it += bitplanesize)
 	{
 		compress_plane(bufDest, it, it + bitplanesize);
@@ -87,16 +88,16 @@ int compress(char* source, unsigned int sourceLen, char* dest, unsigned int dest
 	return bufDest.size();
 }
 /*
-int decompress(char* source, int sourceLen, char* dest, int destLen, int interleaving)
+int decompress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen, uint32_t interleaving)
 {
 	// Decompress into a buffer
 	buffer buf;
 
 	// decompress it one bitplane at a time
-	int lastBitplaneLength = 0;
-	for (int bitplane = 0; bitplane < interleaving; ++bitplane)
+	uint32_t lastBitplaneLength = 0;
+	for (uint32_t bitplane = 0; bitplane < interleaving; ++bitplane)
 	{
-		int bitplaneLength = decompress_plane(&buf, &source);
+		uint32_t bitplaneLength = decompress_plane(&buf, &source);
 		if (bitplaneLength % 32 != 0)
 		{
 			// tile data should always be a multiple of 32 bytes
@@ -111,7 +112,7 @@ int decompress(char* source, int sourceLen, char* dest, int destLen, int interle
 	}
 
 	// check destLen
-	int length = buf.length;
+	uint32_t length = buf.length;
 	if (length > destLen)
 	{
 		return 0;
@@ -126,13 +127,13 @@ int decompress(char* source, int sourceLen, char* dest, int destLen, int interle
 	return length;
 }
 
-int decompress_plane(buffer* dest, char** src)
+int decompress_plane(buffer* dest, uint8_t** src)
 {
 	int destLenBefore = dest->length;
 	for (;;)
 	{
 		// look at byte and increment
-		char b = *(*src)++;
+		uint8_t b = *(*src)++;
 		if ((b & RAW_MASK) == RAW_MASK)
 		{
 			// raw bytes
@@ -163,23 +164,24 @@ int decompress_plane(buffer* dest, char** src)
 	return dest->length - destLenBefore;
 }
 */
-void deinterleave(buffer& buf, int interleaving)
+
+void deinterleave(buffer& buf, uint32_t interleaving)
 {
 	buffer tempbuf(buf);
 
 	// Deinterleave into tempbuf
-	int bitplanesize = buf.size() / interleaving;
+	uint32_t bitplanesize = buf.size() / interleaving;
 	for (buffer::size_type src = 0; src < buf.size(); ++src)
 	{
 		// If interleaving is 4 I want to turn
 		// AbcdEfghIjklMnopQrstUvwx
 		// into
 		// AEIMQUbfjnrvcgkoswdhlptx
-		// so for a char at position x
+		// so for a byte at position x
 		// x div 4 = offset within this section
 		// x mod 4 = which section
 		// final position = (x div 4) + (x mod 4) * (section size)
-		int dest = src / interleaving + (src % interleaving) * bitplanesize;
+		uint32_t dest = src / interleaving + (src % interleaving) * bitplanesize;
 		tempbuf[dest] = buf[src];
 	}
 
@@ -189,7 +191,7 @@ void deinterleave(buffer& buf, int interleaving)
 /*
 void interleave(buffer* buf, int interleaving)
 {
-	char* tempbuf = (char*)malloc(buf->length);
+	uint8_t* tempbuf = (uint8_t*)malloc(buf->length);
 
 	// Interleave into tempbuf
 	int bitplanesize = buf->length / interleaving;
@@ -199,7 +201,7 @@ void interleave(buffer* buf, int interleaving)
 		// ABCDEFghijklmnopqrstuvwx
 		// into
 		// AgmsBhntCiouDjpvEkqwFlr
-		// so for a char at position x,
+		// so for a byte at position x,
 		// x div bitplanesize = offset within this section
 		// x mod bitplanesize = which section
 		// final position = (x div bitplanesize) + (x mod bitplanesize) * (section size)
@@ -222,7 +224,7 @@ void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterato
 		{
 			blocklen = MAX_RUN_SIZE;
 		}
-		dest.push_back((unsigned char)(RAW_MASK | blocklen));
+		dest.push_back((uint8_t)(RAW_MASK | blocklen));
 		for (int i = 0; i < blocklen; ++i)
 		{
 			dest.push_back(*begin++);
@@ -230,7 +232,7 @@ void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterato
 	}
 }
 
-void write_run(buffer& dest, char val, int len)
+void write_run(buffer& dest, uint8_t val, uint32_t len)
 {
 	if (len == 0)
 	{
@@ -239,21 +241,21 @@ void write_run(buffer& dest, char val, int len)
 
 	while (len > 0)
 	{
-		int blocklen = len;
+		uint32_t blocklen = len;
 		if (blocklen > MAX_RUN_SIZE) 
 		{
 			blocklen = MAX_RUN_SIZE;
 		}
-		dest.push_back((unsigned char)(RLE_MASK | blocklen));
+		dest.push_back((uint8_t)(RLE_MASK | blocklen));
 		dest.push_back(val);
 		len -= blocklen;
 	}
 }
 
-int getrunlength(buffer::const_iterator src, buffer::const_iterator end)
+uint32_t getrunlength(buffer::const_iterator src, buffer::const_iterator end)
 {
 	// find the number of consecutive identical values
-	unsigned char c = *src;
+	uint8_t c = *src;
 	buffer::const_iterator it = src;
 	for (++it; it != end && *it == c; ++it);
 	return it - src;
@@ -264,8 +266,8 @@ void compress_plane(buffer& dest, buffer::const_iterator src, buffer::const_iter
 	buffer::const_iterator rawStart = src;
 	for (buffer::const_iterator it = src; it != srcEnd; /* increment in loop */)
 	{
-		int runlength = getrunlength(it, srcEnd);
-		int runlengthneeded = 3; // normally need a run of 3 to be worth breaking a raw block
+		uint32_t runlength = getrunlength(it, srcEnd);
+		uint32_t runlengthneeded = 3; // normally need a run of 3 to be worth breaking a raw block
 		if (it == src || it + runlength == srcEnd) --runlengthneeded; // but at the beginning or end, 2 is enough
 		if (runlength < runlengthneeded)
 		{
