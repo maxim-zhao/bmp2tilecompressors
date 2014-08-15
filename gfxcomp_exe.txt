@@ -1,0 +1,31 @@
+gfxcomp_exe
+
+By Maxim in 2014
+
+This is a generic wrapper for executables to integrate them with BMP2Tile (and any other program that might happen to use the graphics compressor plugin DLL API I invented).
+
+It simply takes the input data, writes it to a file, executes a command (which operates on the file and somehow transforms it to another file), reads the resulting file, and passes it back via the API. This allows you to, for example, make a compressor in Python or Java, or use existing commandline compressors.
+
+Here's how you use it:
+
+1. Decide on what your compressed data extension will be. For this example, I will wrap the aPLib "apack.exe" compressor, so I shall choose "aPLib".
+2. *Rename* gfxcomp_exe.dll to gfxcomp_<extension>.dll. So I get gfxcomp_aPLib.dll.
+3. Create a config file in the same directory with the ".ini" extension *added*. So I get gfxcomp_aPLib.dll.ini.
+4. In this file, add the text:
+
+[Settings]
+Name=<Display name for UI>
+Command=<Commandline, with "%input%" and "%output%" as placeholders for the filenames>
+
+For aPLib, I have:
+
+[Settings]
+Name=aPLib
+Command=apack.exe "%input%" "%output%"
+
+- The name does not have to match the extension. 
+- If you want to use stdin/stdout for data flow, you'll need to include a suitable shell in your command to do the work, e.g.
+  Command=cmd.exe /c gzip < "%input%" > "%output%"
+
+5. Put the DLL and INI in the BMP2Tile directory as with other compressor DLLs. You may also want to put the EXE you rely on in there too.
+
