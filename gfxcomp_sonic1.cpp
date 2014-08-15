@@ -12,14 +12,14 @@ int compress(char* source, int sourceLen, char* dest, int destLen, int interleav
 void deinterleave(buffer& buf, int interleaving);
 void compress_tile(const buffer& src, buffer& dest);
 
-extern "C" __declspec(dllexport) char* getName()
+extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
 	// Generally, the name of the game it was REd from
 	return "Sonic 1";
 }
 
-extern "C" __declspec(dllexport) char* getExt()
+extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
 	return "soniccompr";
@@ -115,7 +115,12 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 			{
 				// Repeated art data
 				bitmask |= 0x80;
-				duplicateRows.push_back((uint8_t)std::distance(artData.begin(), it));
+				uint16_t index = (uint16_t) std::distance(artData.begin(), it); 
+				if(index >= 0xF0) 
+				{ 
+					duplicateRows.push_back((uint8_t)(index >> 8) | 0xf0); 
+				} 
+				duplicateRows.push_back((uint8_t)index); 
 			}
 		}
 
