@@ -176,6 +176,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	HANDLE fOut = CreateFile(outFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (fOut == INVALID_HANDLE_VALUE)
 	{
+		DeleteFile(outFilename.c_str());
 		return -1;
 	}
 	// Check the size
@@ -183,6 +184,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	if (fileSize > destLen)
 	{
 		// Dest buffer too small
+		CloseHandle(fOut);
 		DeleteFile(outFilename.c_str());
 		return 0;
 	}
