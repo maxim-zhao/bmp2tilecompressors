@@ -68,8 +68,8 @@ string getSetting(const string& name)
 		delete [] buffer;
 		buffer = new char[bufferSize];
 
-		// Try to get the DLL filename.
-		// This returns the number of chars copies on success, 0 otherwise.
+		// Try to get the setting value.
+		// This returns the number of chars copied on success, 0 otherwise.
 		DWORD result = GetPrivateProfileString("Settings", name.c_str(), NULL, buffer, bufferSize, configFilename.c_str());
 		success = result != bufferSize;
 	}
