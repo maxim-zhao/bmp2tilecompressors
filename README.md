@@ -14,7 +14,7 @@ Benchmark
 Based on a crude benchmark (the large tile chunk used by [SMS Competition Cart](https://github.com/maxim-zhao/sms-competition-cart)), here's some compression ratios and decompression times:
 
 | Compression | Bytes | Ratio | Load time (cycles) | Ratio |
-|-------------|-------|-------|--------------------|-------|
+|:------------|------:|------:|-------------------:|------:|
 | None        |  9888 |  100% |             494435 |  100% |
 | PScompr     |  8472 |   86% |            1354926 |  274% |
 | Sonic 1     |  5616 |   57% |            1026969 |  207% |
