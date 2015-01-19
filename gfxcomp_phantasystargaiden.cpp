@@ -73,7 +73,7 @@ void deinterleave(buffer& buf, int interleaving)
 
 	// Deinterleave into tempbuf
 	int bitplanesize = buf.size() / interleaving;
-	for (int src = 0; src < buf.size(); ++src)
+	for (unsigned int src = 0; src < buf.size(); ++src)
 	{
 		// If interleaving is 4 I want to turn
 		// AbcdEfghIjklMnopQrstUvwx
@@ -83,7 +83,7 @@ void deinterleave(buffer& buf, int interleaving)
 		// x div 4 = offset within this section
 		// x mod 4 = which section
 		// final position = (x div 4) + (x mod 4) * (section size)
-		int dest = src / interleaving + (src % interleaving) * bitplanesize;
+		unsigned int dest = src / interleaving + (src % interleaving) * bitplanesize;
 		tempbuf[dest] = buf[src];
 	}
 
