@@ -172,4 +172,6 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
-/bmp2tile
+
+*.exp
+*.lib
