@@ -1,4 +1,3 @@
-#include <string>
 #include <cstdint>
 
 extern "C" __declspec(dllexport) const char* getName()

@@ -1,10 +1,4 @@
-#include <windows.h>
-#include <string.h>
-
-BOOL APIENTRY DllMain(HANDLE, DWORD, LPVOID)
-{
-    return TRUE;
-}
+#include <algorithm>
 
 extern "C" __declspec(dllexport) char* getName()
 {
@@ -28,7 +22,7 @@ extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, c
 	}
 	else
 	{
-		memcpy(dest, source, sourceLen);
+		std::copy(source, source + sourceLen, dest);
 		return sourceLen;
 	}
 }
@@ -42,7 +36,7 @@ extern "C" __declspec(dllexport) int compressTilemap(char* source, int width, in
 	}
 	else
 	{
-		memcpy(dest, source, sourceLen);
+		std::copy(source, source + sourceLen, dest);
 		return sourceLen;
 	}
 }
@@ -55,7 +49,7 @@ extern "C" __declspec(dllexport) int decompressTiles(char* source, int sourceLen
 	}
 	else
 	{
-		memcpy(dest, source, sourceLen);
+		std::copy(source, source + sourceLen, dest);
 		return sourceLen;
 	}
 }
@@ -68,7 +62,7 @@ extern "C" __declspec(dllexport) int decompressTilemap(char* source, int sourceL
 	}
 	else
 	{
-		memcpy(dest, source, sourceLen);
+		std::copy(source, source + sourceLen, dest);
 		return sourceLen;
 	}
 }

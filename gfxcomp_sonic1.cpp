@@ -1,11 +1,8 @@
-#include <windows.h>
-#include <vector>
-#include <map>
-#include <cstdint>
 #include <algorithm>
-using namespace::std;
+#include <vector>
+#include <cstdint>
 
-typedef vector<uint8_t> buffer;
+typedef std::vector<uint8_t> buffer;
 
 // Forward declares
 int compress(char* source, int sourceLen, char* dest, int destLen, int interleaving);
@@ -151,7 +148,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 		return 0;
 	}
 	// copy to dest
-	memcpy(dest, &buf[0], resultlen);
+	std::copy(buf.begin(), buf.end(), dest);
 	// return length
 	return resultlen;
 }

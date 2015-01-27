@@ -1,8 +1,6 @@
 #include <cstdint>
-#include <cstring>
+#include <algorithm>
 #include "aPLib/aplib.h"
-
-using namespace std;
 
 int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
 {
@@ -10,7 +8,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	uint8_t* pPacked = new uint8_t[aP_max_packed_size(sourceLen)];
 	uint8_t* pWorkMemory = new uint8_t[aP_workmem_size(sourceLen)];
 
-	unsigned int size = aP_pack(source, pPacked, sourceLen, pWorkMemory, NULL, NULL);
+	unsigned int size = aP_pack(source, pPacked, sourceLen, pWorkMemory, nullptr, nullptr);
 
 	// Free work memory
 	delete [] pWorkMemory;
@@ -23,7 +21,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	}
 
 	// Copy to dest
-	memcpy_s(dest, destLen, pPacked, size);
+	std::copy(pPacked, pPacked + size, dest);
 
 	// Free other memory
 	delete [] pPacked;

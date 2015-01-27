@@ -1,9 +1,9 @@
 #include <windows.h>
 #include <vector>
 #include <map>
-using namespace::std;
+#include <algorithm>
 
-typedef vector<unsigned char> buffer;
+typedef std::vector<unsigned char> buffer;
 
 // Forward declares
 int compress(char* source, int sourceLen, char* dest, int destLen, int interleaving);
@@ -47,7 +47,7 @@ extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, c
 	for (int i = 0; i < numTiles; ++i)
 	{
 		// Get tile into buffer
-		memcpy(&tile[0], source, 32);
+		std::copy(source, source + 32, buf.begin());
 		source += 32;
 		// Deinterleave it
 		deinterleave(tile, 4);
@@ -62,7 +62,7 @@ extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, c
 		return 0;
 	}
 	// copy to dest
-	memcpy(dest, &buf[0], resultlen);
+	std::copy(buf.begin(), buf.end(), dest);
 	// return length
 	return resultlen;
 }
@@ -93,7 +93,7 @@ void deinterleave(buffer& buf, int interleaving)
 
 void findMostCommonValue(buffer::const_iterator data, int& value, int& count)
 {
-	map<int,int> counts;
+	std::map<int,int> counts;
 	// count occurences of each value
 	for (int i = 0; i < 8; ++i)
 	{
@@ -102,7 +102,7 @@ void findMostCommonValue(buffer::const_iterator data, int& value, int& count)
 	}
 	// find the highest count and its value
 	count = 0;
-	for (map<int,int>::const_iterator it = counts.begin(); it != counts.end(); ++it)
+	for (std::map<int,int>::const_iterator it = counts.begin(); it != counts.end(); ++it)
 	{
 		if (it->second > count)
 		{

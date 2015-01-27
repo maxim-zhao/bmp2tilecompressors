@@ -1,9 +1,8 @@
 #include <vector>
 #include <cstdint>
+#include <algorithm>
 
-using namespace std;
-
-typedef vector<uint8_t> buffer;
+typedef std::vector<uint8_t> buffer;
 
 #define MAX_RUN_SIZE 0x7f
 #define RLE_MASK 0x00
@@ -122,8 +121,8 @@ int decompress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t dest
 	interleave(&buf, interleaving);
 
 	// copy to dest
-	memcpy(dest, buf.buf, length);
-	
+	std::copy(bufDest.begin(), bufDest.end(), dest);
+
 	return length;
 }
 
@@ -189,9 +188,9 @@ void deinterleave(buffer& buf, uint32_t interleaving)
 	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
 }
 /*
-void interleave(buffer* buf, int interleaving)
+void interleave(buffer& buf, int interleaving)
 {
-	uint8_t* tempbuf = (uint8_t*)malloc(buf->length);
+	buffer tempbuf(buf);
 
 	// Interleave into tempbuf
 	int bitplanesize = buf->length / interleaving;
@@ -206,13 +205,11 @@ void interleave(buffer* buf, int interleaving)
 		// x mod bitplanesize = which section
 		// final position = (x div bitplanesize) + (x mod bitplanesize) * (section size)
 		int dest = src / bitplanesize + (src % bitplanesize) * interleaving;
-		tempbuf[dest] = buf->buf[src];
+		tempbuf[dest] = buf[src];
 	}
 
 	// Copy results over the original data
-	memcpy(buf->buf, tempbuf, buf->length);
-
-	free(tempbuf);
+	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
 }
 */
 void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterator end)
