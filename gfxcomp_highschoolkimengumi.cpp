@@ -1,9 +1,7 @@
 #include <vector>
 #include <cstdint>
 
-using namespace std;
-
-typedef vector<uint8_t> buffer;
+typedef std::vector<uint8_t> buffer;
 
 #define MAX_RUN_SIZE 0x7f
 #define RLE_MASK 0x00

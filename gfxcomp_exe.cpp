@@ -16,8 +16,6 @@
 #include <sstream>
 #pragma warning(pop)
 
-using namespace ::std;
-
 HINSTANCE g_hInstance;
 
 extern "C" BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD, LPVOID)
@@ -26,9 +24,9 @@ extern "C" BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD, LPVOID)
 	return TRUE;
 }
 
-string getConfigFilename()
+std::string getConfigFilename()
 {
-	static string filename;
+	static std::string filename;
 	if (!filename.empty())
 	{
 		return filename;
@@ -55,7 +53,7 @@ string getConfigFilename()
 	return filename;
 }
 
-string getSetting(const string& name)
+std::string getSetting(const std::string& name)
 {
 	const std::string& configFilename = getConfigFilename();
 	std::string setting;
@@ -78,36 +76,36 @@ string getSetting(const string& name)
 	return setting;
 }
 
-int getSettingInt(const string& name, int default)
+int getSettingInt(const std::string& name, int default)
 {
-	const string& configFilename = getConfigFilename();
+	const std::string& configFilename = getConfigFilename();
 	return GetPrivateProfileInt("Settings", name.c_str(), default, configFilename.c_str());
 }
 
 extern "C" __declspec(dllexport) const char* getName()
 {
-	static string name = getSetting("Name").c_str();
+	static std::string name = getSetting("Name").c_str();
 	return name.c_str();
 }
 
 extern "C" __declspec(dllexport) const char* getExt()
 {
-	static string extension;
+	static std::string extension;
 	if (!extension.empty())
 	{
 		return extension.c_str();
 	}
-	const string& configFilename = getConfigFilename();
-	string::size_type pos = configFilename.find("gfxcomp_") + 8;
+	const std::string& configFilename = getConfigFilename();
+	std::string::size_type pos = configFilename.find("gfxcomp_") + 8;
 	extension = configFilename.substr(pos);
 	pos = extension.find('.');
 	extension = extension.substr(0, pos);
 	return extension.c_str();
 }
 
-void replace(string& haystack, const string& needle, const string& replacement)
+void replace(std::string& haystack, const std::string& needle, const std::string& replacement)
 {
-	for (string::size_type pos = haystack.find(needle); pos != string::npos; pos = haystack.find(needle))
+	for (std::string::size_type pos = haystack.find(needle); pos != std::string::npos; pos = haystack.find(needle))
 	{
 		// Replace while we find it
 		// This can go on forever with badly-chosen needles and replacements...
@@ -124,12 +122,12 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	{
 		return -1;
 	}
-	ostringstream ss;
+	std::ostringstream ss;
 	ss << tempPathBuf << "gfxcomp_exe_temp_in_" << rand() << ".bin";
-	string inFilename(ss.str());
-	ss.str(string());
+	std::string inFilename(ss.str());
+	ss.str(std::string());
 	ss << tempPathBuf << "gfxcomp_exe_temp_out_" << rand() << ".bin";
-	string outFilename(ss.str());
+	std::string outFilename(ss.str());
 
 	// We write the data to the first filename...
 	// Since we're using Windows API for creating the process, let's use it for files too...
@@ -147,7 +145,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	CloseHandle(fIn);
 
 	// Then we get the command
-	string command = getSetting("Command");
+	std::string command = getSetting("Command");
 	// ...and substitute the placeholders in it
 	replace(command, "%input%", inFilename);
 	replace(command, "%output%", outFilename);

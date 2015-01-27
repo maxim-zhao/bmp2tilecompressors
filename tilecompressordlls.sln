@@ -22,6 +22,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_2bppraw", "gfxcomp_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_3bppraw", "gfxcomp_3bppraw.vcxproj", "{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_msb", "gfxcomp_msb.vcxproj", "{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -68,6 +70,10 @@ Global
 		{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}.Debug|Win32.Build.0 = Debug|Win32
 		{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}.Release|Win32.ActiveCfg = Release|Win32
 		{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}.Release|Win32.Build.0 = Release|Win32
+		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Debug|Win32.Build.0 = Debug|Win32
+		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Release|Win32.ActiveCfg = Release|Win32
+		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
