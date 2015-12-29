@@ -166,6 +166,8 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	}
 
 	WaitForSingleObject(processInformation.hProcess, INFINITE);
+	CloseHandle(processInformation.hProcess);
+	CloseHandle(processInformation.hThread);
 
 	// We can delete the input file now
 	DeleteFile(inFilename.c_str());
