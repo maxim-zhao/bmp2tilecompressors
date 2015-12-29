@@ -22,7 +22,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_2bppraw", "gfxcomp_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_3bppraw", "gfxcomp_3bppraw.vcxproj", "{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_msb", "gfxcomp_msb.vcxproj", "{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lsbtilemap", "gfxcomp_lsbtilemap.vcxproj", "{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -10,7 +10,7 @@ extern "C" __declspec(dllexport) const char* getName()
 extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
-	return "msb";
+	return "lsbtilemap";
 }
 
 extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destSize)
