@@ -13,7 +13,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 void deinterleave(buffer& buf, int interleaving);
 //void interleave(buffer* buf, int interleaving);
 //int decompress_plane(buffer* buf, uint8_t** src);
-void compress_plane(buffer& dest, buffer::const_iterator src, buffer::const_iterator srcEnd);
+void compressPlane(buffer& dest, buffer::const_iterator src, buffer::const_iterator srcEnd);
 
 extern "C" __declspec(dllexport) const char* getName()
 {
@@ -64,7 +64,7 @@ void deinterleave(buffer& buf, int interleaving)
 	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
 }
 
-void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterator end)
+void writeRaw(buffer& dest, buffer::const_iterator begin, buffer::const_iterator end)
 {
 	while (begin < end)
 	{
@@ -73,7 +73,7 @@ void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterato
 		{
 			blocklen = MAX_RUN_SIZE;
 		}
-		dest.push_back((uint8_t)(RAW_MASK | blocklen));
+		dest.push_back(static_cast<uint8_t>(RAW_MASK | blocklen));
 		for (size_t i = 0; i < blocklen; ++i)
 		{
 			dest.push_back(*begin++);
@@ -81,7 +81,7 @@ void write_raw(buffer& dest, buffer::const_iterator begin, buffer::const_iterato
 	}
 }
 
-void write_run(buffer& dest, uint8_t val, uint32_t len)
+void writeRun(buffer& dest, uint8_t val, uint32_t len)
 {
 	if (len == 0)
 	{
@@ -95,18 +95,18 @@ void write_run(buffer& dest, uint8_t val, uint32_t len)
 		{
 			blocklen = MAX_RUN_SIZE;
 		}
-		dest.push_back((uint8_t)(RLE_MASK | blocklen));
+		dest.push_back(static_cast<uint8_t>(RLE_MASK | blocklen));
 		dest.push_back(val);
 		len -= blocklen;
 	}
 }
 
-int getrunlength(buffer::const_iterator src, buffer::const_iterator end)
+int getRunLength(buffer::const_iterator src, buffer::const_iterator end)
 {
 	// find the number of consecutive identical values
 	uint8_t c = *src;
 	buffer::const_iterator it = src;
-	for (++it; it != end && *it == c; ++it);
+	for (++it; it != end && *it == c; ++it) {};
 	return it - src;
 }
 
@@ -129,7 +129,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	buffer::const_iterator rawStart = bufSource.begin();
 	for (buffer::const_iterator it = bufSource.begin(); it != bufSource.end(); /* increment in loop */)
 	{
-		int runlength = getrunlength(it, bufSource.end());
+		int runlength = getRunLength(it, bufSource.end());
 		int runlengthneeded = 3; // normally need a run of 3 to be worth breaking a raw block
 		if (it == bufSource.begin() || it + runlength == bufSource.end()) --runlengthneeded; // but at the beginning or end, 2 is enough
 		if (runlength < runlengthneeded)
@@ -140,13 +140,13 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 		}
 
 		// We found a good enough run. Write the raw (if any) and then the run
-		write_raw(bufDest, rawStart, it);
-		write_run(bufDest, *it, runlength);
+		writeRaw(bufDest, rawStart, it);
+		writeRun(bufDest, *it, runlength);
 		it += runlength;
 		rawStart = it;
 	}
 	// We may have a final run of raw bytes
-	write_raw(bufDest, rawStart, bufSource.end());
+	writeRaw(bufDest, rawStart, bufSource.end());
 	// Zero terminator
 	bufDest.push_back(0);
 
