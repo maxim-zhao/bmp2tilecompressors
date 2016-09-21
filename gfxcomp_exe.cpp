@@ -32,7 +32,7 @@ std::string getConfigFilename()
 		return filename;
 	}
 
-	char* buffer = NULL;
+	char* buffer = nullptr;
 	unsigned int bufferSize = 256;
 	bool success = false;
 	while (!success && bufferSize < 1024*1024*1024)
@@ -58,7 +58,7 @@ std::string getSetting(const std::string& name)
 	const std::string& configFilename = getConfigFilename();
 	std::string setting;
 
-	char* buffer = NULL;
+	char* buffer = nullptr;
 	unsigned int bufferSize = 256;
 	bool success = false;
 	while (!success)
@@ -68,7 +68,7 @@ std::string getSetting(const std::string& name)
 
 		// Try to get the setting value.
 		// This returns the number of chars copied on success, 0 otherwise.
-		DWORD result = GetPrivateProfileString("Settings", name.c_str(), NULL, buffer, bufferSize, configFilename.c_str());
+		DWORD result = GetPrivateProfileString("Settings", name.c_str(), nullptr, buffer, bufferSize, configFilename.c_str());
 		success = result != bufferSize;
 	}
 	setting = std::string(buffer);
@@ -76,10 +76,10 @@ std::string getSetting(const std::string& name)
 	return setting;
 }
 
-int getSettingInt(const std::string& name, int default)
+int getSettingInt(const std::string& name, int defaultValue)
 {
 	const std::string& configFilename = getConfigFilename();
-	return GetPrivateProfileInt("Settings", name.c_str(), default, configFilename.c_str());
+	return GetPrivateProfileInt("Settings", name.c_str(), defaultValue, configFilename.c_str());
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -131,12 +131,13 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 
 	// We write the data to the first filename...
 	// Since we're using Windows API for creating the process, let's use it for files too...
-	HANDLE fIn = CreateFile(inFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE fIn = CreateFile(inFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (fIn == INVALID_HANDLE_VALUE)
 	{
 		return -1;
 	}
-	if (!WriteFile(fIn, source, sourceLen, NULL, NULL))
+	DWORD numberOfBytesWritten;
+	if (!WriteFile(fIn, source, sourceLen, &numberOfBytesWritten, nullptr) || numberOfBytesWritten != sourceLen)
 	{
 		// Failed to write
 		CloseHandle(fIn);
@@ -156,7 +157,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	// Then we run it and wait for it to complete
 	PROCESS_INFORMATION processInformation = {};
 	STARTUPINFO startupInfo = {};
-	BOOL created = CreateProcess(NULL, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, &startupInfo, &processInformation);
+	BOOL created = CreateProcess(nullptr, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInformation);
 	free(commandLine);
 
 	if (!created)
@@ -173,14 +174,14 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	DeleteFile(inFilename.c_str());
 
 	// Then read in the output file
-	HANDLE fOut = CreateFile(outFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE fOut = CreateFile(outFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (fOut == INVALID_HANDLE_VALUE)
 	{
 		DeleteFile(outFilename.c_str());
 		return -1;
 	}
 	// Check the size
-	DWORD fileSize = GetFileSize(fOut, NULL);
+	DWORD fileSize = GetFileSize(fOut, nullptr);
 	if (fileSize > destLen)
 	{
 		// Dest buffer too small
@@ -189,7 +190,8 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 		return 0;
 	}
 	// Read it in
-	if (!ReadFile(fOut, dest, fileSize, NULL, NULL))
+	DWORD numberOfBytesRead;
+	if (!ReadFile(fOut, dest, fileSize, &numberOfBytesRead, nullptr) || numberOfBytesRead != fileSize)
 	{
 		// Problem reading
 		CloseHandle(fOut);
