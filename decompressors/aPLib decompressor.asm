@@ -18,10 +18,10 @@
 ; (useful for optimising to see size changes)
 
 .struct aPLibMemoryStruct
-bits     db
+bits     db ; A bitmask for the bit to read next. It is initialised to 1, and rotated right each time a bit is read. When the 1 falls into the carry, the next byte is read into "byte".
 byte     db ; not directly referenced, assumed to come after bits
-LWM      db
-R0       dw
+LWM      db ; Flag for LZ offset reuse, 1 if the last operation set it. We only reuse it if the last operation *didn't* set it.
+R0       dw ; Last used LZ offset
 .endst
 
 .enum aPLibMemory
@@ -38,35 +38,50 @@ mem instanceof aPLibMemoryStruct
 .ifdef calcblocks
 .block "aPLib"
 .endif
-_ap_getbit:
+
+; Gets a bit from the bitstream into the Z flag
+; Always leaves carry flag unset
+_getBit:
 	push bc
+    ; Get bitmask + value
 		ld bc,(mem.bits)
+    ; Rotate bitmask
 		rrc c
 		jr nc,+
+    ; If the bitmask fell into the carry, we need a new byte
 		ld b,(hl)
 		inc hl
-+:	ld a,c
++:	; Then mask to the bit we want - so the result is in the Z flag
+    ld a,c
 		and b
+    ; Save the state
 		ld (mem.bits),bc
 	pop bc
 	ret
 
-_ap_getbitbc: ;doubles BC and adds the read bit
+; Shifts a bit from the bitstream into bc
+_getBit_bc:
+  ; Shift bc left by 1
 	sla c
 	rl b
-	call _ap_getbit
+  ; Get a bit from the bitstream
+	call _getBit
+  ; Add it to bc if 1
 	ret z
 	inc bc
 	ret
 
-_ap_getgamma:
+; Gets a variable-length number from the bitstream
+_getVariableLengthNumber:
+  ; Implicit high bit
 	ld bc,1
--:call _ap_getbitbc
-	call _ap_getbit
+-:call _getBit_bc ; Shift in following bits
+	call _getBit ; Until we hit a 0 indicator bit
 	jr nz,-
 	ret
 
-_apbranch1:
+; Emit a byte of data
+_literal:
 .ifdef aPLibToVRAM
   ld a,(hl)
   out ($be),a
@@ -75,24 +90,34 @@ _apbranch1:
 .else
 	ldi
 .endif
+  ; Clear LWM
 	xor a
 	ld (mem.LWM),a
-	jr _aploop
+	jr _mainLoop
 
-_apbranch2:
-	;use a gamma code * 256 for offset, another gamma code for length
-	call _ap_getgamma
+; Emit an LZ block
+_block:
+  ; Get the offset MSB. The variable-length encoding means it's stored +2
+	call _getVariableLengthNumber
 	dec bc
 	dec bc
+
+  ; Check for the LWM flag. If non-zero, we need to continue to read the offset - but the MSB is stored as +2.
 	ld a,(mem.LWM)
 	or a
 	jr nz,++
-	;bc = 2? ; Maxim: I think he means 0
+  
+  ; Check the offset MSB. If not zero, we need to continue to read the offset - and we need to subtract another 1 from it.
+  ; Could optimise to ignore b here, we'll overflow if it's too large anyway
 	ld a,b
 	or c
 	jr nz,+
-	;if gamma code is 2, use old R0 offset, and a new gamma code for length
-	call _ap_getgamma
+  
+_block_reuseOffset:  
+  ; If we get here then we're re-using the LZ offset.
+  ; Get the length
+	call _getVariableLengthNumber
+  ; Copy LZ run
 	push hl
 		ld h,d
 		ld l,e
@@ -106,20 +131,34 @@ _apbranch2:
     ldir
 .endif
 	pop hl
+  ; Done
 	jr +++
   
-+:dec bc
+_block_getOffsetLSB_MSBisPlus3:
++:; The MSB is stored +3, we need to decrement once more
+  dec bc
+  
+_block_getOffsetLSB:
 ++:
-	;do I even need this code? ; Maxim: seems so, it's broken without it
-	;bc=bc*256+(hl), lazy 16bit way
+  ; Shift the MSB into b and get the LSB in c
 	ld b,c
 	ld c,(hl)
 	inc hl
+  ; Save it for possible later reuse
 	ld (mem.R0),bc
 	push bc
-		call _ap_getgamma
+    ; Get the length in bc
+		call _getVariableLengthNumber
+    ; Get the offset into hl and save the data pointer in the stack.
+    ; This is a bit cunning because the preceding line may have modified hl, and we needed to preserve bc from before it.
 		ex (sp),hl
-		;bc = len, hl=offs
+    ; Check for ranges of values and increase the length accordingly
+    ;      Offset    Adjustment
+    ;     0..  127       2
+    ;   128.. 1279       0
+    ;  1280..31999       1
+    ; 32000..            2
+    ; Could optimise for the common cases (shorter offsets), 32K will almost never be seen on Z80, and bail after range is found
 		push de
 			ex de,hl
 			;some comparison junk for some reason
@@ -137,23 +176,26 @@ _apbranch2:
 			jr c,+
 			inc bc
 			inc bc
-+:		;bc = len, de = offs, hl=junk
-		pop hl
++:	pop hl
+    ; Apply offset to current output pointer
 		push hl
 			or a
 			sbc hl,de
 		pop de
-		;hl=dest-offs, bc=len, de = dest
+    ; now hl = LZ source, de = dest, bc = count
 .ifdef aPLibToVRAM
     call _ldir_vram_to_vram
 .else
 		ldir
 .endif
+  ; Restore data pointer
 	pop hl
+
 +++:
+  ; Set the LWM flag
 	ld a,1
 	ld (mem.LWM),a
-	jr _aploop
+	jr _mainLoop
 
 aPLib_decompress:
 	;hl = source
@@ -168,97 +210,119 @@ aPLib_decompress:
   inc hl
   inc de
   
-	xor a
+	xor a ; Initialise LWM to 0
 	ld (mem.LWM),a
-	inc a
+	inc a ; Initialise bits to 1
 	ld (mem.bits),a
 
-_aploop:
-	call _ap_getbit
-	jr z, _apbranch1
-	call _ap_getbit
-	jr z, _apbranch2
-	call _ap_getbit
-	jr z, _apbranch3
-	;LWM = 0
+_mainLoop:
+	call _getBit
+	jr z, _literal
+	call _getBit
+	jr z, _block
+	call _getBit
+	jr z, _shortBlock
+  ; Fall through
+  
+_singleByte:
+	; Clear the LWM flag
 	xor a
 	ld (mem.LWM),a
-	;get an offset
+	; Read the four-bit offset
 	ld bc,0
-	call _ap_getbitbc
-	call _ap_getbitbc
-	call _ap_getbitbc
-	call _ap_getbitbc
+	call _getBit_bc
+	call _getBit_bc
+	call _getBit_bc
+	call _getBit_bc
+  ; Check for zero
 	ld a,b
 	or c
-	jr nz, _apbranch4
-;	xor a  ;write a 0 ; Maxim: a is zero already (just failed nz test), optimise this line away
-
+	jr nz, _singleByte_nonZeroOffset
+_singleByte_zeroOffset:
+  ; Zero offset means just emit a zero
+  ; a is already 0 here
 .ifdef aPLibToVRAM
   out ($be),a
 .else
   ld (de),a
 .endif
   inc de
+	jr _mainLoop
 
-	jr _aploop
-
-_apbranch4:
-	ex de,hl ;write a previous bit (1-15 away from dest)
-	push hl
-		sbc hl,bc
-.ifdef aPLibToVRAM
-    ld c,$bf
-    out (c),l
-    ld a,h
-    xor $40
-    out (c),a
-    in a,($be)
-.else
-		ld a,(hl)
-.endif
-	pop hl
-.ifdef aPLibToVRAM
-  out (c),l
-  out (c),h
-  out ($be),a
-.else
-	ld (hl),a
-.endif
-	inc hl
+_singleByte_nonZeroOffset:
+  ; bc = offset
+  ; Swap source and destination pointers
 	ex de,hl
-	jr _aploop
-_apbranch3:
-	;use 7 bit offset, length = 2 or 3
-	;if a zero is encountered here, it's EOF
+    push hl
+      ; Subtract offset
+      sbc hl,bc
+      ; Read byte
+.ifdef aPLibToVRAM
+      ld c,$bf
+      out (c),l
+      ld a,h
+      xor $40
+      out (c),a
+      in a,($be)
+.else
+      ld a,(hl)
+.endif
+    pop hl
+    ; Then emit it
+.ifdef aPLibToVRAM
+    out (c),l
+    out (c),h
+    out ($be),a
+.else
+    ld (hl),a
+.endif
+    inc hl
+  ; Swap pointers back again
+	ex de,hl
+	jr _mainLoop
+
+; Emit an LZ block encoded in a single byte - or end
+_shortBlock:
+  ; Get the byte
+  ; High 7 bits = offset
+  ; Low bit = length - 2
 	ld c,(hl)
 	inc hl
+  ; Shift offset. Carry is always unset here
 	rr c
+  ; Zero offset means end of compressed data
 	ret z
+  ; Use the carry flag to get the length (2 or 3) in b
 	ld b,2
 	jr nc,+
 	inc b
-+:;LWM = 1
++:
+  ; Set the LWM flag
 	ld a,1
 	ld (mem.LWM),a
 
+  ; Calculate the source address
 	push hl
 		ld a,b
+    ; Save the offset for future use
 		ld b,0
-		;R0 = c
 		ld (mem.R0),bc
+    ; Subtract the offset from the pointer
 		ld h,d
 		ld l,e
 		or a
 		sbc hl,bc
+    ; Get the byte count in bc
 		ld c,a
+    ; Copy data
 .ifdef aPLibToVRAM
     call _ldir_vram_to_vram
 .else
 		ldir
 .endif
 	pop hl
-	jr _aploop
+  ; Done
+	jr _mainLoop
   
 .ifdef aPLibToVRAM
 _ldir_vram_to_vram:
@@ -297,36 +361,6 @@ _below256:
   inc hl
   inc de
   djnz -
-  ret
-  
-/*
-  ; Make hl a read address
-  ld a,h
-  xor $40
-  ld h,a
--:; Read a byte
-  ld a,l
-  out ($bf),a
-  ld a,h
-  out ($bf),a
-  in a,($be)
-  push af
-    ; Write it
-    ld a,e
-    out ($bf),a
-    ld a,d
-    out ($bf),a
-  pop af
-  out ($be),a
-  ; Increment
-  inc hl
-  inc de
-  dec bc
-  ; Loop
-  ld a,b
-  or c
-  jr nz,-
-*/
   ret
 .endif
   
