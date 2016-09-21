@@ -13,13 +13,14 @@ Benchmark
 
 Based on a crude benchmark (the large tile chunk used by [SMS Competition Cart](https://github.com/maxim-zhao/sms-competition-cart)), here's some compression ratios and decompression times:
 
-| Compression | Bytes | Ratio | Load time (cycles) | Ratio |
-|:------------|------:|------:|-------------------:|------:|
-| None        |  9888 |  100% |             494435 |  100% |
-| PScompr     |  8472 |   86% |            1354926 |  274% |
-| Sonic 1     |  5616 |   57% |            1026969 |  207% |
-| PSGcompr    |  5116 |   52% |            1600820 |  324% |
-| PuCrunch    |  4109 |   42% |            3475587 |  703% |
-| aPLib       |  4058 |   41% |            3640882 |  736% |
+| Compression | Data size | Ratio | Decompressor size | Load time (cycles) | Ratio |
+|:------------|----------:|------:|------------------:|-------------------:|------:|
+| None        |      9728 | 100%  |                24 |             161365 |  100% |
+| PScompr     |      8338 |  86%  |                54 |            1335193 |  827% |
+| Sonic 1     |      5507 |  57%  |               162 |            1011588 |  627% |
+| PSGcompr    |      5029 |  52%  |               223 |            1576965 |  977% |
+| PuCrunch    |      4005 |  41%  |               414 |            3394510 | 2104% |
+| aPLib       |      3946 |  41%  |               304 |            3552372 | 2201% |
+| aPLib-fast  |      3946 |  41%  |               334 |            1789523 | 1109% |
 
 This was mostly done manually, using [Meka](http://www.smspower.org/meka/)'s CLOCK debugger feature for cycle counting. It would be better to have an automated benchmark for it, which could then cover a better corpus of source data. There is scope for optimising the "None" case (for speed), but that would just scale the other results up - which might be a useful thing to do.
