@@ -138,15 +138,43 @@ namespace gfxcomp_phantasystar
 		return it - begin;
 	}
 
+	class Block
+	{
+	public:
+		enum Type
+		{
+			Raw,
+			Run
+		};
+		Type _type;
+		std::vector<uint8_t> _data;
+
+		// Raw block constructor
+		Block(std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
+		: _type(Raw)
+		{
+			// Copy to our vector
+			_data.insert(_data.end(), begin, end);
+		}
+
+		// RLE block constructor
+		Block(uint32_t runLength, uint8_t value)
+		: _type(Run)
+		{
+			// Fill up our vector
+			_data.resize(runLength, value);
+		}
+	};
+
 	void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::const_iterator source, std::vector<uint8_t>::const_iterator sourceEnd)
 	{
-		std::vector<uint8_t>::const_iterator rawStart = source;
-		for (std::vector<uint8_t>::const_iterator it = source; it != sourceEnd; /* increment in loop */)
+		// First we decompose into blocks
+		std::vector<Block> blocks;
+		auto rawStart = source;
+		for (auto it = source; it != sourceEnd; /* increment in loop */)
 		{
 			uint32_t runlength = getRunLength(it, sourceEnd);
-			uint32_t runlengthneeded = 3; // normally need a run of 3 to be worth breaking a raw block
-			if (it == source || it + runlength == sourceEnd) --runlengthneeded; // but at the beginning or end, 2 is enough
-			if (runlength < runlengthneeded)
+			if (runlength < 2)
 			{
 				// Not good enough; keep looking for a run
 				it += runlength;
@@ -154,11 +182,70 @@ namespace gfxcomp_phantasystar
 			}
 
 			// We found a good enough run. Write the raw (if any) and then the run
-			writeRaw(destination, rawStart, it);
-			writeRun(destination, *it, runlength);
+			if (rawStart != it)
+			{
+				blocks.push_back(Block(rawStart, it));
+			}
+			blocks.push_back(Block(runlength, *it));
+
 			it += runlength;
 			rawStart = it;
 		}
+
+		// We may have a final run of raw bytes
+		if (rawStart != sourceEnd)
+		{
+			blocks.push_back(Block(rawStart, sourceEnd));
+		}
+
+		// Go through and optimise any instances of:
+		// * raw - run[2]
+		// * run[2] - raw 
+		// * raw - raw
+		// into a single raw block
+		if (blocks.size() > 2)
+		{
+			std::vector<Block>::iterator previous = blocks.begin();
+			for (auto current = previous + 1; current != blocks.end(); /* increment in loop */)
+			{
+				if ((previous->_type == Block::Raw && current->_type == Block::Run && current->_data.size() == 2) ||
+					(previous->_type == Block::Raw && current->_type == Block::Raw) ||
+					(previous->_type == Block::Run && previous->_data.size() == 2 && current->_type == Block::Raw))
+				{
+					// Combine the data
+					previous->_data.insert(previous->_data.end(), current->_data.begin(), current->_data.end());
+					previous->_type = Block::Raw;
+					// Knock out the dead block (slow for a vector, probably not a big deal)
+					blocks.erase(current);
+					// Fix up the iterator
+					current = previous + 1;
+					// We go around again pointing at the new current
+				}
+				else
+				{
+					// Move on
+					previous = current;
+					++current;
+				}
+			}
+		}
+
+		// Now emit them
+		for (auto it = blocks.begin(); it != blocks.end(); ++it)
+		{
+			switch (it->_type)
+			{
+			case Block::Raw:
+				writeRaw(destination, it->_data.begin(), it->_data.end());
+				break;
+			case Block::Run:
+				writeRun(destination, it->_data[0], it->_data.size());
+				break;
+			default:
+				break;
+			}
+		}
+
 		// We may have a final run of raw bytes
 		writeRaw(destination, rawStart, sourceEnd);
 		// Zero terminator
