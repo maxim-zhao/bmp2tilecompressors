@@ -66,7 +66,7 @@ namespace gfxcomp_phantasystar
 		}
 
 		// copy to dest
-		std::copy(bufDest.begin(), bufDest.end(), dest);
+		memcpy_s(dest, destLen, &bufDest[0], bufDest.size());
 
 		// return length
 		return bufDest.size();
@@ -199,9 +199,9 @@ namespace gfxcomp_phantasystar
 		}
 
 		// Go through and optimise any instances of:
-		// * raw - run[2]
-		// * run[2] - raw 
-		// * raw - raw
+		// * raw + run[2] (n+1, 2 bytes) -> n+2+1 (same but more mergeable)
+		// * run[2] + raw (2, n+1 bytes) -> 2+n+1 (same but more mergeable)
+		// * raw + raw (n+1, m+1 bytes) -> n+m+1 (saves 1, merges results from above)
 		// into a single raw block
 		if (blocks.size() > 2)
 		{
@@ -246,8 +246,6 @@ namespace gfxcomp_phantasystar
 			}
 		}
 
-		// We may have a final run of raw bytes
-		writeRaw(destination, rawStart, sourceEnd);
 		// Zero terminator
 		destination.push_back(0);
 	}
