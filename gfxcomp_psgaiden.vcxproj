@@ -55,6 +55,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <OutputFile>C:\Documents and Settings\Maxim\Desktop\Local docs\Code\Delphi\BMP to tile/gfxcomp_psgaiden.dll</OutputFile>
