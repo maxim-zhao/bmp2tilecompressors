@@ -8,7 +8,7 @@
 ;    call aPLib_decompress
 ;
 ; At most four bytes of stack are used (apart from the call to the decompressor in the first place)
-; ROM usage is 297 bytes in VRAM mode, 242 in RAM mode. The extra bytes are the cost 
+; ROM usage is 336 bytes in VRAM mode, 262 in RAM mode. The extra bytes are the cost 
 ; of VRAM to VRAM copies, which also makes it pretty slow.
 ; This file is using WLA-DX syntax quite heavily, you'd better use it too...
 
