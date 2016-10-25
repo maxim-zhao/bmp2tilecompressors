@@ -157,7 +157,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	}
 
 	// copy to dest
-	std::copy(bufDest.begin(), bufDest.end(), dest);
+	memcpy_s(dest, destLen, &bufDest[0], bufDest.size());
 
 	// return length
 	return bufDest.size();

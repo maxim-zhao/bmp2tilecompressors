@@ -148,7 +148,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 		return 0;
 	}
 	// copy to dest
-	std::copy(buf.begin(), buf.end(), dest);
+	memcpy_s(dest, destLen, &buf[0], buf.size());
 	// return length
 	return resultlen;
 }

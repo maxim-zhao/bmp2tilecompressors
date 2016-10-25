@@ -21,7 +21,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	}
 
 	// Copy to dest
-	std::copy(pPacked, pPacked + size, dest);
+	memcpy_s(dest, destLen, pPacked, size);
 
 	// Free other memory
 	delete [] pPacked;

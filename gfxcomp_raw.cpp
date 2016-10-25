@@ -20,11 +20,8 @@ extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, c
 	{
 		return 0;
 	}
-	else
-	{
-		std::copy(source, source + sourceLen, dest);
-		return sourceLen;
-	}
+	memcpy_s(dest, destLen, source, sourceLen);
+	return sourceLen;
 }
 
 extern "C" __declspec(dllexport) int compressTilemap(char* source, int width, int height, char* dest, int destLen)
@@ -34,11 +31,8 @@ extern "C" __declspec(dllexport) int compressTilemap(char* source, int width, in
 	{
 		return 0;
 	}
-	else
-	{
-		std::copy(source, source + sourceLen, dest);
-		return sourceLen;
-	}
+	memcpy_s(dest, destLen, source, sourceLen);
+	return sourceLen;
 }
 
 extern "C" __declspec(dllexport) int decompressTiles(char* source, int sourceLen, char* dest, int destLen)
@@ -47,11 +41,8 @@ extern "C" __declspec(dllexport) int decompressTiles(char* source, int sourceLen
 	{
 		return 0;
 	}
-	else
-	{
-		std::copy(source, source + sourceLen, dest);
-		return sourceLen;
-	}
+	memcpy_s(dest, destLen, source, sourceLen);
+	return sourceLen;
 }
 
 extern "C" __declspec(dllexport) int decompressTilemap(char* source, int sourceLen, char* dest, int destLen)
@@ -60,9 +51,6 @@ extern "C" __declspec(dllexport) int decompressTilemap(char* source, int sourceL
 	{
 		return 0;
 	}
-	else
-	{
-		std::copy(source, source + sourceLen, dest);
-		return sourceLen;
-	}
+	memcpy_s(dest, destLen, source, sourceLen);
+	return sourceLen;
 }
