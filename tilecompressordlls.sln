@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_phantasystar", "gfxcomp_phantasystar.vcxproj", "{CDDC9081-7930-454C-A887-B72BDFE9DE93}"
 EndProject
@@ -22,7 +22,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_2bppraw", "gfxcomp_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_3bppraw", "gfxcomp_3bppraw.vcxproj", "{EEA25CFF-B4E6-4585-AD30-54F2F2A28D0C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lsbtilemap", "gfxcomp_lsbtilemap.vcxproj", "{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lsb", "gfxcomp_lsbtilemap.vcxproj", "{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_zx7", "gfxcomp_zx7.vcxproj", "{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_exomizerv2", "gfxcomp_exomizerv2.vcxproj", "{A936A3A1-2414-4276-B940-3F2358FD3928}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6} = {CB1429FA-552A-453E-B5A6-8D6CFAE006C6}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exomizer", "exomizer\exomizer.vcxproj", "{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +83,18 @@ Global
 		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Debug|Win32.Build.0 = Debug|Win32
 		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Release|Win32.ActiveCfg = Release|Win32
 		{B3EFFF2D-80A9-40DB-AB5E-F6564AE924F9}.Release|Win32.Build.0 = Release|Win32
+		{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}.Debug|Win32.Build.0 = Debug|Win32
+		{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}.Release|Win32.ActiveCfg = Release|Win32
+		{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}.Release|Win32.Build.0 = Release|Win32
+		{A936A3A1-2414-4276-B940-3F2358FD3928}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A936A3A1-2414-4276-B940-3F2358FD3928}.Debug|Win32.Build.0 = Debug|Win32
+		{A936A3A1-2414-4276-B940-3F2358FD3928}.Release|Win32.ActiveCfg = Release|Win32
+		{A936A3A1-2414-4276-B940-3F2358FD3928}.Release|Win32.Build.0 = Release|Win32
+		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Debug|Win32.Build.0 = Debug|Win32
+		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Release|Win32.ActiveCfg = Release|Win32
+		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

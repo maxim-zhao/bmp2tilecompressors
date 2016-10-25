@@ -177,3 +177,4 @@ FakesAssemblies/
 *.lib
 /.vs
 /*.opendb
+*.db
