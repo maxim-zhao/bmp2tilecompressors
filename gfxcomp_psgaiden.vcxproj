@@ -58,7 +58,6 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <OutputFile>C:\Documents and Settings\Maxim\Desktop\Local docs\Code\Delphi\BMP to tile/gfxcomp_psgaiden.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)gfxcomp_psgaiden.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -68,6 +67,9 @@
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y "$(TargetPath)" D:\sms\bmp2tile\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

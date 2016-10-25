@@ -1,20 +1,10 @@
-#include <windows.h>
 #include <vector>
 #include <map>
-#include <algorithm>
-
-typedef std::vector<unsigned char> buffer;
+#include <cstdint>
 
 // Forward declares
-int compress(char* source, int sourceLen, char* dest, int destLen, int interleaving);
-void deinterleave(buffer& buf, int interleaving);
-void compress_tile(const buffer& src, buffer& dest);
-
-// avoid CRT. Evil. Big. Bloated.
-BOOL WINAPI _DllMainCRTStartup(HANDLE, ULONG, LPVOID)
-{
-	return TRUE;
-}
+void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving);
+void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest);
 
 extern "C" __declspec(dllexport) char* getName()
 {
@@ -29,47 +19,46 @@ extern "C" __declspec(dllexport) char* getExt()
 	return "psgcompr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, char* dest, int destLen)
+extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destLength)
 {
 	if (numTiles > 0xffff)
 	{
 		return -1; // error
 	}
-	buffer buf; // the output
-	buf.reserve(destLen); // avoid reallocation
+	std::vector<uint8_t> buf; // the output
+	buf.reserve(destLength); // avoid reallocation
 
 	// Write number of tiles
 	buf.push_back((numTiles >> 0) & 0xff);
 	buf.push_back((numTiles >> 8) & 0xff);
 
-	buffer tile;
+	std::vector<uint8_t> tile;
 	tile.resize(32); // zero fill
-	for (int i = 0; i < numTiles; ++i)
+	for (uint32_t i = 0; i < numTiles; ++i)
 	{
 		// Get tile into buffer
-		std::copy(source, source + 32, buf.begin());
+		std::copy(source, source + 32, tile.begin());
 		source += 32;
 		// Deinterleave it
 		deinterleave(tile, 4);
 		// Compress it to dest
-		compress_tile(tile, buf);
+		compressTile(tile, buf);
 	}
 
 	// check length
-	int resultlen = (int)buf.size();
-	if (resultlen > destLen)
+	if (buf.size() > destLength)
 	{
 		return 0;
 	}
 	// copy to dest
-	std::copy(buf.begin(), buf.end(), dest);
+	memcpy_s(dest, destLength, &buf[0], buf.size());
 	// return length
-	return resultlen;
+	return buf.size();
 }
 
-void deinterleave(buffer& buf, int interleaving)
+void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving)
 {
-	buffer tempbuf(buf);
+	std::vector<uint8_t> tempbuf(buf.size());
 
 	// Deinterleave into tempbuf
 	int bitplanesize = buf.size() / interleaving;
@@ -91,28 +80,28 @@ void deinterleave(buffer& buf, int interleaving)
 	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
 }
 
-void findMostCommonValue(buffer::const_iterator data, int& value, int& count)
+void findMostCommonValue(std::vector<uint8_t>::const_iterator data, uint8_t& value, int& count)
 {
-	std::map<int,int> counts;
+	std::map<uint8_t, int> counts;
 	// count occurences of each value
 	for (int i = 0; i < 8; ++i)
 	{
-		int val= *data++;
+		uint8_t val = *data++;
 		counts[val]++;
 	}
 	// find the highest count and its value
 	count = 0;
-	for (std::map<int,int>::const_iterator it = counts.begin(); it != counts.end(); ++it)
+	for (auto& pair: counts)
 	{
-		if (it->second > count)
+		if (pair.second > count)
 		{
-			value = it->first;
-			count = it->second;
+			value = pair.first;
+			count = pair.second;
 		}
 	}
 }
 
-int countMatches(buffer::const_iterator me, buffer::const_iterator other, bool invert)
+int countMatches(std::vector<uint8_t>::const_iterator me, std::vector<uint8_t>::const_iterator other, bool invert)
 {
 	int count = 0;
 	int mask = invert ? 0xff : 0x00;
@@ -126,42 +115,42 @@ int countMatches(buffer::const_iterator me, buffer::const_iterator other, bool i
 	return count;
 }
 
-void compress_tile(const buffer& src, buffer& dest)
+void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 {
-	int bitplaneMethods = 0;
+	uint8_t bitplaneMethods = 0;
 
 	// compress the tile data into a temporary buffer
 	// because we need to build the method byte before outputting to dest
-	buffer tiledata;
+	std::vector<uint8_t> tiledata;
 
 	// for each bitplane
-	for(int bitplane = 0; bitplane < 4; ++bitplane)
+	for (int bitplaneIndex = 0; bitplaneIndex < 4; ++bitplaneIndex)
 	{
 		// Find the most common value in this bitplane
-		int mostCommonByte;
+		uint8_t mostCommonByte;
 		int mostCommonByteCount;
-		buffer::const_iterator itBitplane = src.begin() + bitplane * 8;
+		std::vector<uint8_t>::const_iterator itBitplane = src.begin() + bitplaneIndex * 8;
 		findMostCommonValue(itBitplane, mostCommonByte, mostCommonByteCount);
 
 		// Find how much it matches previous bitplanes
-		int otherBitplaneMatch = 0; // which bitplane
+		uint8_t otherBitplaneMatchIndex = 0; // which bitplane
 		int otherBitplaneMatchCount = 0; // how many matched
 		bool otherBitplaneMatchInverse = false; // whether it was an inverted match
-		for (int otherbitplane = 0; otherbitplane < bitplane; ++otherbitplane)
+		for (uint8_t otherBitplaneIndex = 0; otherBitplaneIndex < bitplaneIndex; ++otherBitplaneIndex)
 		{
 			// Compare
-			buffer::const_iterator itOtherBitplane = src.begin() + otherbitplane * 8;
+			std::vector<uint8_t>::const_iterator itOtherBitplane = src.begin() + otherBitplaneIndex * 8;
 			int count = countMatches(itBitplane, itOtherBitplane, false);
 			if (count > otherBitplaneMatchCount)
 			{
-				otherBitplaneMatch = otherbitplane;
+				otherBitplaneMatchIndex = otherBitplaneIndex;
 				otherBitplaneMatchCount = count;
 				otherBitplaneMatchInverse = false;
 			}
 			count = countMatches(itBitplane, itOtherBitplane, true);
 			if (count > otherBitplaneMatchCount)
 			{
-				otherBitplaneMatch = otherbitplane;
+				otherBitplaneMatchIndex = otherBitplaneIndex;
 				otherBitplaneMatchCount = count;
 				otherBitplaneMatchInverse = true;
 			}
@@ -176,13 +165,13 @@ void compress_tile(const buffer& src, buffer& dest)
 			bitplaneMethods |= 0x00;
 			// no data
 		}
-		else if (mostCommonByteCount == 8 && mostCommonByte == 0xff) 
+		else if (mostCommonByteCount == 8 && mostCommonByte == 0xff)
 		{
 			// all ff = %01
 			bitplaneMethods |= 0x01;
 			// no data
 		}
-		else if (mostCommonByteCount <= 2 && otherBitplaneMatchCount <= 2 ) 
+		else if (mostCommonByteCount <= 2 && otherBitplaneMatchCount <= 2)
 		{
 			// raw = %11
 			bitplaneMethods |= 0x03;
@@ -198,34 +187,34 @@ void compress_tile(const buffer& src, buffer& dest)
 			if (otherBitplaneMatchCount == 8)
 			{
 				/// %000f00nn = whole bitplane duplicate
-				if (otherBitplaneMatchInverse) 
+				if (otherBitplaneMatchInverse)
 				{
-					tiledata.push_back((unsigned char)(0x10 | otherBitplaneMatch));
+					tiledata.push_back(0x10 | otherBitplaneMatchIndex);
 				}
 				else
 				{
-					tiledata.push_back((unsigned char)(0x00 | otherBitplaneMatch));
+					tiledata.push_back(0x00 | otherBitplaneMatchIndex);
 				}
 			}
 			else if (otherBitplaneMatchCount > mostCommonByteCount)
 			{
 				/// %001000nn = copy bytes
 				/// %010000nn = copy and invert bytes
-				if (otherBitplaneMatchInverse) 
+				if (otherBitplaneMatchInverse)
 				{
-					tiledata.push_back((unsigned char)(0x40 | otherBitplaneMatch));
+					tiledata.push_back(0x40 | otherBitplaneMatchIndex);
 				}
 				else
 				{
-					tiledata.push_back((unsigned char)(0x20 | otherBitplaneMatch));
+					tiledata.push_back(0x20 | otherBitplaneMatchIndex);
 				}
 
 				// Build bitmask
-				int bitmask = 0;
-				int mask = otherBitplaneMatchInverse ? 0xff : 0x00;
-				buffer::const_iterator it1 = itBitplane;
-				buffer::const_iterator it2 = src.begin() + otherBitplaneMatch * 8;
-				for (int i = 0; i < 8; ++i, ++it1, ++it2)
+				uint8_t bitmask = 0;
+				uint8_t mask = otherBitplaneMatchInverse ? 0xff : 0x00;
+				std::vector<uint8_t>::const_iterator it1 = itBitplane;
+				std::vector<uint8_t>::const_iterator it2 = src.begin() + otherBitplaneMatchIndex * 8;
+				for (int i = 0; i < 8; ++i , ++it1 , ++it2)
 				{
 					bitmask <<= 1;
 					if (*it1 == (*it2 ^ mask))
@@ -235,12 +224,12 @@ void compress_tile(const buffer& src, buffer& dest)
 				}
 
 				// output byte
-				tiledata.push_back((unsigned char)(bitmask));
+				tiledata.push_back(bitmask);
 
 				// output non-matching bytes
 				it1 = itBitplane;
-				it2 = src.begin() + otherBitplaneMatch * 8;
-				for (int i = 0; i < 8; ++i, ++it1, ++it2)
+				it2 = src.begin() + otherBitplaneMatchIndex * 8;
+				for (int i = 0; i < 8; ++i , ++it1 , ++it2)
 				{
 					bitmask <<= 1;
 					if (*it1 != (*it2 ^ mask))
@@ -249,13 +238,13 @@ void compress_tile(const buffer& src, buffer& dest)
 					}
 				}
 			}
-			else 
+			else
 			{
 				// common byte
 				// build bitmask
-				int bitmask = 0;
-				buffer::const_iterator it = itBitplane;
-				for (int i = 0; i < 8; ++i, ++it)
+				uint8_t bitmask = 0;
+				std::vector<uint8_t>::const_iterator it = itBitplane;
+				for (int i = 0; i < 8; ++i , ++it)
 				{
 					bitmask <<= 1;
 					if (*it == mostCommonByte)
@@ -263,12 +252,12 @@ void compress_tile(const buffer& src, buffer& dest)
 						bitmask |= 1;
 					}
 				}
-				tiledata.push_back((unsigned char)(bitmask));
-				tiledata.push_back((unsigned char)(mostCommonByte));
+				tiledata.push_back(bitmask);
+				tiledata.push_back(mostCommonByte);
 
 				// output non-matching bytes
 				it = itBitplane;
-				for (int i = 0; i < 8; ++i, ++it)
+				for (int i = 0; i < 8; ++i , ++it)
 				{
 					bitmask <<= 1;
 					if (*it != mostCommonByte)
@@ -281,6 +270,7 @@ void compress_tile(const buffer& src, buffer& dest)
 	} // bitplane loop
 
 	// output
-	dest.push_back((unsigned char)(bitplaneMethods));
+	dest.push_back(bitplaneMethods);
 	dest.insert(dest.end(), tiledata.begin(), tiledata.end());
 }
+
