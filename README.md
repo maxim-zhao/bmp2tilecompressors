@@ -20,7 +20,7 @@ Based on a crude benchmark (the large tile chunk used by [SMS Competition Cart](
 | Sonic 1     |      5507 |  57%  |               162 |            1011588 |  627% |
 | PSGcompr    |      5029 |  52%  |               223 |            1576965 |  977% |
 | PuCrunch    |      4005 |  41%  |               414 |            3394510 | 2104% |
-| zx7         |      3995 |  41%  |                   |                    |       |
+| zx7         |      3995 |  41%  |               117 |            1513653 |  938% |
 | aPLib       |      3946 |  41%  |               304 |            3552372 | 2201% |
 | aPLib-fast  |      3946 |  41%  |               334 |            1789523 | 1109% |
 | exomizer    |      3668 |  38%  |                   |                    |       |
