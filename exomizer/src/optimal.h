@@ -32,7 +32,8 @@
 #include "output.h"
 
 float optimal_encode(const_matchp mp,   /* IN */
-                     encode_match_data emp);    /* IN */
+                     encode_match_data emp,     /* IN */
+                     struct encode_match_buckets *embp);/* OUT */
 
 void optimal_init(encode_match_data emp);        /* IN/OUT */
 
@@ -45,8 +46,8 @@ void optimal_optimize(encode_match_data emd,    /* IN/OUT */
 void optimal_encoding_import(encode_match_data emd,     /* IN/OUT */
                              const char *encoding);     /* IN */
 
-const char *
-optimal_encoding_export(encode_match_data emd);    /* IN */
+void optimal_encoding_export(encode_match_data emd,     /* IN */
+                             struct membuf *export);    /* OUT */
 
 void optimal_dump(int level, encode_match_data emp);       /* IN */
 

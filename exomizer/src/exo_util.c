@@ -30,13 +30,13 @@
 #include "stdlib.h"
 #include "string.h"
 
-int find_sys(const unsigned char *buf, int target)
+int find_sys(const unsigned char *buf, int sys_token, int *stub_lenp)
 {
     int outstart = -1;
     int state = 1;
-    int i = 0;
+
     /* skip link and line number */
-    buf += 4;
+    int i = 4;
     /* exit loop at line end */
     while(i < 1000 && buf[i] != '\0')
     {
@@ -46,11 +46,11 @@ int find_sys(const unsigned char *buf, int target)
         {
             /* look for and consume sys token */
         case 1:
-            if((target == -1 &&
+            if((sys_token == -1 &&
                 (c == 0x9e /* cbm */ ||
                  c == 0x8c /* apple 2*/ ||
                  c == 0xbf /* oric 1*/)) ||
-               c == target)
+               c == sys_token)
             {
                 state = 2;
             }
@@ -74,6 +74,11 @@ int find_sys(const unsigned char *buf, int target)
         }
         ++i;
     }
+    if (stub_lenp != NULL)
+    {
+        /* skip zero byte + next zero link word */
+        *stub_lenp = i + 3;
+    }
 
     LOG(LOG_DEBUG, ("state when leaving: %d.\n", state));
     return outstart;
@@ -86,7 +91,7 @@ static int get_byte(FILE *in)
     {
         LOG(LOG_ERROR, ("Error: unexpected end of xex-file."));
         fclose(in);
-        exit(-1);
+        exit(1);
     }
     return byte;
 }
@@ -105,6 +110,134 @@ static int get_be_word(FILE *in)
     return word;
 }
 
+/**
+ * if the file is detected to be xex then load_addr will be set to -1
+ * if the file is detected to be oric tap then load_addr will be set to -2
+ * if the name contains no len info then len will be set to NULL
+ * if the name contains offset info then the FILE* will be skipped offset
+ * bytes.
+ */
+static
+FILE *
+open_file(char *name, int *load_addr, int *offsetp, int *lenp)
+{
+    FILE * in;
+    int is_plain = 0;
+    int is_relocated = 0;
+
+    int tries = 0;
+    int tries_arr[3];
+    for (;;)
+    {
+        char *load_str;
+        char *at_str;
+
+        in = fopen(name, "rb");
+        if (in != NULL || is_plain == 1 || tries == 3)
+        {
+            /* We have succeded in opening the file.
+             * There's no address suffix. */
+            break;
+        }
+
+        /* hmm, let's see if the user is trying to relocate it */
+        load_str = strrchr(name, ',');
+        at_str = strrchr(name, '@');
+        if(at_str != NULL && (load_str == NULL || at_str > load_str))
+        {
+            is_plain = 1;
+            load_str = at_str;
+        }
+
+        if (load_str == NULL)
+        {
+            /* nope, */
+            break;
+        }
+
+        *load_str = '\0';
+        is_relocated = 1;
+        ++load_str;
+
+        /* relocation was requested */
+        if (str_to_int(load_str, &tries_arr[tries++]) != 0)
+        {
+            /* we fail */
+            LOG(LOG_ERROR,
+                (" can't parse load address from \"%s\"\n", load_str));
+            exit(1);
+        }
+    }
+    if (in == NULL)
+    {
+        LOG(LOG_ERROR,
+            (" can't open file \"%s\" for input\n", name));
+        exit(1);
+    }
+
+    {
+        int load = -3;
+        int offset = 0;
+        int len = -1;
+        if (--tries >= 0)
+        {
+            load = tries_arr[tries];
+        }
+        if (--tries >= 0)
+        {
+            offset = tries_arr[tries];
+        }
+        if (--tries >= 0)
+        {
+            len = tries_arr[tries];
+        }
+
+        if(!is_plain)
+        {
+            /* read the prg load address */
+            int prg_load = get_le_word(in);
+            if(!is_relocated)
+            {
+                load = prg_load;
+                /* unrelocated prg loading to $ffff is xex */
+                if(prg_load == 0xffff)
+                {
+                    /* differentiate this from relocated $ffff files so it is
+                     * possible to override the xex auto-detection. */
+                    load = -1;
+                }
+                /* unrelocated prg loading to $1616 is Oric tap */
+                else if(prg_load == 0x1616)
+                {
+                    load = -2;
+                }
+            }
+        }
+
+        if(load_addr != NULL)
+        {
+            *load_addr = load;
+        }
+        if(offsetp != NULL)
+        {
+            *offsetp = offset;
+        }
+        if(lenp != NULL)
+        {
+            *lenp = len;
+        }
+    }
+    return in;
+}
+
+#if 0
+/**
+ * if the file is detected to be xex then load_addr will be set to -1
+ * if the file is detected to be oric tap then load_addr will be set to -2
+ * if the name contains no len info then len will be set to NULL
+ * if the name contains offset info then the FILE* will be skipped offset
+ * bytes.
+ */
 static
 FILE *
 open_file(char *name, int *load_addr)
@@ -152,7 +285,7 @@ open_file(char *name, int *load_addr)
             /* we fail */
             LOG(LOG_ERROR,
                 (" can't parse load address from \"%s\"\n", load_str));
-            exit(-1);
+            exit(1);
         }
 
         in = fopen(name, "rb");
@@ -162,7 +295,7 @@ open_file(char *name, int *load_addr)
     {
         LOG(LOG_ERROR,
             (" can't open file \"%s\" for input\n", name));
-        exit(-1);
+        exit(1);
     }
 
     if(!is_plain)
@@ -193,6 +326,7 @@ open_file(char *name, int *load_addr)
     }
     return in;
 }
+#endif
 
 static void load_xex(unsigned char mem[65536], FILE *in,
                      struct load_info *info)
@@ -222,7 +356,7 @@ static void load_xex(unsigned char mem[65536], FILE *in,
         {
             LOG(LOG_ERROR, ("Error: corrupt data in xex-file."));
             fclose(in);
-            exit(-1);
+            exit(1);
         }
         if(start == 0x2e2 && end == 0x2e3)
         {
@@ -248,7 +382,7 @@ static void load_xex(unsigned char mem[65536], FILE *in,
         {
             LOG(LOG_ERROR, ("Error: unexpected end of xex-file.\n"));
             fclose(in);
-            exit(-1);
+            exit(1);
         }
         LOG(LOG_VERBOSE, (" xex chunk loading from $%04X to $%04X\n",
                           start, end));
@@ -282,7 +416,7 @@ static void load_oric_tap(unsigned char mem[65536], FILE *in,
         LOG(LOG_ERROR, ("Error: fewer than three lead-in bytes ($16) "
                         "in Oric tap-file header.\n"));
         fclose(in);
-        exit(-1);
+        exit(1);
     }
     /* optionally more 0x16 bytes */
     while((c = get_byte(in)) == 0x16);
@@ -292,7 +426,7 @@ static void load_oric_tap(unsigned char mem[65536], FILE *in,
         LOG(LOG_ERROR, ("Error: bad sync byte after lead-in in Oric tap-file "
                         "header, got $%02X but expected $24\n", c));
         fclose(in);
-        exit(-1);
+        exit(1);
     }
 
     /* now we are in sync, lets be lenient */
@@ -334,10 +468,24 @@ static void load_oric_tap(unsigned char mem[65536], FILE *in,
 }
 
 static void load_prg(unsigned char mem[65536], FILE *in,
+                     int offset, int len,
                      struct load_info *info)
 {
-    int len;
-    len = fread(mem + info->start, 1, 65536 - info->start, in);
+    if (offset != 0)
+    {
+        int origin = SEEK_CUR;
+        if (offset < 0)
+        {
+            origin = SEEK_END;
+        }
+        fseek(in, offset, origin);
+    }
+    if (len < 0 || len  > 65536 - info->start)
+    {
+        len = 65536 - info->start;
+    }
+
+    len = fread(mem + info->start, 1, len, in);
 
     info->end = info->start + len;
     info->basic_var_start = -1;
@@ -352,10 +500,10 @@ static void load_prg(unsigned char mem[65536], FILE *in,
 void load_located(char *filename, unsigned char mem[65536],
                   struct load_info *info)
 {
-    int load;
+    int load, offset, len;
     FILE *in;
 
-    in = open_file(filename, &load);
+    in = open_file(filename, &load, &offset, &len);
     if(load == -1)
     {
         /* file is an xex file */
@@ -370,12 +518,12 @@ void load_located(char *filename, unsigned char mem[65536],
     {
         /* file is a located plain file or a prg file */
         info->start = load;
-        load_prg(mem, in, info);
+        load_prg(mem, in, offset, len, info);
     }
     fclose(in);
 
-    LOG(LOG_NORMAL,
-        (" filename: \"%s\", loading from $%04X to $%04X\n",
+    LOG(LOG_BRIEF,
+        (" Reading \"%s\", loading from $%04X to $%04X.\n",
          filename, info->start, info->end));
 }
 

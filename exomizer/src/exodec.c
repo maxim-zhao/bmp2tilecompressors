@@ -38,7 +38,7 @@ get_byte(struct dec_ctx *ctx)
     if(ctx->inpos == ctx->inend)
     {
         LOG(LOG_ERROR, ("unexpected end of input data\n"));
-        exit(-1);
+        exit(1);
     }
     c = ctx->inbuf[ctx->inpos++];
 
@@ -127,36 +127,38 @@ table_init(struct dec_ctx *ctx, struct dec_table *tp) /* IN/OUT */
     }
 }
 
-char *
-table_dump(struct dec_table *tp)
+static void
+table_dump(struct dec_table *tp, struct membuf *target)
 {
-    int i, j;
-    static char buf[100];
-    char *p = buf;
+    if (target != NULL)
+    {
+        int i, j;
 
-    for(i = 0; i < 16; ++i)
-    {
-        p += sprintf(p, "%X", tp->table_bi[i]);
-    }
-    for(j = 0; j < 3; ++j)
-    {
-        int start;
-        int end;
-        p += sprintf(p, ",");
-        start = tp->table_off[j];
-        end = start + (1 << tp->table_bit[j]);
-        for(i = start; i < end; ++i)
+        membuf_truncate(target, 0);
+        for(i = 0; i < 16; ++i)
         {
-            p += sprintf(p, "%X", tp->table_bi[i]);
+            membuf_printf(target, "%X", tp->table_bi[i]);
+        }
+        for(j = 0; j < 3; ++j)
+        {
+            int start;
+            int end;
+            membuf_append_char(target, ',');
+            start = tp->table_off[j];
+            end = start + (1 << tp->table_bit[j]);
+            for(i = start; i < end; ++i)
+            {
+                membuf_printf(target, "%X", tp->table_bi[i]);
+            }
         }
     }
-    return buf;
 }
 
-char *
-dec_ctx_init(struct dec_ctx *ctx, struct membuf *inbuf, struct membuf *outbuf)
+void
+dec_ctx_init(struct dec_ctx ctx[1],
+             struct membuf *inbuf, struct membuf *outbuf,
+             struct membuf *enc_out)
 {
-    char *encoding;
     ctx->bits_read = 0;
 
     ctx->inbuf = membuf_get(inbuf);
@@ -170,8 +172,7 @@ dec_ctx_init(struct dec_ctx *ctx, struct membuf *inbuf, struct membuf *outbuf)
 
     /* init tables */
     table_init(ctx, ctx->t);
-    encoding = table_dump(ctx->t);
-    return encoding;
+    table_dump(ctx->t, enc_out);
 }
 
 void dec_ctx_free(struct dec_ctx *ctx)

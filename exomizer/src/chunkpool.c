@@ -96,7 +96,7 @@ chunkpool_malloc(struct chunkpool *ctx)
 	{
 	    LOG(LOG_ERROR, ("out of memory error in file %s, line %d\n",
 			    __FILE__, __LINE__));
-	    exit(-1);
+	    exit(1);
 	}
 	vec_push(&ctx->used_chunks, &ctx->current_chunk);
         ctx->current_chunk = m;

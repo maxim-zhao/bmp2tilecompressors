@@ -35,7 +35,7 @@
  * target is the basic token for the sys/call basic command
  * it may be -1 for hardcoded detection of a few targets.
  */
-int find_sys(const unsigned char *buf, int target);
+int find_sys(const unsigned char *buf, int target, int *stub_lenp);
 
 struct load_info
 {

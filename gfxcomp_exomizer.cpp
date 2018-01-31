@@ -1,7 +1,7 @@
 #define _SCL_SECURE_NO_WARNINGS
 
 #include <cstdint>
-#include <algorithm>
+#include <cstring>
 
 extern "C" {
 #include "exomizer/src/membuf.h"
@@ -11,7 +11,7 @@ extern "C" {
 extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
-	return "Exomizer";
+	return "Exomizer v2";
 }
 
 extern "C" __declspec(dllexport) const char* getExt()

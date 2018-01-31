@@ -340,7 +340,7 @@ static i32 resolve_expr(struct expr *e)
     if(p != NULL)
     {
         LOG(LOG_ERROR, ("%s\n", p));
-        exit(-1);
+        exit(1);
     }
     return val;
 }
@@ -380,7 +380,7 @@ struct expr *new_expr_incword(const char *name,
         LOG(LOG_ERROR,
             ("Can't read word from offset %d in file \"%s\".\n",
              offset, name));
-        exit(-1);
+        exit(1);
     }
     p = membuf_get(in);
     p += offset;
@@ -566,7 +566,7 @@ struct atom *new_incbin(const char *name,
     {
         LOG(LOG_ERROR,
             ("Can't read from offset %d in file \"%s\".\n", skip32, name));
-        exit(-1);
+        exit(1);
     }
     length -= skip32;
 
@@ -584,7 +584,7 @@ struct atom *new_incbin(const char *name,
         LOG(LOG_ERROR,
             ("Can't read %d bytes from offset %d from file \"%s\".\n",
              len32, skip32, name));
-        exit(-1);
+        exit(1);
     }
 
     atom = chunkpool_malloc(s->atom_pool);

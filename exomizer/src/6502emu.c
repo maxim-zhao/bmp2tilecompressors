@@ -227,10 +227,9 @@ static void update_carry(struct cpu_ctx *r, int bool)
     r->flags = (r->flags & ~FLAG_C) | (bool != 0 ? FLAG_C : 0);
 }
 
-static void update_overflow(struct cpu_ctx *r, signed short value)
+static void update_overflow(struct cpu_ctx *r, int bool)
 {
-    r->flags &= ~FLAG_V;
-    r->flags |= (value < -128 || value > 127) ? FLAG_V : 0;
+    r->flags = (r->flags & ~FLAG_V) | (bool != 0 ? FLAG_V : 0);
 }
 
 static u8 read_op_arg(struct cpu_ctx *r, int mode, union inst_arg *arg)
@@ -270,7 +269,8 @@ static void op_adc(struct cpu_ctx *r, int mode, union inst_arg *arg)
     value = read_op_arg(r, mode, arg);
     result = r->a + value + (r->flags & FLAG_C);
     update_carry(r, result & 256);
-    update_overflow(r, (signed short)result);
+    update_overflow(r, !((r->a & 0x80) ^ (value & 0x80)) &&
+                        ((r->a & 0x80) ^ (result & 0x80)));
     r->a = result;
     update_flags_nz(r, r->a);
 }
@@ -603,7 +603,8 @@ static void op_sbc(struct cpu_ctx *r, int mode, union inst_arg *arg)
     u16 result;
     value = read_op_arg(r, mode, arg);
     result = subtract(r, r->flags & FLAG_C, r->a, value);
-    update_overflow(r, result);
+    update_overflow(r, ((r->a & 0x80) ^ (value & 0x80)) &&
+                       ((r->a & 0x80) ^ (result & 0x80)));
     r->a = result;
     update_flags_nz(r, r->a);
 }

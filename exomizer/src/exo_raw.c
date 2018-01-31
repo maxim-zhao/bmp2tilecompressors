@@ -61,13 +61,15 @@ main(int argc, char *argv[])
     int c, infilec;
     char **infilev;
 
-    static struct crunch_options options[1] = { CRUNCH_OPTIONS_DEFAULT };
-    struct common_flags flags[1] = { {options, DEFAULT_OUTFILE} };
+    struct crunch_options options[1] = { CRUNCH_OPTIONS_DEFAULT };
+    struct common_flags flags[1] = { {NULL, DEFAULT_OUTFILE} };
 
     struct membuf inbuf[1];
     struct membuf outbuf[1];
 
     const char *appl = fixup_appl(argv[0]);
+
+    flags->options = options;
 
     /* init logging */
     LOG_INIT_CONSOLE(LOG_NORMAL);
@@ -100,7 +102,7 @@ main(int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: exactly one input file must be given.\n"));
         print_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(-1);
+        exit(1);
     }
 
     membuf_init(inbuf);

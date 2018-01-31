@@ -31,8 +31,8 @@
 #include "membuf.h"
 
 struct match {
-    int offset;
-    int len;
+    unsigned short int offset;
+    unsigned short int len;
     struct match *next;
 };
 
@@ -48,7 +48,7 @@ struct pre_calc {
 struct match_ctx {
     struct chunkpool m_pool[1];
     struct pre_calc (*info)[1];
-    int *rle;
+    unsigned short int *rle;
     unsigned short int *rle_r;
     const unsigned char *buf;
     int len;
@@ -63,7 +63,7 @@ void match_ctx_init(match_ctx ctx,          /* IN/OUT */
                     struct membuf *inbuf,   /* IN */
                     int max_len,            /* IN */
                     int max_offset,         /* IN */
-                    int use_imprecise_rle); /* IN */
+                    int favor_speed);       /* IN */
 
 void match_ctx_free(match_ctx ctx);     /* IN/OUT */
 

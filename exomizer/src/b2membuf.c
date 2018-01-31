@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         {
             fprintf(stderr, "Error: can't open file \"%s\" for input.\n",
                     argv[i]);
-            exit(-1);
+            exit(1);
         }
         generate(argv[i], in, stdout);
         fclose(in);

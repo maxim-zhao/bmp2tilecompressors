@@ -75,7 +75,7 @@ struct membuf *new_named_buffer(struct named_buffer *nb, const char *name)
     {
         /* found */
         LOG(LOG_ERROR, ("buffer already exists.\n"));
-        exit(-1);
+        exit(1);
     }
     membuf_init(mp);
     return mp;

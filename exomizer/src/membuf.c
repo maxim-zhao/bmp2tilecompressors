@@ -30,6 +30,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdarg.h>
+
+#ifdef WIN32
+#define vsnprintf _vsnprintf
+#endif
+
 void membuf_init(struct membuf *sb)
 {
     sb->buf = NULL;
@@ -232,4 +238,30 @@ int membuf_get_size(const struct membuf *sb)
 void *membuf_get(const struct membuf *sb)
 {
     return sb->buf;
+}
+void membuf_printf(struct membuf *sb, const char *format, ...)
+{
+    int pos;
+    int printed;
+    va_list args;
+
+    pos = sb->len;
+
+    va_start(args, format);
+    printed = vsnprintf((char*)membuf_get(sb) + pos, sb->size - pos,
+                        format, args);
+    va_end(args);
+
+    if (printed >= sb->size - pos)
+    {
+        va_list args2;
+
+        membuf_atleast(sb, pos + printed + 1);
+
+        va_start(args2, format);
+        printed = vsnprintf((char*)membuf_get(sb) + pos, sb->size - pos,
+                            format, args2);
+        va_end(args2);
+    }
+    sb->len += printed;
 }

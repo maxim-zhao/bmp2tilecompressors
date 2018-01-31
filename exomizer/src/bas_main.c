@@ -119,7 +119,7 @@ open_file(const char *name, int *load_addr)
             /* we fail */
             LOG(LOG_ERROR,
                 (" can't parse load address from \"%s\"\n", load_str));
-            exit(-1);
+            exit(1);
         }
 
         in = fopen(name, "rb");
@@ -129,7 +129,7 @@ open_file(const char *name, int *load_addr)
     {
         LOG(LOG_ERROR,
             (" can't open file \"%s\" for input\n", name));
-        exit(-1);
+        exit(1);
     }
 
     /* set the load address */
@@ -151,18 +151,18 @@ open_file(const char *name, int *load_addr)
 
 void print_license(void)
 {
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("----------------------------------------------------------------------------\n"
          "Exobasic v1.0b2, Copyright (c) 2003 Magnus Lind. (magli143@gmail.com)\n"
          "----------------------------------------------------------------------------\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("This software is provided 'as-is', without any express or implied warranty.\n"
          "In no event will the authors be held liable for any damages arising from\n"
          "the use of this software.\n"
          "Permission is granted to anyone to use this software, alter it and re-\n"
          "distribute it freely for any non-commercial, non-profit purpose subject to\n"
          "the following restrictions:\n\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("   1.  The origin of this software must not be misrepresented; you must not\n"
          "   claim that you wrote the original software. If you use this software in a\n"
          "   product, an acknowledgment in the product documentation would be\n"
@@ -170,7 +170,7 @@ void print_license(void)
          "   2. Altered source versions must be plainly marked as such, and must not\n"
          "   be misrepresented as being the original software.\n"
          "   3. This notice may not be removed or altered from any distribution.\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("   4. The names of this software and/or it's copyright holders may not be\n"
          "   used to endorse or promote products derived from this software without\n"
          "   specific prior written permission.\n"
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
                     ("error: invalid number for -n option, "
                      "must be in the range of [0 - 63999]\n"));
                 print_usage(argv[0], LOG_ERROR);
-                exit(-1);
+                exit(1);
             }
             LOG(LOG_DEBUG, ("option -n: nice renumber, "
                             "start with %d, increment %d\n",
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
                 }
                 LOG(LOG_ERROR, ("\n"));
             }
-            print_usage(argv[0], LOG_BRIEF);
+            print_usage(argv[0], LOG_WARNING);
             exit(0);
         }
     }

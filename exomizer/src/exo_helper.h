@@ -39,8 +39,8 @@ struct common_flags
     const char *outfile;
 };
 
-#define CRUNCH_FLAGS "cCe:Em:M:p:o:qv"
-#define BASE_FLAGS "o:qv"
+#define CRUNCH_FLAGS "cCe:Em:M:p:o:qBv"
+#define BASE_FLAGS "o:qBv"
 
 void print_crunch_flags(enum log_level level, const char *default_outfile);
 
@@ -68,7 +68,7 @@ struct crunch_options
     int max_len;
     int max_offset;
     int use_literal_sequences;
-    int use_imprecise_rle;
+    int favor_speed;
     int output_header;
 };
 
@@ -76,6 +76,7 @@ struct crunch_info
 {
     int literal_sequences_used;
     int needed_safety_offset;
+    char used_encoding[100];
 };
 
 void print_license(void);

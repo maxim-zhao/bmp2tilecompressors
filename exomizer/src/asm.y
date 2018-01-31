@@ -159,6 +159,8 @@ void yyerror(const char *s);
 %left vNEG
 %left LNOT
 
+%token <str> LABEL
+
 %type <expr> lexpr
 %type <expr> expr
 %type <atom> op;
@@ -178,7 +180,7 @@ void yyerror(const char *s);
 %%
 
 stmts:	stmts stmt | stmt;
-stmt:	SYMBOL COLON { new_label($1); } |
+stmt:	LABEL COLON { new_label($1); } |
 	SYMBOL ASSIGN expr { new_symbol_expr($1, $3); } |
 	SYMBOL GUESS expr { new_symbol_expr_guess($1, $3); } |
         IF LPAREN lexpr RPAREN { push_if_state($3); } |

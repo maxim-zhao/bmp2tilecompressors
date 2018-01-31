@@ -42,7 +42,7 @@
 static struct crunch_options default_options[1] = { CRUNCH_OPTIONS_DEFAULT };
 
 int do_output(match_ctx ctx,
-              search_nodep snp,
+              struct search_node *snp,
               encode_match_data emd,
               encode_match_f * f,
               struct membuf *outbuf,
@@ -109,7 +109,7 @@ int do_output(match_ctx ctx,
                 }
             } else
             {
-                f(mp, emd);
+                f(mp, emd, NULL);
                 output_bits(out, 1, 0);
             }
 
@@ -143,21 +143,21 @@ int do_output(match_ctx ctx,
     return max_diff;
 }
 
-search_nodep
+struct search_node*
 do_compress(match_ctx ctx, encode_match_data emd,
             const char *exported_encoding,
             int max_passes,
-            int use_literal_sequences)
+            int use_literal_sequences,
+            struct membuf *enc)
 {
     matchp_cache_enum mpce;
     matchp_snp_enum snpe;
-    search_nodep snp;
-    search_nodep best_snp;
+    struct search_node *snp;
+    struct search_node *best_snp;
     int pass;
     float size;
     float old_size;
     char prev_enc[100];
-    const char *curr_enc;
 
     pass = 1;
     prev_enc[0] = '\0';
@@ -174,6 +174,8 @@ do_compress(match_ctx ctx, encode_match_data emd,
         matchp_cache_get_enum(ctx, mpce);
         optimal_optimize(emd, matchp_cache_enum_get_next, mpce);
     }
+    optimal_encoding_export(emd, enc);
+    strcpy(prev_enc, membuf_get(enc));
 
     best_snp = NULL;
     old_size = 100000000.0;
@@ -185,7 +187,7 @@ do_compress(match_ctx ctx, encode_match_data emd,
         if (snp == NULL)
         {
             LOG(LOG_ERROR, ("error: search_buffer() returned NULL\n"));
-            exit(-1);
+            exit(1);
         }
 
         size = snp->total_score;
@@ -194,13 +196,13 @@ do_compress(match_ctx ctx, encode_match_data emd,
 
         if (size >= old_size)
         {
-            search_node_free(snp);
+            free(snp);
             break;
         }
 
         if (best_snp != NULL)
         {
-            search_node_free(best_snp);
+            free(best_snp);
         }
         best_snp = snp;
         old_size = size;
@@ -219,12 +221,12 @@ do_compress(match_ctx ctx, encode_match_data emd,
         matchp_snp_get_enum(snp, snpe);
         optimal_optimize(emd, matchp_snp_enum_get_next, snpe);
 
-        curr_enc = optimal_encoding_export(emd);
-        if (strcmp(curr_enc, prev_enc) == 0)
+        optimal_encoding_export(emd, enc);
+        if (strcmp(membuf_get(enc), prev_enc) == 0)
         {
             break;
         }
-        strcpy(prev_enc, curr_enc);
+        strcpy(prev_enc, membuf_get(enc));
     }
 
     return best_snp;
@@ -235,18 +237,21 @@ void crunch_backwards(struct membuf *inbuf,
                       struct crunch_options *options, /* IN */
                       struct crunch_info *info) /* OUT */
 {
-    static match_ctx ctx;
+    match_ctx ctx;
     encode_match_data emd;
-    search_nodep snp;
+    struct search_node *snp;
     int outlen;
+    int inlen;
     int safety;
     int copy_used;
+    struct membuf exported_enc = STATIC_MEMBUF_INIT;
 
     if(options == NULL)
     {
         options = default_options;
     }
 
+    inlen = membuf_memlen(inbuf);
     outlen = membuf_memlen(outbuf);
     emd->out = NULL;
     optimal_init(emd);
@@ -254,10 +259,10 @@ void crunch_backwards(struct membuf *inbuf,
     LOG(LOG_NORMAL,
         ("\nPhase 1: Instrumenting file"
          "\n-----------------------------\n"));
-    LOG(LOG_NORMAL, (" Length of indata: %d bytes.\n", membuf_memlen(inbuf)));
+    LOG(LOG_NORMAL, (" Length of indata: %d bytes.\n", inlen));
 
     match_ctx_init(ctx, inbuf, options->max_len, options->max_offset,
-                   options->use_imprecise_rle);
+                   options->favor_speed);
 
     LOG(LOG_NORMAL, (" Instrumenting file, done.\n"));
 
@@ -268,27 +273,34 @@ void crunch_backwards(struct membuf *inbuf,
         ("\nPhase 2: Calculating encoding"
          "\n-----------------------------\n"));
     snp = do_compress(ctx, emd, options->exported_encoding,
-                      options->max_passes, options->use_literal_sequences);
+                      options->max_passes, options->use_literal_sequences,
+                      &exported_enc);
     LOG(LOG_NORMAL, (" Calculating encoding, done.\n"));
 
     LOG(LOG_NORMAL,
         ("\nPhase 3: Generating output file"
          "\n------------------------------\n"));
-    LOG(LOG_NORMAL, (" Encoding: %s\n", optimal_encoding_export(emd)));
+    LOG(LOG_NORMAL, (" Encoding: %s\n", (char*)membuf_get(&exported_enc)));
     safety = do_output(ctx, snp, emd, optimal_encode, outbuf,
                        &copy_used, options->output_header);
-    LOG(LOG_NORMAL, (" Length of crunched data: %d bytes.\n",
-                     membuf_memlen(outbuf) - outlen));
+    outlen = membuf_memlen(outbuf) - outlen;
+    LOG(LOG_NORMAL, (" Length of crunched data: %d bytes.\n", outlen));
+
+    LOG(LOG_BRIEF, (" Crunched data reduced %d bytes (%0.2f%%)\n",
+                    inlen - outlen, 100.0 * (inlen - outlen) / inlen));
 
     optimal_free(emd);
-    search_node_free(snp);
+    free(snp);
     match_ctx_free(ctx);
 
     if(info != NULL)
     {
         info->literal_sequences_used = copy_used;
         info->needed_safety_offset = safety;
+        strncpy(info->used_encoding, (char*)membuf_get(&exported_enc), 100);
+        info->used_encoding[99] = '\0';
     }
+    membuf_free(&exported_enc);
 }
 
 void reverse_buffer(char *start, int len)
@@ -328,11 +340,12 @@ void decrunch(int level,
               struct membuf *outbuf)
 {
     struct dec_ctx ctx[1];
-    char *enc;
-    enc = dec_ctx_init(ctx, inbuf, outbuf);
+    struct membuf enc_buf[1] = {STATIC_MEMBUF_INIT};
+    dec_ctx_init(ctx, inbuf, outbuf, enc_buf);
 
-    LOG(level, (" Encoding: %s\n", enc));
+    LOG(level, (" Encoding: %s\n", (char*)membuf_get(enc_buf)));
 
+    membuf_free(enc_buf);
     dec_ctx_decrunch(ctx);
     dec_ctx_free(ctx);
 }
@@ -354,18 +367,18 @@ void decrunch_backwards(int level,
 
 void print_license(void)
 {
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("----------------------------------------------------------------------------\n"
-         "Exomizer v2.0.9 Copyright (c) 2002-2015 Magnus Lind. (magli143@gmail.com)\n"
+         "Exomizer v2.0.10 Copyright (c) 2002-2017 Magnus Lind. (magli143@gmail.com)\n"
          "----------------------------------------------------------------------------\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("This software is provided 'as-is', without any express or implied warranty.\n"
          "In no event will the authors be held liable for any damages arising from\n"
          "the use of this software.\n"
          "Permission is granted to anyone to use this software, alter it and re-\n"
          "distribute it freely for any non-commercial, non-profit purpose subject to\n"
          "the following restrictions:\n\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("   1. The origin of this software must not be misrepresented; you must not\n"
          "   claim that you wrote the original software. If you use this software in a\n"
          "   product, an acknowledgment in the product documentation would be\n"
@@ -373,7 +386,7 @@ void print_license(void)
          "   2. Altered source versions must be plainly marked as such, and must not\n"
          "   be misrepresented as being the original software.\n"
          "   3. This notice may not be removed or altered from any distribution.\n"));
-    LOG(LOG_BRIEF,
+    LOG(LOG_WARNING,
         ("   4. The names of this software and/or it's copyright holders may not be\n"
          "   used to endorse or promote products derived from this software without\n"
          "   specific prior written permission.\n"
@@ -388,7 +401,8 @@ void print_base_flags(enum log_level level, const char *default_outfile)
         ("  -o <outfile>  sets the outfile name, default is \"%s\"\n",
          default_outfile));
     LOG(level,
-        ("  -q            quiet mode, disables display output\n"
+        ("  -q            quiet mode, disables all display output\n"
+         "  -B            brief mode, disables most display output\n"
          "  -v            displays version and the usage license\n"
          "  --            treats all following arguments as non-options\n"
          "  -?            displays this help screen\n"));
@@ -398,7 +412,7 @@ void print_crunch_flags(enum log_level level, const char *default_outfile)
 {
     LOG(level,
         ("  -c            compatibility mode, disables the use of literal sequences\n"
-         "  -C            enable imprecise rle matching, trades result for speed\n"
+         "  -C            favor compression speed over ratio\n"
          "  -e <encoding> uses the given encoding for crunching\n"
          "  -E            don't write the encoding to the outfile\n"
          "  -m <offset>   sets the maximum sequence offset, default is 65535\n"
@@ -419,6 +433,9 @@ void handle_base_flags(int flag_char, /* IN */
         *default_outfilep = flag_arg;
         break;
     case 'q':
+        LOG_SET_LEVEL(LOG_WARNING);
+        break;
+    case 'B':
         LOG_SET_LEVEL(LOG_BRIEF);
         break;
     case 'v':
@@ -435,7 +452,7 @@ void handle_base_flags(int flag_char, /* IN */
             }
             LOG(LOG_ERROR, ("\n"));
         }
-        print_usage(appl, LOG_BRIEF, *default_outfilep);
+        print_usage(appl, LOG_WARNING, *default_outfilep);
         exit(0);
     }
 }
@@ -453,7 +470,7 @@ void handle_crunch_flags(int flag_char, /* IN */
         options->use_literal_sequences = 0;
         break;
     case 'C':
-        options->use_imprecise_rle = 1;
+        options->favor_speed = 1;
         break;
     case 'e':
         options->exported_encoding = flag_arg;
@@ -469,7 +486,7 @@ void handle_crunch_flags(int flag_char, /* IN */
                 ("Error: invalid offset for -m option, "
                  "must be in the range of [0 - 65535]\n"));
             print_usage(appl, LOG_NORMAL, flags->outfile);
-            exit(-1);
+            exit(1);
         }
         break;
     case 'M':
@@ -480,7 +497,7 @@ void handle_crunch_flags(int flag_char, /* IN */
                 ("Error: invalid offset for -n option, "
                  "must be in the range of [0 - 65535]\n"));
             print_usage(appl, LOG_NORMAL, flags->outfile);
-            exit(-1);
+            exit(1);
         }
         break;
     case 'p':
@@ -491,7 +508,7 @@ void handle_crunch_flags(int flag_char, /* IN */
                 ("Error: invalid value for -p option, "
                  "must be in the range of [1 - 65535]\n"));
             print_usage(appl, LOG_NORMAL, flags->outfile);
-            exit(-1);
+            exit(1);
         }
         break;
     default:

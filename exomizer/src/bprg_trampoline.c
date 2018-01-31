@@ -122,7 +122,7 @@ bprg_trampoline_add(struct bprg_ctx *ctx,
                         "must be >= basic vars at $%04X\n",
                         endpos,
                         *var));
-        exit(-1);
+        exit(1);
     }
     ctx->start = *start;
     ctx->basic_start = ctx->start + t->size;

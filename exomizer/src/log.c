@@ -30,19 +30,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "log.h"
 
 #ifdef WIN32
 #define vsnprintf _vsnprintf
-#endif
-#ifdef DJGPP
-#define vsnprintf(A, B, C, D) vsprintf((A),(C),(D))
 #endif
 
 struct log_output {
     enum log_level min;
     enum log_level max;
     FILE *stream;
+    int isatty;
     log_formatter_f *f;
 };
 
@@ -57,6 +56,7 @@ struct log_ctx {
 struct log_ctx *G_log_ctx = NULL;
 enum log_level G_log_level = LOG_MIN;
 enum log_level G_log_log_level = 0;
+int G_log_tty_only = 0;
 
 struct log_ctx *log_new(void)
 {
@@ -124,19 +124,16 @@ void log_add_output_stream(struct log_ctx *ctx, /* IN/OUT */
     out->min = min;
     out->max = max;
     out->stream = out_stream;
+    out->isatty = isatty(fileno(out_stream));
     out->f = default_f;
 }
 
-#define UNUSED(x) (void)(x)
-
 void raw_log_formatter(FILE * out,      /* IN */
                        enum log_level level,    /* IN */
-                       const char * context,     /* IN */
+                       const char *context,     /* IN */
                        const char *log) /* IN */
 {
-	UNUSED(level);
-	UNUSED(context);
-	fprintf(out, "%s", log);
+    fprintf(out, "%s", log);
     fflush(out);
 }
 
@@ -180,7 +177,8 @@ void log_vlog(struct log_ctx *ctx,      /* IN */
         struct log_output *o = &ctx->out[i];
         log_formatter_f *of = f;
 
-        if (level >= o->min && level <= o->max)
+        if (level >= o->min && level <= o->max &&
+            (G_log_tty_only == 0 || o->isatty != 0))
         {
             /* generate log for this output */
             if (of == NULL)

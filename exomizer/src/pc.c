@@ -60,7 +60,7 @@ struct expr *pc_get(void)
     if(p->pc1 == unset_value)
     {
         LOG(LOG_ERROR, ("PC must be set by a .org(pc) call.\n"));
-        exit(-1);
+        exit(1);
     }
     if(p->pc1 == NULL || p->pc2 != 0)
     {

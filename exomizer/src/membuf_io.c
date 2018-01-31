@@ -40,7 +40,7 @@ void read_file(const char *name, struct membuf *buf)
     if(in == NULL)
     {
         LOG(LOG_ERROR, ("Can't open file \"%s\" for input.\n", name));
-        exit(-1);
+        exit(1);
     }
     do
     {
@@ -59,7 +59,7 @@ void write_file(const char *name, struct membuf *buf)
     if(out == NULL)
     {
         LOG(LOG_ERROR, ("Can't open file \"%s\" for output.\n", name));
-        exit(-1);
+        exit(1);
     }
     fwrite(membuf_get(buf), 1, membuf_memlen(buf), out);
     fclose(out);
