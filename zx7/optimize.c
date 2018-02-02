@@ -124,7 +124,6 @@ Optimal* optimize(unsigned char *input_data, size_t input_size, long skip) {
     free(min);
     free(max);
     free(matches);
-    free(match_slots);
 
     return optimal;
 }
