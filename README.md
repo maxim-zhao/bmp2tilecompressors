@@ -23,6 +23,6 @@ Based on a crude benchmark (the large tile chunk used by [SMS Competition Cart](
 | zx7         |      3995 |  41%  |               117 |            1513653 |  938% |
 | aPLib       |      3946 |  41%  |               304 |            3552372 | 2201% |
 | aPLib-fast  |      3946 |  41%  |               334 |            1789523 | 1109% |
-| exomizer    |      3668 |  38%  |                   |                    |       |
+| exomizer    |      3668 |  38%  |               208 |            3153906 | 1955% |
 
 This was mostly done manually, using [Meka](http://www.smspower.org/meka/)'s CLOCK debugger feature for cycle counting. It would be better to have an automated benchmark for it, which could then cover a better corpus of source data. There is scope for optimising the "None" case (for speed), but that would just scale the other results up - which might be a useful thing to do.
