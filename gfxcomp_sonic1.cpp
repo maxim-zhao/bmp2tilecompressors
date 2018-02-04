@@ -4,11 +4,6 @@
 
 typedef std::vector<uint8_t> buffer;
 
-// Forward declares
-int compress(char* source, int sourceLen, char* dest, int destLen, int interleaving);
-void deinterleave(buffer& buf, int interleaving);
-void compress_tile(const buffer& src, buffer& dest);
-
 extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
