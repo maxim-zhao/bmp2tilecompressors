@@ -26,3 +26,12 @@ Based on a crude benchmark (the large tile chunk used by [SMS Competition Cart](
 | exomizer    |      3668 |  38%  |               208 |            3153906 | 1955% |
 
 This was mostly done manually, using [Meka](http://www.smspower.org/meka/)'s CLOCK debugger feature for cycle counting. It would be better to have an automated benchmark for it, which could then cover a better corpus of source data. There is scope for optimising the "None" case (for speed), but that would just scale the other results up - which might be a useful thing to do.
+
+Other compressors
+----
+
+Here's some other compressors people have made.
+
+| Name | Link |
+|------|------|
+| ShrunkTileMap | https://github.com/sverx/STMcomp |  
