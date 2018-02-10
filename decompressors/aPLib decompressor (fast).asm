@@ -8,7 +8,7 @@
 ;    call aPLib_decompress
 ;
 ; At most four bytes of stack are used (apart from the call to the decompressor in the first place)
-; ROM usage is 336 bytes in VRAM mode, 262 in RAM mode. The extra bytes are the cost 
+; ROM usage is 333 bytes in VRAM mode, 262 in RAM mode. The extra bytes are the cost 
 ; of VRAM to VRAM copies, which also makes it pretty slow.
 ; This file is using WLA-DX syntax quite heavily, you'd better use it too...
 
@@ -160,11 +160,10 @@ _emitSingleByte_offset:
 .ifdef aPLibToVRAM
     push hl
       sbc hl, bc
+      res 6,h
       ld c,VDP_ADDRESS_PORT
       out (c),l
-      ld a,h
-      xor $40
-      out (c),a
+      out (c),h
       in a,(VDP_DATA_PORT)
     pop hl
     out (c),l
@@ -190,22 +189,32 @@ _getBitstream_bit3:
   inc hl
   rla
   jr c, _getBitstream_bit3_set
+  ; Fall through if unset
+  
 _emitSmallBlock:
-  ld c, (hl) ;use 7 bit offset, length = 2 or 3
+  ; Retrieve the data byte
+  ; (high 7 bits = offset, low bit = byte count - 2)
+  ld c, (hl)
   inc hl
   ex af, af'
-  rr c
-  ret z ;if a zero is found here, it's EOF
-  ld a, 2
-  ld b, 0
-  adc a, b
-  push hl
-    ld iyh, b
-    ld iyl, c
-    ld h, d
-    ld l, e
-    sbc hl, bc
-    ld c, a
+    ; Get the offset, and the length bit in carry
+    rr c
+    ; Check it for zero - that means end of data
+    ret z
+    ; a = carry + 2
+    ld a, 2
+    ld b, 0 ; Persists until the ldir later
+    adc a, b
+    push hl
+      ; Save offset into iy for possible later reuse
+      ld iyh, b
+      ld iyl, c
+      ; Get the destination into hl
+      ld h, d
+      ld l, e
+      ; Subtract the offset. Carry will be 0 from the adc above which can't overflow.
+      sbc hl, bc
+      ld c, a ; Store the byte count in bc
     ex af, af'
 .ifdef aPLibToVRAM
     call _ldir_vram_to_vram
@@ -216,13 +225,14 @@ _emitSmallBlock:
   ld ixh, b ; will be zero
   jp _mainLoop
   
-_getBitstream_bit2: ; ap2:
+  
+_getBitstream_bit2:
   ; Get bitstream next byte
   ld a, (hl)
   inc hl
   rla
   jr c, _getBitstream_bit2_set
-  ; fall through for zero
+  ; fall through if unset
 
 _emitBlock:
   ; Get the first part of the offset (usually the MSB)
@@ -231,7 +241,7 @@ _emitBlock:
   ex af, af' ; make a usable for maths
     ld a, c
     sub a,ixh ; will be 1 if we should use the last offset, 0 otherwise (?)
-    jr z, ap_r0_gamma ; If we hit zero here the the encoded MSB was 2 and ixh was 1.
+    jr z, _emitBlock_lastOffset ; If we hit zero here the the encoded MSB was 2 and ixh was 1.
     dec a ; Else we subtract another 1 so we are at n-3 (if the "r0" flag was set) or n-2 (otherwise)
 
     ; Shift into b and get a byte in c
@@ -271,27 +281,9 @@ _emitBlock:
         cp d
         jr nc,++
         inc bc
-++:
-/*
-        ; First check for >= $0500 = 1280
-        ; i.e. check d > 4
-        ld a, 4
-        cp d
-        jr nc, +
-        ; d > 4 so we are in the third category
-        inc bc
-        or a ; clear carry
-+:      ; Next check for <=127 (will always fail for things that passed the first case)
-        ld hl, 127
-        sbc hl, de
-        jr c, +
-        inc bc
-        inc bc
-+:        
-*/        
-      pop hl ;bc = len, de = offs, hl=junk
-      push hl
         or a
+++:   pop hl ;bc = len, de = offs, hl=junk
+      push hl
         sbc hl, de
       ex af, af' ; To bitstream a
     pop de ;hl=dest-offs, bc=len, de = dest
@@ -305,13 +297,18 @@ _emitBlock:
   jp _mainLoop
 
 
-ap_r0_gamma:
-  call _getVariableLengthNumber_fromShadowA ;and a new gamma code for length
+_emitBlock_lastOffset:
+  ; Retrieve just the run length. Note that this is guaranteed to return with carry unset.
+  call _getVariableLengthNumber_fromShadowA
   push hl
     push de
+      ; Get the current destination pointer
       ex de, hl
+      ; Retrieve the offset from iy
       ld d, iyh
       ld e, iyl
+      ; Subtract it from the destination pointer
+      ; Carry is unset (see above)
       sbc hl, de
     pop de ;hl=dest-offs, bc=len, de = dest
 .ifdef aPLibToVRAM
@@ -323,7 +320,9 @@ ap_r0_gamma:
   ld ixh, b ; will be 0
   jp _mainLoop
 
-
+; These _getBitstream_* functions are all special cases to retrieve a new bitstream byte
+; when needed, using a jr z, <label> opcode. They are tuned to jp back to the appropriate 
+; place after getting a byte and rotating it into a.
 _getBitstream_variableLengthNumber_bit1:
   ld a,(hl)
   inc hl
@@ -349,8 +348,6 @@ _getBitstream_variableLengthNumber_bit:
   inc hl
   rla
   jp _getBitstream_variableLengthNumber_bit_done
-
-
 _getBitstream_variableLengthNumber_bitflag:
   ld a, (hl)
   inc hl
@@ -360,7 +357,7 @@ _getBitstream_variableLengthNumber_bitflag:
 
 
 _getVariableLengthNumber_fromShadowA:
-  ; Variant of the below where we restore the bitstream a bofore we start
+  ; Variant of the below where we restore the bitstream a before we start
   ex af, af'
   
 _getVariableLengthNumber:
@@ -405,44 +402,47 @@ _getBitstream_variableLengthNumber_bitflag_done:
   ret nc 
   jp _getVariableLengthNumberloop
   
+.define BUFFER_SIZE 16
+.define BUFFER $d000
+  
 .ifdef aPLibToVRAM
+
 _ldir_vram_to_vram:
   ; Copy bc bytes from VRAM address hl to VRAM address de
   ; Both hl and de are "write" addresses ($4xxx)
-
+  ; TODO optimisations from zx7
+  ; preserve flags
   ex af, af'
-  ; Make hl a read address
-  ld a,h
-  xor $40
-  ld h,a
-  ; Check if the count is below 256
-  ld a,b
-  or a
-  jr z,_below256
-  ; Else emit 256*b bytes
--:push bc
-    ld c,VDP_ADDRESS_PORT
-    ld b,0
-    call +
-  pop bc
-  djnz -
-  ; Then fall through for the rest  
+    ; Make hl a read address
+    res 6, h
+    ; Check if the count is below 256
+    ld a,b
+    or a
+    jr z,_below256
+    ; Else emit 256*b bytes
+  -:push bc
+      ld b,0
+      ld c,VDP_ADDRESS_PORT
+      call +
+    pop bc
+    djnz -
+    ; Then fall through for the rest  
 _below256:
-  ; By emitting 256 at a time, we can use the out (c),r opcode
-  ; for address setting, which then relieves pressure on a
-  ; and saves some push/pops; and we can use djnz for the loop.
-  ld b,c
-  ld c,VDP_ADDRESS_PORT
+    ; By emitting 256 at a time, we can use the out (c),r opcode
+    ; for address setting, which then relieves pressure on a
+    ; and saves some push/pops; and we can use djnz for the loop.
+    ld b,c
+    ld c,VDP_ADDRESS_PORT
 +:
--:out (c),l
-  out (c),h
-  in a,(VDP_DATA_PORT)
-  out (c),e
-  out (c),d
-  out (VDP_DATA_PORT),a
-  inc hl
-  inc de
-  djnz -
+-:  out (c),l
+    out (c),h
+    in a,(VDP_DATA_PORT)
+    out (c),e
+    out (c),d
+    out (VDP_DATA_PORT),a
+    inc hl
+    inc de
+    djnz -
   ex af, af'
   ret
 .endif
