@@ -14,6 +14,26 @@ Releases
 
 Automated builds are available on the [Releases page](https://github.com/maxim-zhao/bmp2tilecompressors/releases).
 
+Compressors
+----
+
+| DLL name |  Short name | Longer name | Description | Tiles supported | Tilemap supported |
+|:---------|:------------|:------------|:------------|-------|---------|
+| 1bppraw  | 1bpp        | 1bpp raw (uncompressed) binary | One bit per pixel tiles - discards upper bits   | ✅ |   |
+| 2bppraw  | 2bpp        | 2bpp raw (uncompressed) binary | Two bits per pixel tiles - discards upper bits  | ✅ |   |
+| 3bppraw  | 3bpp        | 3bpp raw (uncompressed) binary | Three bits per pixel tiles - discards upper bit | ✅ |   |
+| aPLib    | aPLib       | aPLib | [aPLib](http://ibsensoftware.com/products_aPLib.html) compression library | ✅ | ✅ |
+| exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
+| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression | ✅ | ✅ |
+| highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
+| lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
+| lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library | ✅ | ✅ |
+| phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
+| psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
+| raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
+| sonic1   | soniccompr  | Sonic 1 | Tiel compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
+| zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression llibrary tweaked for performance | ✅ | ✅ |
+
 Benchmark
 ----
 
@@ -38,6 +58,6 @@ Other compressors
 
 Here's some other compressors people have made.
 
-| Name | Link |
-|------|------|
-| ShrunkTileMap | https://github.com/sverx/STMcomp |
+| Name | Link | Description | Tiles supported | Tilemap supported |
+|:-----|:-----|:------------|-----------------|-------------------|
+| ShrunkTileMap | https://github.com/sverx/STMcomp | Compresses tilemaps with specific support for sequential tile indices |   | ✅ |
