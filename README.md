@@ -1,12 +1,18 @@
 bmp2tile-compressors
 ====================
 
-Compression DLLs for [BMP2Tile](https://github.com/maxim-zhao/bmp2tile)
+Compression DLLs for [BMP2Tile](https://github.com/maxim-zhao/bmp2tile). [![Build status](https://ci.appveyor.com/api/projects/status/hbooun6oc0ux6ujh?svg=true)](https://ci.appveyor.com/project/maxim-zhao/bmp2tilecompressors)
+
 
 Overview
 ----
 
 BMP2Tile supports plug-in compressors, somewhat inspired by Winamp. This repo holds all the ones I've written, plus some that were contributed by others. As far as is possible, I try to also include decompressors for use in homebrew and ROM hacks.
+
+Releases
+----
+
+Automated builds are available on the [Releases page](https://github.com/maxim-zhao/bmp2tilecompressors/releases).
 
 Benchmark
 ----
@@ -34,4 +40,4 @@ Here's some other compressors people have made.
 
 | Name | Link |
 |------|------|
-| ShrunkTileMap | https://github.com/sverx/STMcomp |  
+| ShrunkTileMap | https://github.com/sverx/STMcomp |
