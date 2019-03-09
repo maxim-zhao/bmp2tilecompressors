@@ -5,8 +5,8 @@
 int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
 {
 	// Allocate memory
-	uint8_t* pPacked = new uint8_t[aP_max_packed_size(sourceLen)];
-	uint8_t* pWorkMemory = new uint8_t[aP_workmem_size(sourceLen)];
+	auto* pPacked = new uint8_t[aP_max_packed_size(sourceLen)];
+	auto* pWorkMemory = new uint8_t[aP_workmem_size(sourceLen)];
 
 	unsigned int size = aP_pack(source, pPacked, sourceLen, pWorkMemory, nullptr, nullptr);
 

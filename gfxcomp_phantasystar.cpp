@@ -53,7 +53,7 @@ namespace gfxcomp_phantasystar
 		bufDest.reserve(destLen);
 
 		// Compress each plane in turn
-		int32_t bitplanesize = static_cast<int32_t>(sourceLen / interleaving);
+		auto bitplanesize = static_cast<int32_t>(sourceLen / interleaving);
 		for (std::vector<uint8_t>::const_iterator it = bufSource.begin(); it != bufSource.end(); it += bitplanesize)
 		{
 			compressPlane(bufDest, it, it + bitplanesize);
@@ -133,7 +133,7 @@ namespace gfxcomp_phantasystar
 	{
 		// find the number of consecutive identical values
 		uint8_t c = *begin;
-		std::vector<uint8_t>::const_iterator it = begin;
+		auto it = begin;
 		for (++it; it != end && *it == c; ++it) {};
 		return it - begin;
 	}
@@ -205,7 +205,7 @@ namespace gfxcomp_phantasystar
 		// into a single raw block
 		if (blocks.size() > 2)
 		{
-			std::vector<Block>::iterator previous = blocks.begin();
+			auto previous = blocks.begin();
 			for (auto current = previous + 1; current != blocks.end(); /* increment in loop */)
 			{
 				if ((previous->_type == Block::Raw && current->_type == Block::Run && current->_data.size() == 2) ||

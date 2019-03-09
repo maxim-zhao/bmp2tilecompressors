@@ -105,7 +105,7 @@ int getRunLength(buffer::const_iterator src, buffer::const_iterator end)
 {
 	// find the number of consecutive identical values
 	uint8_t c = *src;
-	buffer::const_iterator it = src;
+	auto it = src;
 	for (++it; it != end && *it == c; ++it) {};
 	return it - src;
 }

@@ -41,7 +41,7 @@ uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination
 		return 0;
 	}
 
-	const uint8_t* pBegin = static_cast<const uint8_t*>(membuf_get(&outbuf));
+	const auto* pBegin = static_cast<const uint8_t*>(membuf_get(&outbuf));
 
 	memcpy_s(pDestination, destinationLength, pBegin, length);
 

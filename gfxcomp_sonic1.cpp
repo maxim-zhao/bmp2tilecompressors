@@ -96,7 +96,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 			uint32_t row = getRow(source);
 
 			// Look for it in the art data
-			std::vector<uint32_t>::iterator it = std::find(artData.begin(), artData.end(), row);
+			auto it = std::find(artData.begin(), artData.end(), row);
 
 			if (it == artData.end())
 			{

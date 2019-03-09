@@ -129,7 +129,7 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 		// Find the most common value in this bitplane
 		uint8_t mostCommonByte;
 		int mostCommonByteCount;
-		std::vector<uint8_t>::const_iterator itBitplane = src.begin() + bitplaneIndex * 8;
+		auto itBitplane = src.begin() + bitplaneIndex * 8;
 		findMostCommonValue(itBitplane, mostCommonByte, mostCommonByteCount);
 
 		// Find how much it matches previous bitplanes
@@ -139,7 +139,7 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 		for (uint8_t otherBitplaneIndex = 0; otherBitplaneIndex < bitplaneIndex; ++otherBitplaneIndex)
 		{
 			// Compare
-			std::vector<uint8_t>::const_iterator itOtherBitplane = src.begin() + otherBitplaneIndex * 8;
+			auto itOtherBitplane = src.begin() + otherBitplaneIndex * 8;
 			int count = countMatches(itBitplane, itOtherBitplane, false);
 			if (count > otherBitplaneMatchCount)
 			{
@@ -212,8 +212,8 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 				// Build bitmask
 				uint8_t bitmask = 0;
 				uint8_t mask = otherBitplaneMatchInverse ? 0xff : 0x00;
-				std::vector<uint8_t>::const_iterator it1 = itBitplane;
-				std::vector<uint8_t>::const_iterator it2 = src.begin() + otherBitplaneMatchIndex * 8;
+				auto it1 = itBitplane;
+				auto it2 = src.begin() + otherBitplaneMatchIndex * 8;
 				for (int i = 0; i < 8; ++i , ++it1 , ++it2)
 				{
 					bitmask <<= 1;
@@ -243,7 +243,7 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 				// common byte
 				// build bitmask
 				uint8_t bitmask = 0;
-				std::vector<uint8_t>::const_iterator it = itBitplane;
+				auto it = itBitplane;
 				for (int i = 0; i < 8; ++i , ++it)
 				{
 					bitmask <<= 1;
