@@ -1,8 +1,9 @@
 bmp2tile-compressors
 ====================
 
-Compression DLLs for [BMP2Tile](https://github.com/maxim-zhao/bmp2tile). [![Build status](https://ci.appveyor.com/api/projects/status/hbooun6oc0ux6ujh?svg=true)](https://ci.appveyor.com/project/maxim-zhao/bmp2tilecompressors)
+Compression DLLs for [BMP2Tile](https://github.com/maxim-zhao/bmp2tile)
 
+[![Build status](https://ci.appveyor.com/api/projects/status/hbooun6oc0ux6ujh?svg=true)](https://ci.appveyor.com/project/maxim-zhao/bmp2tilecompressors)
 
 Overview
 ----
