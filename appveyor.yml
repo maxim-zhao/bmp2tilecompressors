@@ -14,3 +14,9 @@ after_build:
     7z a bmp2tiledecompressors.zip %APPVEYOR_BUILD_FOLDER%\decompressors\*.asm
 artifacts:
 - path: '*.zip'
+deploy:
+- provider: GitHub
+  release: Build ${appveyor_build_number}
+  auth_token:
+    secure: KbY6wD6RTuotJxi7BdGQWg4e6rEc9OMP1u0keEYIrO9CrV9C8OJNSTjaOAmNH1LJ
+  force_update: true
