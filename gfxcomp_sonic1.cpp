@@ -14,6 +14,7 @@ extern "C" __declspec(dllexport) const char* getName()
 extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
+	// ReSharper disable once StringLiteralTypo
 	return "soniccompr";
 }
 
@@ -27,10 +28,10 @@ uint32_t getRow(uint8_t*& source)
 {
 	// We just need to be consistent with addRow...
 	// So we read it as little-endian.
-	uint8_t b0 = *source++;
-	uint8_t b1 = *source++;
-	uint8_t b2 = *source++;
-	uint8_t b3 = *source++;
+	const uint8_t b0 = *source++;
+	const uint8_t b1 = *source++;
+	const uint8_t b2 = *source++;
+	const uint8_t b3 = *source++;
 	return
 		(b0 <<  0) |
 		(b1 <<  8) |
@@ -71,10 +72,10 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 	// We will do this in the dumbest way possible... brute force.
 	// First we make the header
 	writeWord(buf, 0x5948);
-	int duplicateRowsOffset = numTiles + 8;
+	const int duplicateRowsOffset = numTiles + 8;
 	writeWord(buf, (uint16_t)duplicateRowsOffset);
 	writeWord(buf, 0); // Art pointer will be filled in later
-	int rowCount = numTiles * 8;
+	const int rowCount = numTiles * 8;
 	writeWord(buf, (uint16_t)rowCount);
 
 	// We make a buffer for the art data...
@@ -107,7 +108,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 			{
 				// Repeated art data
 				bitmask |= 0x80;
-				uint16_t index = (uint16_t) std::distance(artData.begin(), it); 
+				const uint16_t index = (uint16_t) std::distance(artData.begin(), it); 
 				if(index >= 0xF0) 
 				{ 
 					duplicateRows.push_back((uint8_t)(index >> 8) | 0xf0); 
@@ -124,7 +125,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 	buf.insert(buf.end(), duplicateRows.begin(), duplicateRows.end());
 
 	// Now we know the art data offset...
-	int artDataOffset = buf.size();
+	const int artDataOffset = buf.size();
 	buf[4] = (artDataOffset >> 0) & 0xff;
 	buf[5] = (artDataOffset >> 8) & 0xff;
 
@@ -132,12 +133,12 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 	// Not sure if there's an STL-y way to do this
 	for (std::vector<uint32_t>::const_iterator it = artData.begin(); it != artData.end(); ++it)
 	{
-		uint32_t row = *it;
+		const uint32_t row = *it;
 		addRow(buf, row);
 	}
 
 	// check length
-	int resultlen = (int)buf.size();
+	const int resultlen = (int)buf.size();
 	if (resultlen > destLen)
 	{
 		return 0;

@@ -6,16 +6,18 @@
 void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving);
 void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest);
 
-extern "C" __declspec(dllexport) char* getName()
+extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
 	// Generally, the name of the game it was REd from
+	// ReSharper disable once StringLiteralTypo
 	return "PS Gaiden";
 }
 
-extern "C" __declspec(dllexport) char* getExt()
+extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
+	// ReSharper disable once StringLiteralTypo
 	return "psgcompr";
 }
 
@@ -58,12 +60,13 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, uint32_t num
 
 void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving)
 {
-	std::vector<uint8_t> tempbuf(buf.size());
+	std::vector<uint8_t> tempBuffer(buf.size());
 
-	// Deinterleave into tempbuf
-	int bitplanesize = buf.size() / interleaving;
+	// Deinterleave into tempBuffer
+	const int bitplaneSize = buf.size() / interleaving;
 	for (unsigned int src = 0; src < buf.size(); ++src)
 	{
+		// ReSharper disable CommentTypo
 		// If interleaving is 4 I want to turn
 		// AbcdEfghIjklMnopQrstUvwx
 		// into
@@ -72,18 +75,19 @@ void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving)
 		// x div 4 = offset within this section
 		// x mod 4 = which section
 		// final position = (x div 4) + (x mod 4) * (section size)
-		unsigned int dest = src / interleaving + (src % interleaving) * bitplanesize;
-		tempbuf[dest] = buf[src];
+		// ReSharper restore CommentTypo
+		const size_t dest = src / interleaving + (src % interleaving) * bitplaneSize;
+		tempBuffer[dest] = buf[src];
 	}
 
 	// Copy results over the original data
-	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
+	std::copy(tempBuffer.begin(), tempBuffer.end(), buf.begin());
 }
 
 void findMostCommonValue(std::vector<uint8_t>::const_iterator data, uint8_t& value, int& count)
 {
 	std::map<uint8_t, int> counts;
-	// count occurences of each value
+	// count concurrences of each value
 	for (int i = 0; i < 8; ++i)
 	{
 		uint8_t val = *data++;
@@ -104,7 +108,7 @@ void findMostCommonValue(std::vector<uint8_t>::const_iterator data, uint8_t& val
 int countMatches(std::vector<uint8_t>::const_iterator me, std::vector<uint8_t>::const_iterator other, bool invert)
 {
 	int count = 0;
-	int mask = invert ? 0xff : 0x00;
+	const int mask = invert ? 0xff : 0x00;
 	for (int i = 0; i < 8; ++i)
 	{
 		if (*me++ == (*other++ ^ mask))
@@ -139,7 +143,7 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 		for (uint8_t otherBitplaneIndex = 0; otherBitplaneIndex < bitplaneIndex; ++otherBitplaneIndex)
 		{
 			// Compare
-			auto itOtherBitplane = src.begin() + otherBitplaneIndex * 8;
+			const auto itOtherBitplane = src.begin() + otherBitplaneIndex * 8;
 			int count = countMatches(itBitplane, itOtherBitplane, false);
 			if (count > otherBitplaneMatchCount)
 			{
@@ -211,7 +215,7 @@ void compressTile(const std::vector<uint8_t>& src, std::vector<uint8_t>& dest)
 
 				// Build bitmask
 				uint8_t bitmask = 0;
-				uint8_t mask = otherBitplaneMatchInverse ? 0xff : 0x00;
+				const uint8_t mask = otherBitplaneMatchInverse ? 0xff : 0x00;
 				auto it1 = itBitplane;
 				auto it2 = src.begin() + otherBitplaneMatchIndex * 8;
 				for (int i = 0; i < 8; ++i , ++it1 , ++it2)

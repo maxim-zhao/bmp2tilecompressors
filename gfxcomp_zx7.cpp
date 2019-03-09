@@ -22,6 +22,7 @@ extern "C" __declspec(dllexport) const char* getExt()
 // The actual compressor function, calling into the zx7 code
 uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
 {
+    // ReSharper disable once CommentTypo
     // The compressor allocates using calloc, so we have to free() the results
     std::size_t outputSize;
     long delta; // we don't care about this
