@@ -2,8 +2,6 @@
 #include <vector>
 #include <cstdint>
 
-typedef std::vector<uint8_t> buffer;
-
 extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
@@ -18,7 +16,7 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "soniccompr";
 }
 
-void writeWord(buffer& buf, uint16_t word)
+void writeWord(std::vector<uint8_t>& buf, uint16_t word)
 {
 	buf.push_back((word >> 0) & 0xff);
 	buf.push_back((word >> 8) & 0xff);
@@ -39,7 +37,7 @@ uint32_t getRow(uint8_t*& source)
 		(b3 << 24);
 }
 
-void addRow(buffer& buf, uint32_t row)
+void addRow(std::vector<uint8_t>& buf, uint32_t row)
 {
 	// We write it back as little-endian.
 	buf.push_back((row >>  0) & 0xff);
@@ -54,7 +52,7 @@ extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, int numTiles
 	{
 		return -1; // error
 	}
-	buffer buf; // the output
+	std::vector<uint8_t> buf; // the output
 	buf.reserve(destLen); // avoid reallocation
 
 	// The format:

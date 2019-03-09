@@ -20,6 +20,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -49,16 +50,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;GFXCOMP_2BPPRAW_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PrecompiledHeader />
       <WarningLevel>Level4</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)gfxcomp_2bppraw.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(IntermediateOutputPath)$(TargetName).lib</ImportLibrary>

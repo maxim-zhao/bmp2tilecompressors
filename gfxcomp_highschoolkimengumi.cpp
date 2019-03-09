@@ -1,30 +1,26 @@
 #include <vector>
 #include <cstdint>
 
-typedef std::vector<uint8_t> buffer;
-
 #define MAX_RUN_SIZE 0x7f
 #define RLE_MASK 0x00
 #define RAW_MASK 0x80
 
 // Forward declares
 int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen, unsigned int interleaving);
-//int decompress(uint8_t* source, int sourceLen, uint8_t* dest, int destLen, int interleaving);
-void deinterleave(buffer& buf, int interleaving);
-//void interleave(buffer* buf, int interleaving);
-//int decompress_plane(buffer* buf, uint8_t** src);
-void compressPlane(buffer& dest, buffer::const_iterator src, buffer::const_iterator srcEnd);
+void deinterleave(std::vector<uint8_t>& buf, int interleaving);
 
 extern "C" __declspec(dllexport) const char* getName()
 {
 	// A pretty name for this compression type
 	// Generally, the name of the game it was REd from
+	// ReSharper disable once StringLiteralTypo
 	return "High School Kimengumi RLE";
 }
 
 extern "C" __declspec(dllexport) const char* getExt()
 {
 	// A string suitable for use as a file extension
+	// ReSharper disable once StringLiteralTypo
 	return "hskcompr";
 }
 
@@ -40,14 +36,15 @@ extern "C" __declspec(dllexport) int compressTilemap(uint8_t* source, uint32_t w
 	return compress(source, width * height * 2, dest, destLen, 2);
 }
 
-void deinterleave(buffer& buf, int interleaving)
+void deinterleave(std::vector<uint8_t>& buf, const int interleaving)
 {
-	buffer tempbuf(buf);
+	std::vector<uint8_t> tempBuffer(buf);
 
-	// Deinterleave into tempbuf
-	int bitplanesize = buf.size() / interleaving;
-	for (buffer::size_type src = 0; src < buf.size(); ++src)
+	// Deinterleave into tempBuffer
+	const size_t bitplaneSize = buf.size() / interleaving;
+	for (size_t src = 0; src < buf.size(); ++src)
 	{
+		// ReSharper disable CommentTypo
 		// If interleaving is 4 I want to turn
 		// AbcdEfghIjklMnopQrstUvwx
 		// into
@@ -56,15 +53,16 @@ void deinterleave(buffer& buf, int interleaving)
 		// x div 4 = offset within this section
 		// x mod 4 = which section
 		// final position = (x div 4) + (x mod 4) * (section size)
-		int dest = src / interleaving + (src % interleaving) * bitplanesize;
-		tempbuf[dest] = buf[src];
+		// ReSharper restore CommentTypo
+		const size_t dest = src / interleaving + (src % interleaving) * bitplaneSize;
+		tempBuffer[dest] = buf[src];
 	}
 
 	// Copy results over the original data
-	std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
+	std::copy(tempBuffer.begin(), tempBuffer.end(), buf.begin());
 }
 
-void writeRaw(buffer& dest, buffer::const_iterator begin, buffer::const_iterator end)
+void writeRaw(std::vector<uint8_t>& dest, std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
 {
 	while (begin < end)
 	{
@@ -81,7 +79,7 @@ void writeRaw(buffer& dest, buffer::const_iterator begin, buffer::const_iterator
 	}
 }
 
-void writeRun(buffer& dest, uint8_t val, uint32_t len)
+void writeRun(std::vector<uint8_t>& dest, uint8_t val, uint32_t len)
 {
 	if (len == 0)
 	{
@@ -101,10 +99,10 @@ void writeRun(buffer& dest, uint8_t val, uint32_t len)
 	}
 }
 
-int getRunLength(buffer::const_iterator src, buffer::const_iterator end)
+int getRunLength(std::vector<uint8_t>::const_iterator src, std::vector<uint8_t>::const_iterator end)
 {
 	// find the number of consecutive identical values
-	uint8_t c = *src;
+	const uint8_t c = *src;
 	auto it = src;
 	for (++it; it != end && *it == c; ++it) {};
 	return it - src;
@@ -116,33 +114,33 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	// return length, or 0 if destLen is too small, or -1 if there is an error
 
 	// Copy the data into a buffer
-	buffer bufSource(source, source + sourceLen);
+	std::vector<uint8_t> bufSource(source, source + sourceLen);
 
 	// Deinterleave it
 	deinterleave(bufSource, interleaving);
 
 	// Make a buffer to hold the result
-	buffer bufDest;
+	std::vector<uint8_t> bufDest;
 	bufDest.reserve(destLen);
 
 	// Compress everything in one go
-	buffer::const_iterator rawStart = bufSource.begin();
-	for (buffer::const_iterator it = bufSource.begin(); it != bufSource.end(); /* increment in loop */)
+	auto rawStart = bufSource.cbegin();
+	for (auto it = bufSource.cbegin(); it != bufSource.end(); /* increment in loop */)
 	{
-		int runlength = getRunLength(it, bufSource.end());
-		int runlengthneeded = 3; // normally need a run of 3 to be worth breaking a raw block
-		if (it == bufSource.begin() || it + runlength == bufSource.end()) --runlengthneeded; // but at the beginning or end, 2 is enough
-		if (runlength < runlengthneeded)
+		const int runLength = getRunLength(it, bufSource.end());
+		int runLengthNeeded = 3; // normally need a run of 3 to be worth breaking a raw block
+		if (it == bufSource.begin() || it + runLength == bufSource.end()) --runLengthNeeded; // but at the beginning or end, 2 is enough
+		if (runLength < runLengthNeeded)
 		{
 			// Not good enough; keep looking for a run
-			it += runlength;
+			it += runLength;
 			continue;
 		}
 
 		// We found a good enough run. Write the raw (if any) and then the run
 		writeRaw(bufDest, rawStart, it);
-		writeRun(bufDest, *it, runlength);
-		it += runlength;
+		writeRun(bufDest, *it, runLength);
+		it += runLength;
 		rawStart = it;
 	}
 	// We may have a final run of raw bytes

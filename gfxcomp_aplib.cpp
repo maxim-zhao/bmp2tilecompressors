@@ -8,7 +8,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	auto* pPacked = new uint8_t[aP_max_packed_size(sourceLen)];
 	auto* pWorkMemory = new uint8_t[aP_workmem_size(sourceLen)];
 
-	unsigned int size = aP_pack(source, pPacked, sourceLen, pWorkMemory, nullptr, nullptr);
+	const auto size = aP_pack(source, pPacked, sourceLen, pWorkMemory, nullptr, nullptr);
 
 	// Free work memory
 	delete [] pWorkMemory;
@@ -43,10 +43,10 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "aPLib";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destinationLength)
 {
 	// Compress tiles
-	return compress(source, numTiles * 32, dest, destLen);
+	return compress(source, numTiles * 32, dest, destinationLength);
 }
 
 extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)

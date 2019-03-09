@@ -1,5 +1,3 @@
-#define _SCL_SECURE_NO_WARNINGS
-
 #include <cstdint>
 #include <cstring>
 
@@ -23,18 +21,18 @@ extern "C" __declspec(dllexport) const char* getExt()
 // The actual compressor function
 uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
 {
-	struct membuf inbuf;
+	struct membuf inbuf{};
 	membuf_init(&inbuf);
 	membuf_append(&inbuf, pSource, sourceLength);
 
-	struct membuf outbuf;
+	struct membuf outbuf{};
 	membuf_init(&outbuf);
 
 	crunch(&inbuf, &outbuf, nullptr, nullptr);
 
 	membuf_free(&inbuf);
 
-	uint32_t length = membuf_memlen(&outbuf);
+	const uint32_t length = membuf_memlen(&outbuf);
 	if (length > destinationLength)
 	{
 		membuf_free(&outbuf);
