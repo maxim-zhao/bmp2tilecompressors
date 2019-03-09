@@ -1,6 +1,6 @@
 #include <cstdint> // uint8_t, etc
-#include <cstring> // memcpy
 #include <cstdlib> // free
+#include <iterator>
 
 extern "C"
 {
@@ -22,11 +22,11 @@ extern "C" __declspec(dllexport) const char* getExt()
 // The actual compressor function, calling into the zx7 code
 uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
 {
-    // The compressor allocates using calloc
-    size_t outputSize;
+    // The compressor allocates using calloc, so we have to free() the results
+    std::size_t outputSize;
     long delta; // we don't care about this
-    auto optimised = optimize(pSource, sourceLength, 0);
-    auto pOutputData = compress(optimised, pSource, sourceLength, 0, &outputSize, &delta);
+    const auto optimised = optimize(pSource, sourceLength, 0);
+    const auto pOutputData = compress(optimised, pSource, sourceLength, 0, &outputSize, &delta);
     free(optimised);
 
     if (outputSize > destinationLength)
@@ -35,7 +35,8 @@ uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination
         return 0;
     }
 
-    memcpy_s(pDestination, destinationLength, pOutputData, outputSize);
+    // Copy to the provided destination buffer
+    std::copy_n(pOutputData, outputSize, stdext::checked_array_iterator<uint8_t*>(pDestination, destinationLength));
     free(pOutputData);
 
     return outputSize;
