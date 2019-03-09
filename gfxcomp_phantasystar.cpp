@@ -10,7 +10,7 @@ namespace gfxcomp_phantasystar
 	// Forward declares
 	uint32_t compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen, uint32_t interleaving);
 	void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving);
-	void compressPlane(std::vector<uint8_t>& dest, std::vector<uint8_t>::const_iterator src, std::vector<uint8_t>::const_iterator srcEnd);
+	void compressPlane(std::vector<uint8_t>& dest, std::vector<uint8_t>::const_iterator source, std::vector<uint8_t>::const_iterator sourceEnd);
 
 	extern "C" __declspec(dllexport) const char* getName()
 	{
@@ -22,6 +22,7 @@ namespace gfxcomp_phantasystar
 	extern "C" __declspec(dllexport) const char* getExt()
 	{
 		// A string suitable for use as a file extension
+		// ReSharper disable once StringLiteralTypo
 		return "pscompr";
 	}
 
@@ -53,10 +54,10 @@ namespace gfxcomp_phantasystar
 		bufDest.reserve(destLen);
 
 		// Compress each plane in turn
-		auto bitplanesize = static_cast<int32_t>(sourceLen / interleaving);
-		for (std::vector<uint8_t>::const_iterator it = bufSource.begin(); it != bufSource.end(); it += bitplanesize)
+		const auto bitplaneSize = static_cast<int32_t>(sourceLen / interleaving);
+		for (std::vector<uint8_t>::const_iterator it = bufSource.begin(); it != bufSource.end(); it += bitplaneSize)
 		{
-			compressPlane(bufDest, it, it + bitplanesize);
+			compressPlane(bufDest, it, it + bitplaneSize);
 		}
 
 		// check length
@@ -74,12 +75,13 @@ namespace gfxcomp_phantasystar
 
 	void deinterleave(std::vector<uint8_t>& buf, uint32_t interleaving)
 	{
-		std::vector<uint8_t> tempbuf(buf);
+		std::vector<uint8_t> tempBuf(buf);
 
-		// Deinterleave into tempbuf
-		uint32_t bitplanesize = buf.size() / interleaving;
+		// Deinterleave into tempBuf
+		const uint32_t bitplaneSize = buf.size() / interleaving;
 		for (std::vector<uint8_t>::size_type src = 0; src < buf.size(); ++src)
 		{
+			// ReSharper disable CommentTypo
 			// If interleaving is 4 I want to turn
 			// AbcdEfghIjklMnopQrstUvwx
 			// into
@@ -88,12 +90,13 @@ namespace gfxcomp_phantasystar
 			// x div 4 = offset within this section
 			// x mod 4 = which section
 			// final position = (x div 4) + (x mod 4) * (section size)
-			uint32_t dest = src / interleaving + (src % interleaving) * bitplanesize;
-			tempbuf[dest] = buf[src];
+			// ReSharper restore CommentTypo
+			const size_t dest = src / interleaving + (src % interleaving) * bitplaneSize;
+			tempBuf[dest] = buf[src];
 		}
 
 		// Copy results over the original data
-		std::copy(tempbuf.begin(), tempbuf.end(), buf.begin());
+		std::copy(tempBuf.begin(), tempBuf.end(), buf.begin());
 	}
 
 	void writeRaw(std::vector<uint8_t>& dest, std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
@@ -122,7 +125,7 @@ namespace gfxcomp_phantasystar
 
 		while (count > 0)
 		{
-			uint8_t blockLength = count > MAX_RUN_SIZE ? MAX_RUN_SIZE : static_cast<uint8_t>(count);
+			const uint8_t blockLength = count > MAX_RUN_SIZE ? MAX_RUN_SIZE : static_cast<uint8_t>(count);
 			destination.push_back(RLE_MASK | blockLength);
 			destination.push_back(value);
 			count -= blockLength;
@@ -132,7 +135,7 @@ namespace gfxcomp_phantasystar
 	uint32_t getRunLength(std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
 	{
 		// find the number of consecutive identical values
-		uint8_t c = *begin;
+		const uint8_t c = *begin;
 		auto it = begin;
 		for (++it; it != end && *it == c; ++it) {};
 		return it - begin;
@@ -146,23 +149,24 @@ namespace gfxcomp_phantasystar
 			Raw,
 			Run
 		};
-		Type _type;
-		std::vector<uint8_t> _data;
+
+		Type type;
+		std::vector<uint8_t> data;
 
 		// Raw block constructor
 		Block(std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
-		: _type(Raw)
+		: type(Raw)
 		{
 			// Copy to our vector
-			_data.insert(_data.end(), begin, end);
+			data.insert(data.end(), begin, end);
 		}
 
 		// RLE block constructor
 		Block(uint32_t runLength, uint8_t value)
-		: _type(Run)
+		: type(Run)
 		{
 			// Fill up our vector
-			_data.resize(runLength, value);
+			data.resize(runLength, value);
 		}
 	};
 
@@ -173,29 +177,29 @@ namespace gfxcomp_phantasystar
 		auto rawStart = source;
 		for (auto it = source; it != sourceEnd; /* increment in loop */)
 		{
-			uint32_t runlength = getRunLength(it, sourceEnd);
-			if (runlength < 2)
+			const uint32_t runLength = getRunLength(it, sourceEnd);
+			if (runLength < 2)
 			{
 				// Not good enough; keep looking for a run
-				it += runlength;
+				it += runLength;
 				continue;
 			}
 
 			// We found a good enough run. Write the raw (if any) and then the run
 			if (rawStart != it)
 			{
-				blocks.push_back(Block(rawStart, it));
+				blocks.emplace_back(rawStart, it);
 			}
-			blocks.push_back(Block(runlength, *it));
+			blocks.emplace_back(runLength, *it);
 
-			it += runlength;
+			it += runLength;
 			rawStart = it;
 		}
 
 		// We may have a final run of raw bytes
 		if (rawStart != sourceEnd)
 		{
-			blocks.push_back(Block(rawStart, sourceEnd));
+			blocks.emplace_back(rawStart, sourceEnd);
 		}
 
 		// Go through and optimise any instances of:
@@ -208,13 +212,13 @@ namespace gfxcomp_phantasystar
 			auto previous = blocks.begin();
 			for (auto current = previous + 1; current != blocks.end(); /* increment in loop */)
 			{
-				if ((previous->_type == Block::Raw && current->_type == Block::Run && current->_data.size() == 2) ||
-					(previous->_type == Block::Raw && current->_type == Block::Raw) ||
-					(previous->_type == Block::Run && previous->_data.size() == 2 && current->_type == Block::Raw))
+				if ((previous->type == Block::Raw && current->type == Block::Run && current->data.size() == 2) ||
+					(previous->type == Block::Raw && current->type == Block::Raw) ||
+					(previous->type == Block::Run && previous->data.size() == 2 && current->type == Block::Raw))
 				{
 					// Combine the data
-					previous->_data.insert(previous->_data.end(), current->_data.begin(), current->_data.end());
-					previous->_type = Block::Raw;
+					previous->data.insert(previous->data.end(), current->data.begin(), current->data.end());
+					previous->type = Block::Raw;
 					// Knock out the dead block (slow for a vector, probably not a big deal)
 					blocks.erase(current);
 					// Fix up the iterator
@@ -231,15 +235,15 @@ namespace gfxcomp_phantasystar
 		}
 
 		// Now emit them
-		for (auto it = blocks.begin(); it != blocks.end(); ++it)
+		for (auto& block : blocks)
 		{
-			switch (it->_type)
+			switch (block.type)
 			{
 			case Block::Raw:
-				writeRaw(destination, it->_data.begin(), it->_data.end());
+				writeRaw(destination, block.data.begin(), block.data.end());
 				break;
 			case Block::Run:
-				writeRun(destination, it->_data[0], it->_data.size());
+				writeRun(destination, block.data[0], block.data.size());
 				break;
 			default:
 				break;

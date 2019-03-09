@@ -21,14 +21,14 @@ extern "C" __declspec(dllexport) char* getExt()
     return "lz4";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, char* dest, int destLen)
+extern "C" __declspec(dllexport) int compressTiles(char* source, int numTiles, char* dest, int destLength)
 {
     int sourceLen = numTiles * 32;
-    if (destLen < LZ4_compressBound(sourceLen))
+    if (destLength < LZ4_compressBound(sourceLen))
     {
         return 0;
     }
-    return LZ4_compress_default(source, dest, sourceLen, destLen);
+    return LZ4_compress_default(source, dest, sourceLen, destLength);
 }
 
 extern "C" __declspec(dllexport) int compressTilemap(char* source, int width, int height, char* dest, int destLen)
