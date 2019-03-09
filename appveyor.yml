@@ -4,12 +4,12 @@ image: Visual Studio 2017
 configuration: Release
 platform: x86
 build:
-  project: tilecompressordlls.sln
+  project: compressors\tilecompressordlls.sln
   parallel: true
   verbosity: minimal
 after_build:
 - cmd: >-
-    7z a bmp2tilecompressors.zip %APPVEYOR_BUILD_FOLDER%\Release\*.dll
+    7z a bmp2tilecompressors.zip %APPVEYOR_BUILD_FOLDER%\compressors\Release\*.dll
 
     7z a bmp2tiledecompressors.zip %APPVEYOR_BUILD_FOLDER%\decompressors\*.asm
 artifacts:
