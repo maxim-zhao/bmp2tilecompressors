@@ -33,7 +33,7 @@ Compressors
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
-| zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression llibrary tweaked for performance | ✅ | ✅ |
+| zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression  library tweaked for performance | ✅ | ✅ |
 
 Benchmark
 ----
