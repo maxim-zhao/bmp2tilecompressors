@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="gfxcomp_apultra.cpp" />
+    <ClCompile Include="apultra\src\apultra.c">
+      <Filter>apultra</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\expand.c">
+      <Filter>apultra</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\matchfinder.c">
+      <Filter>apultra</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\shrink.c">
+      <Filter>apultra</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\libdivsufsort\lib\divsufsort.c">
+      <Filter>libdivsufsort</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\libdivsufsort\lib\divsufsort_utils.c">
+      <Filter>libdivsufsort</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\libdivsufsort\lib\sssort.c">
+      <Filter>libdivsufsort</Filter>
+    </ClCompile>
+    <ClCompile Include="apultra\src\libdivsufsort\lib\trsort.c">
+      <Filter>libdivsufsort</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="apultra">
+      <UniqueIdentifier>{ee2c30e0-e608-4242-8c14-14c03f36167f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libdivsufsort">
+      <UniqueIdentifier>{db1b683b-89e0-4c76-924a-8cee62107fc6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="apultra\src\expand.h">
+      <Filter>apultra</Filter>
+    </ClInclude>
+    <ClInclude Include="apultra\src\format.h">
+      <Filter>apultra</Filter>
+    </ClInclude>
+    <ClInclude Include="apultra\src\libapultra.h">
+      <Filter>apultra</Filter>
+    </ClInclude>
+    <ClInclude Include="apultra\src\matchfinder.h">
+      <Filter>apultra</Filter>
+    </ClInclude>
+    <ClInclude Include="apultra\src\shrink.h">
+      <Filter>apultra</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_phantasystar", "gfxcomp_phantasystar.vcxproj", "{CDDC9081-7930-454C-A887-B72BDFE9DE93}"
 EndProject
@@ -34,6 +34,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exomizer", "exomizer\exomizer.vcxproj", "{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lz4", "gfxcomp_lz4.vcxproj", "{046E0C05-BEDD-484E-882D-BE3FF4531636}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_apultra", "gfxcomp_apultra.vcxproj", "{48A1D906-9AE6-41B0-9454-8158837CDFFF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_oapack", "gfxcomp_oapack.vcxproj", "{48A1D906-9AE6-41B0-9454-DEADBEEFDFFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,6 +105,14 @@ Global
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Debug|x86.Build.0 = Debug|Win32
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Release|x86.ActiveCfg = Release|Win32
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Release|x86.Build.0 = Release|Win32
+		{48A1D906-9AE6-41B0-9454-8158837CDFFF}.Debug|x86.ActiveCfg = Debug|Win32
+		{48A1D906-9AE6-41B0-9454-8158837CDFFF}.Debug|x86.Build.0 = Debug|Win32
+		{48A1D906-9AE6-41B0-9454-8158837CDFFF}.Release|x86.ActiveCfg = Release|Win32
+		{48A1D906-9AE6-41B0-9454-8158837CDFFF}.Release|x86.Build.0 = Release|Win32
+		{48A1D906-9AE6-41B0-9454-DEADBEEFDFFF}.Debug|x86.ActiveCfg = Debug|Win32
+		{48A1D906-9AE6-41B0-9454-DEADBEEFDFFF}.Debug|x86.Build.0 = Debug|Win32
+		{48A1D906-9AE6-41B0-9454-DEADBEEFDFFF}.Release|x86.ActiveCfg = Release|Win32
+		{48A1D906-9AE6-41B0-9454-DEADBEEFDFFF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

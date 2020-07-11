@@ -1,0 +1,8 @@
+[submodule "compressors/apultra"]
+	path = compressors/apultra
+	url = https://github.com/emmanuel-marty/apultra.git
+	branch = master
+[submodule "compressors/oapack"]
+	path = compressors/oapack
+	url = https://github.com/maxim-zhao/oapack.git
+	branch = master
