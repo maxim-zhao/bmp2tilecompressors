@@ -1,6 +1,8 @@
 version: '{build}'
 skip_tags: true
 image: Visual Studio 2019
+install:
+- cmd: git submodule -q update --init
 configuration: Release
 platform: x86
 build:
