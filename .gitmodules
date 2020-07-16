@@ -6,3 +6,7 @@
 	path = compressors/oapack
 	url = https://github.com/maxim-zhao/oapack.git
 	branch = master
+[submodule "compressors/lzsa"]
+	path = compressors/lzsa
+	url = https://github.com/emmanuel-marty/lzsa.git
+	branch = master
