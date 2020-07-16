@@ -4,3 +4,5 @@ Debug/
 Release/
 *.user
 *.VC.*
+/benchmark/*.sms
+/benchmark/*.sym
