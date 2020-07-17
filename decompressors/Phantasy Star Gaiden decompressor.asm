@@ -2,7 +2,7 @@
 ; To use:
 ;
 ; .define PSGDecoderBuffer $c000                   ; define a 34 byte work area for it
-; .include "Phantasy Star Gaiden decompressor.inc" ; include this file
+; .include "Phantasy Star Gaiden decompressor.asm" ; include this file
 ; ld ix, <address of compressed data>
 ; ld hl, <VRAM address to write to, ORed with $4000>
 ; call PSG_decompress

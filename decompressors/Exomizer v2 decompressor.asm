@@ -31,11 +31,13 @@
 ;If you want this, replace all instances of "call _getbit" with "srl a" followed by
 ;"call z,_getbit", and remove the first two instructions in _getbit routine.
 
-deexo: 
+deexo:
+.ifdef ExomizerToVRAM
   ; Set VDP address
   ld c,$bf
   out (c),e
   out (c),d
+.endif
 
   ld iy, exo_mapbasebits+11
   ld a, (hl)
