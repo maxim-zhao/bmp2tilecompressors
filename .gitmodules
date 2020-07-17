@@ -10,3 +10,7 @@
 	path = compressors/lzsa
 	url = https://github.com/emmanuel-marty/lzsa.git
 	branch = master
+[submodule "compressors/pucrunch"]
+	path = compressors/pucrunch
+	url = https://github.com/mist64/pucrunch.git
+	branch = master
