@@ -15,19 +15,19 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	size = static_cast<int>(sourceLen);
 
 	packedBits = FindOptimalSolution();
-	auto size = EmitCompressed();
+    const auto compressedSize = static_cast<uint32_t>(EmitCompressed());
 
 	// Check size
-	if (size > destLen)
+	if (compressedSize > destLen)
 	{
 		return 0;
 	}
 
 	// Copy to dest
-	memcpy_s(dest, destLen, &packedData, size);
+	memcpy_s(dest, destLen, &packedData, compressedSize);
 
 	// Done
-	return size;
+	return compressedSize;
 }
 
 extern "C" __declspec(dllexport) const char* getName()
