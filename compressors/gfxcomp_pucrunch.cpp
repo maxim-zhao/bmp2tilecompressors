@@ -29,8 +29,8 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     }
 
     // We invoke the Pucrunch main function directly...
-    const char* args[] = { "-d", "-c0", inFilename, outFilename };
-    const auto status = main(sizeof(args), const_cast<char**>(args));
+    const char* argv[] = { "", "-d", "-c0", inFilename, outFilename };
+    const auto status = main(5, const_cast<char**>(argv));
 
     remove(inFilename);
 
@@ -41,27 +41,25 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     }
 
     // Read the file back in again
-    if (fopen_s(&f, outFilename, "rb") != 0 && 
+    if (fopen_s(&f, outFilename, "rb") != 0 || 
         fseek(f, 0, SEEK_END) != 0)
     {
+        fclose(f);
         remove(outFilename);
         return -1;
     }
 
     const size_t compressedSize = ftell(f);
-    if (fseek(f, 0, SEEK_SET) != 0)
-    {
-        remove(outFilename);
-        return -1;
-    }
 
     if (compressedSize > destLen)
     {
+        fclose(f);
         remove(outFilename);
         return 0; // Buffer too small
     }
 
-    if (fread_s(dest, destLen, 1, compressedSize, f) != compressedSize)
+    if (fseek(f, 0, SEEK_SET) != 0 ||
+        fread_s(dest, destLen, 1, compressedSize, f) != compressedSize)
     {
         fclose(f);
         remove(outFilename);
@@ -69,6 +67,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     }
 
     fclose(f);
+    remove(outFilename);
     return static_cast<int>(compressedSize);
 }
 
