@@ -1,3 +1,5 @@
+; { "technology": "LZ4", "extension": "lz4" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,10 +15,13 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld hl,$4000
+	ld hl,data
 	ld de,$4000
-	ld ix,$4000 + 5155 ; pointer to end of data :(
+	ld ix,dataend
 	call lz4_decompress
 	ret ; ends the test
 
 .include "../decompressors/LZ4 decompressor.asm"
+
+data: .incbin "data.lz4"
+dataend:

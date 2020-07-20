@@ -1,3 +1,5 @@
+; { "technology": "null", "extension": "bin" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,9 +15,9 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld hl,$4000
+	ld hl,data
 	ld de,$4000
-	ld bc,8416
+	ld bc,dataSize
 	call copy
 	ret ; ends the test
 	
@@ -39,3 +41,5 @@ copy:
 	ld b,a
 	otir
 	ret
+
+data: .incbin "data.bin" fsize dataSize

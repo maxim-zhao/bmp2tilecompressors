@@ -81,7 +81,6 @@ LoadTiles4BitRLENoDI:
   djnz -
   ret
 
-_NotAnonymous:
 __:
   ld a,(hl)          ; read count byte <----+
   inc hl             ; increment pointer    |

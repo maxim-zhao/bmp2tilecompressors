@@ -1,3 +1,5 @@
+; { "technology": "Exomizer v2", "extension": "exomizer" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,7 +15,7 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld hl,$4000
+	ld hl,data
 	ld de,$4000
 	call deexo
 	ret ; ends the test
@@ -21,3 +23,5 @@ banks 1
 .define exo_mapbasebits $c000
 .define ExomizerToVRAM
 .include "../decompressors/Exomizer v2 decompressor.asm"
+
+data: .incbin "data.exomizer"

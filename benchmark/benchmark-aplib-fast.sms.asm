@@ -13,7 +13,7 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld hl,$4000
+	ld hl,data
 	ld de,$4000
 	call aPLib_decompress
 	ret ; ends the test
@@ -21,3 +21,6 @@ banks 1
 .define aPLibMemory $c000
 .define aPLibToVRAM
 .include "../decompressors/aPLib decompressor (fast).asm"
+
+data:
+.incbin "data.aplib"

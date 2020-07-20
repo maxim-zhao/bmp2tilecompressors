@@ -1,3 +1,5 @@
+; # "technology": "Pucrunch", "extension": "pucrunch" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,10 +15,13 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld de,$4000
+	ld de,data
 	ld hl,$4000
 	call Uncrunch
 	ret ; ends the test
 
-.define PucrunchVars $c000	
+.define PucrunchVars $c000
+.define PuCrunchToVRAM
 .include "../decompressors/PuCrunch decompressor.asm"
+
+data: .incbin "data.pucrunch"

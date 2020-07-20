@@ -1,3 +1,5 @@
+; { "technology": "Sonic 1", "extension": "soniccompr" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,10 +15,12 @@ banks 1
 .bank 0 slot 0
 
 .org 0
+	ld hl,data
 	ld de,$4000
-	ld hl,$4000
 	call Sonic1TileLoader_Decompress
 	ret ; ends the test
 
 .define Sonic1TileLoaderMemory $c000	
 .include "../decompressors/Sonic decompressor.asm"
+
+data: .incbin "data.soniccompr"

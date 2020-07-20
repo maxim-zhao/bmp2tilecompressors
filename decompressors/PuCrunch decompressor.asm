@@ -103,9 +103,11 @@ regy      db
 .block "Pucrunch" ; for finding out the compiled size
 Uncrunch:
   ld (OutPtr),de
+.ifdef PuCrunchToVRAM
   ld c,$bf
   out (c),e
   out (c),d
+.endif
 
 ; Read the file header & setup variables
 
@@ -399,9 +401,7 @@ _lz77_2:
   
     ld hl,(lzpos)                                           ; 2A C7 DF
 .ifdef PuCrunchToVRAM
-    ld a,h
-    xor $40
-    ld h,a
+    res 4,h
 .endif
     ld de,(OutPtr)                                          ; ED 5B C5 DF
 

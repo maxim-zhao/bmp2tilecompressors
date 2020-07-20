@@ -1,3 +1,5 @@
+; { "technology": "Phantasy Star Gaiden", "extension": "psgcompr" }
+
 .memorymap
 defaultslot 0
 slotsize $4000
@@ -13,10 +15,12 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld ix,$4000
+	ld ix,data
 	ld hl,$4000
 	call PSG_decompress
 	ret ; ends the test
 	
 .define PSGDecoderBuffer $c000
 .include "../decompressors/Phantasy Star Gaiden decompressor.asm"
+
+data: .incbin "data.psgcompr"

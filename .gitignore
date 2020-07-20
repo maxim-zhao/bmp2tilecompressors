@@ -6,3 +6,8 @@ Release/
 *.VC.*
 /benchmark/*.sms
 /benchmark/*.sym
+benchmark/*.o
+benchmark/*.sms
+benchmark/data.*
+benchmark/expected.bin
+/benchmark/venv
