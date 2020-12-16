@@ -1,4 +1,5 @@
-; # "technology": "Pucrunch", "extension": "pucrunch" }
+; Decompression fails, benchmark disabled
+; { "technology": "Pucrunch", "extension": "pucrunch" }
 
 .memorymap
 defaultslot 0
@@ -15,8 +16,8 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld de,data
-	ld hl,$4000
+	ld de,$4000
+	ld hl,data
 	call Uncrunch
 	ret ; ends the test
 

@@ -1,3 +1,4 @@
+; Disabled as the compressor crashes and sometimes doesn't decompress correctly
 ; { "technology": "Exomizer v2", "extension": "exomizer" }
 
 .memorymap
