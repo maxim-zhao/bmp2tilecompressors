@@ -61,11 +61,11 @@ void progress_bump(struct progress p[1], int pos)
     {
         if(p->last == -1)
         {
-            LOG_TTY(LOG_NORMAL, ("  %*s]\r [", BAR_LENGTH, ""));
+            LOG(LOG_NORMAL, ("  %*s]\r [", BAR_LENGTH, ""));
         }
         else
         {
-            LOG_TTY(LOG_NORMAL, ("%c", p->msg[p->last % strlen(p->msg)]));
+            LOG(LOG_NORMAL, ("%c", p->msg[p->last % strlen(p->msg)]));
         }
         p->last += 1;
     }

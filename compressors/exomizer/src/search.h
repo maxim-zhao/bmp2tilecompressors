@@ -31,23 +31,17 @@
 #include "match.h"
 #include "output.h"
 
-struct encode_int_bucket {
-    unsigned short start;
-    unsigned short end;
-};
-
-struct encode_match_buckets {
-    struct encode_int_bucket len;
-    struct encode_int_bucket offset;
-};
-
-struct search_node {
+struct _search_node {
     int index;
     match match;
     unsigned int total_offset;
     float total_score;
-    struct search_node *prev;
+    struct _search_node *prev;
 };
+
+typedef struct _search_node search_node[1];
+typedef struct _search_node *search_nodep;
+typedef const struct _search_node *const_search_nodep;
 
 struct _encode_match_data {
     output_ctxp out;
@@ -60,8 +54,7 @@ typedef struct _encode_match_data *encode_match_datap;
 /* example of what may be used for priv data
  * field in the encode_match_data struct */
 typedef
-float encode_int_f(int val, void *priv, output_ctxp out,
-                   struct encode_int_bucket *eibp);       /* IN */
+float encode_int_f(int val, void *priv, output_ctxp out);       /* IN */
 
 struct _encode_match_priv {
     int lit_num;
@@ -84,28 +77,26 @@ typedef struct _encode_match_priv *encode_match_privp;
 /* end of example */
 
 typedef
-float encode_match_f(const_matchp mp,
-                     encode_match_data emd,     /* IN */
-                     struct encode_match_buckets *embp);    /* OUT */
+float encode_match_f(const_matchp mp, encode_match_data emd);   /* IN */
 
-void search_node_dump(const struct search_node *snp);        /* IN */
+void search_node_dump(search_nodep snp);        /* IN */
 
-/* Dont forget to free() the returned pointer after calling */
-struct search_node*
-search_buffer(match_ctx ctx,       /* IN */
-              encode_match_f * f,  /* IN */
-              encode_match_data emd,
-              int use_literal_sequences);      /* IN */
+void search_node_free(search_nodep snp);        /* IN/OUT */
+
+search_nodep search_buffer(match_ctx ctx,       /* IN */
+                           encode_match_f * f,  /* IN */
+                           encode_match_data emd,
+                           int use_literal_sequences);      /* IN */
 
 struct _matchp_snp_enum {
-    const struct search_node *startp;
-    const struct search_node *currp;
+    const_search_nodep startp;
+    const_search_nodep currp;
 };
 
 typedef struct _matchp_snp_enum matchp_snp_enum[1];
 typedef struct _matchp_snp_enum *matchp_snp_enump;
 
-void matchp_snp_get_enum(const struct search_node *snp,   /* IN */
+void matchp_snp_get_enum(const_search_nodep snp,        /* IN */
                          matchp_snp_enum snpe); /* IN/OUT */
 
 const_matchp matchp_snp_enum_get_next(void *matchp_snp_enum);

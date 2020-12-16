@@ -63,6 +63,4 @@ int membuf_get_size(const struct membuf *sb);
  * its size. */
 void *membuf_get(const struct membuf *sb);
 
-/* Appends a printf formatted string to */
-void membuf_printf(struct membuf *sb, const char *format, ...);
 #endif

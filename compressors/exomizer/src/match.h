@@ -63,7 +63,7 @@ void match_ctx_init(match_ctx ctx,          /* IN/OUT */
                     struct membuf *inbuf,   /* IN */
                     int max_len,            /* IN */
                     int max_offset,         /* IN */
-                    int favor_speed);       /* IN */
+                    int use_imprecise_rle); /* IN */
 
 void match_ctx_free(match_ctx ctx);     /* IN/OUT */
 

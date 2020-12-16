@@ -52,10 +52,9 @@ struct dec_ctx
 };
 
 /* returns the encoding */
-void
+char *
 dec_ctx_init(struct dec_ctx ctx[1],
-             struct membuf *inbuf, struct membuf *outbuf,
-             struct membuf *enc_out);   /* OUT, might be null for no output */
+             struct membuf *inbuf, struct membuf *outbuf);
 
 void
 dec_ctx_free(struct dec_ctx ctx[1]);

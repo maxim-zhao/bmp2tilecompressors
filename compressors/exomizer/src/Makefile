@@ -1,12 +1,12 @@
 #
 # Makefile for exomizer
 #
-WFLAGS = --std=c89 -Wall -Wstrict-prototypes
-CFLAGS = $(WFLAGS) -O3 -ffast-math -fomit-frame-pointer -fgcse -pedantic -D_XOPEN_SOURCE=500
+WFLAGS = -Wall -Wstrict-prototypes
+CFLAGS = $(WFLAGS) -O3 -ffast-math -mtune=i686 -fomit-frame-pointer -fgcse -pedantic
 LDFLAGS = -s
 
-#CFLAGS = -g $(WFLAGS)
-#LDFLAGS = -g
+#CFLAGS = -g -mtune=i686 $(WFLAGS)
+#LDFLAGS = -g -mtune=i686
 
 SHARED_OBJS = getflag.o log.o membuf.o
 RAW_OBJS = match.o search.o exo_raw.o optimal.o output.o membuf_io.o \
@@ -23,9 +23,8 @@ ALL_OBJS = $(EXO_OBJS) $(RAW_OBJS) $(BAS_OBJS) $(SHARED_OBJS)
 #.SILENT:
 
 .PHONY: build clean
-.INTERMEDIATE: b2membuf exoraw
 
-build: $(MAKEFILE) exomizer exobasic
+build: $(MAKEFILE) exomizer exoraw exobasic
 
 exomizer: deps $(EXO_OBJS) $(SHARED_OBJS)
 	@echo "Linking $@"

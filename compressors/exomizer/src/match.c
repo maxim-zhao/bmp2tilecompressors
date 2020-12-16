@@ -43,8 +43,7 @@ struct match_node {
 
 static
 const_matchp matches_calc(match_ctx ctx,        /* IN/OUT */
-                          int index,            /* IN */
-                          int favor_speed);     /* IN */
+                          int index);    /* IN */
 
 matchp match_new(match_ctx ctx, /* IN/OUT */
                  matchp *mpp,
@@ -78,14 +77,13 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
                     struct membuf *inbuf,  /* IN */
                     int max_len,           /* IN */
                     int max_offset,        /* IN */
-                    int favor_speed) /* IN */
+                    int use_imprecise_rle) /* IN */
 {
     struct match_node *np;
     struct progress prog[1];
 
     int buf_len = membuf_memlen(inbuf);
     const unsigned char *buf = membuf_get(inbuf);
-    char *rle_map;
 
     int c, i;
     int val;
@@ -132,14 +130,14 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
     }
 
     /* add extra nodes to rle sequences */
-    rle_map = malloc(65536);
     for(c = 0; c < 256; ++c)
     {
+        static char rle_map[65536];
         struct match_node *prev_np;
         unsigned short int rle_len;
 
         /* for each possible rle char */
-        memset(rle_map, 0, 65536);
+        memset(rle_map, 0, sizeof(rle_map));
         prev_np = NULL;
         for (i = 0; i < buf_len; ++i)
         {
@@ -156,7 +154,7 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
                 continue;
             }
 
-            if (favor_speed &&
+            if (use_imprecise_rle &&
                 ctx->rle_r[i] != 0 && ctx->rle[i] != 0)
             {
                 continue;
@@ -181,7 +179,7 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
             prev_np = np;
         }
 
-        memset(rle_map, 0, 65536);
+        memset(rle_map, 0, sizeof(rle_map));
         prev_np = NULL;
         for (i = buf_len - 1; i >= 0; --i)
         {
@@ -219,7 +217,6 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
             rle_map[rle_len] = 1;
         }
     }
-    free(rle_map);
 
     progress_init(prog, "building.directed.acyclic.graph.", buf_len - 1, 0);
 
@@ -228,7 +225,7 @@ void match_ctx_init(match_ctx ctx,         /* IN/OUT */
         const_matchp matches;
 
         /* let's populate the cache */
-        matches = matches_calc(ctx, i, favor_speed);
+        matches = matches_calc(ctx, i);
 
         /* add to cache */
         ctx->info[i]->cache = matches;
@@ -268,7 +265,7 @@ void dump_matches(int level, matchp mp)
 }
 
 const_matchp matches_get(match_ctx ctx, /* IN/OUT */
-                         int index)     /* IN */
+                         int index)      /* IN */
 {
     return ctx->info[index]->cache;
 }
@@ -276,8 +273,7 @@ const_matchp matches_get(match_ctx ctx, /* IN/OUT */
 /* this needs to be called with the indexes in
  * reverse order */
 const_matchp matches_calc(match_ctx ctx,        /* IN/OUT */
-                          int index,            /* IN */
-                          int favor_speed)      /* IN */
+                          int index)     /* IN */
 {
     const unsigned char *buf;
 
@@ -331,6 +327,7 @@ const_matchp matches_calc(match_ctx ctx,        /* IN/OUT */
          * > 0 */
         while(len > 1 && buf[pos] == buf[pos + offset])
         {
+#if 1
             int offset1 = ctx->rle_r[pos];
             int offset2 = ctx->rle_r[pos + offset];
             int offset = offset1 < offset2 ? offset1 : offset2;
@@ -340,6 +337,10 @@ const_matchp matches_calc(match_ctx ctx,        /* IN/OUT */
 
             len -= 1 + offset;
             pos += 1 + offset;
+#else
+            --len;
+            ++pos;
+#endif
         }
         if(len > 1)
         {
@@ -365,7 +366,7 @@ const_matchp matches_calc(match_ctx ctx,        /* IN/OUT */
             ++len;
             --pos;
         }
-        if(len > mp_len || (!favor_speed && len == mp_len))
+        if(len > mp_len)
         {
             /* allocate match struct and add it to matches */
             mp = match_new(ctx, &matches, index - pos, offset);
@@ -477,6 +478,20 @@ matchp_cache_peek(struct match_ctx *ctx, int pos,
             val = val->next;
         }
     }
+#if 0
+    LOG(LOG_NORMAL, ("[%05d]: ", pos));
+    if(litp == NULL)
+        LOG(LOG_NORMAL, ("litp(NULL)"));
+    else
+        LOG(LOG_NORMAL, ("litp(%d,%d)", litp->len, litp->offset));
+
+    if(seqp == NULL)
+        LOG(LOG_NORMAL, ("seqp(NULL)"));
+    else
+        LOG(LOG_NORMAL, ("seqp(%d,%d)", seqp->len, seqp->offset));
+
+    LOG(LOG_NORMAL, ("\n"));
+#endif
 
     if(litpp != NULL) *litpp = litp;
     if(seqpp != NULL) *seqpp = seqp;

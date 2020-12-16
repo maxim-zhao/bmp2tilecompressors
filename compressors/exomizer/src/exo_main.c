@@ -62,13 +62,13 @@ static void load_plain_file(const char *name, struct membuf *mb)
         {
             /* not found and no comma  */
             LOG(LOG_ERROR, ("Error: file not found.\n"));
-            exit(1);
+            exit(-1);
         }
         *p = '\0';
         if(str_to_int(p + 1, &offset))
         {
             LOG(LOG_ERROR, ("Error: invalid value for plain file offset.\n"));
-            exit(1);
+            exit(-1);
         }
         in = fopen(name, "rb");
         if(in == NULL)
@@ -79,21 +79,21 @@ static void load_plain_file(const char *name, struct membuf *mb)
             {
                 LOG(LOG_ERROR, ("Error, value for plain file "
                                 "len must not be negative.\n"));
-                exit(1);
+                exit(-1);
             }
             *p = '\0';
             if(str_to_int(p + 1, &offset))
             {
                 LOG(LOG_ERROR,
                     ("Error: invalid value for plain file offset.\n"));
-                exit(1);
+                exit(-1);
             }
             in = fopen(name, "rb");
             if(in == NULL)
             {
                 /* really not found */
                 LOG(LOG_ERROR, ("Error: file not found.\n"));
-                exit(1);
+                exit(-1);
             }
         }
     }
@@ -102,7 +102,7 @@ static void load_plain_file(const char *name, struct membuf *mb)
     {
         LOG(LOG_ERROR, ("Error: can't seek to EOF.\n"));
         fclose(in);
-        exit(1);
+        exit(-1);
     }
     file_len = ftell(in);
     if(offset < 0)
@@ -117,14 +117,14 @@ static void load_plain_file(const char *name, struct membuf *mb)
     {
         LOG(LOG_ERROR, ("Error: can't seek to offset %d.\n", offset));
         fclose(in);
-        exit(1);
+        exit(-1);
     }
     if(offset + len > file_len)
     {
         LOG(LOG_ERROR, ("Error: can't read %d bytes from offset %d.\n",
                         len, offset));
         fclose(in);
-        exit(1);
+        exit(-1);
     }
     LOG(LOG_VERBOSE, ("Reading %d bytes from offset %d.\n", len, offset));
     do
@@ -137,7 +137,7 @@ static void load_plain_file(const char *name, struct membuf *mb)
             LOG(LOG_ERROR, ("Error: tried to read %d bytes but got %d.\n",
                             r, read_len));
             fclose(in);
-            exit(1);
+            exit(-1);
         }
         membuf_append(mb, buf, r);
         len -= r;
@@ -165,7 +165,7 @@ do_load(char *file_name, struct membuf *mem)
     membuf_truncate(mem, info->end);
     membuf_trim(mem, info->start);
 
-    LOG(LOG_NORMAL, (" Crunching from $%04X to $%04X.",
+    LOG(LOG_NORMAL, (" crunching from $%04X to $%04X ",
                      info->start, info->end));
     return info->start;
 }
@@ -177,14 +177,13 @@ struct target_info
     int basic_txt_start;
     int end_of_ram;
     const char *model;
-    const char *outformat;
 };
 
 static
 int
 do_loads(int filec, char *filev[], struct membuf *mem,
          int basic_txt_start, int sys_token,
-         int *basic_var_startp, int *runp, int trim_sys)
+         int *basic_var_startp, int *runp)
 {
     int run = -1;
     int min_start = 65537;
@@ -225,26 +224,8 @@ do_loads(int filec, char *filev[], struct membuf *mem,
                 {
                     /* only if we didn't get run address from load_located
                      * (run is not -1 if we did) */
-                    int stub_len;
-                    run = find_sys(p + basic_txt_start, sys_token, &stub_len);
+                    run = find_sys(p + basic_txt_start, sys_token);
                     *runp = run;
-                    if (trim_sys &&
-                        basic_txt_start == info->start &&
-                        min_start >= info->start)
-                    {
-                        if (run >= info->start &&
-                            run < info->start + stub_len)
-                        {
-                            /* the run address points into the sys stub,
-                               trim up to it but no further */
-                            info->start = run;
-                        }
-                        else
-                        {
-                            /* trim the sys stub*/
-                            info->start += stub_len;
-                        }
-                    }
                 }
             }
         }
@@ -257,6 +238,14 @@ do_loads(int filec, char *filev[], struct membuf *mem,
         {
             max_end = info->end;
         }
+        if(info->basic_var_start != -1)
+        {
+            info->basic_var_start = info->basic_var_start;
+        }
+        if(info->run != -1)
+        {
+            info->run = info->run;
+        }
     }
 
     if(basic_txt_start >= 0 && !basic_code && run == -1)
@@ -265,7 +254,7 @@ do_loads(int filec, char *filev[], struct membuf *mem,
         LOG(LOG_ERROR, ("\nError: nothing loaded at the start of basic "
                         "text address ($%04X).\n",
                         basic_txt_start));
-        exit(1);
+        exit(-1);
     }
 
     /* if we have a basic code loaded and we are doing a proper basic start
@@ -370,31 +359,25 @@ void print_sfx_usage(const char *appl, enum log_level level,
 {
     /* done */
     LOG(level,
-        ("usage: %s sfx basic[,<start>[,<end>[,<high>]]]|sys[trim][,<start>]|<jmpaddress> [option]... infile[,<address>]...\n"
+        ("usage: %s sfx basic[,<start>[,<end>[,<high>]]]|sys[,<start>]|<jmpaddress> [option]... infile[,<address>]...\n"
          "  The sfx command generates outfiles that are intended to decrunch themselves.\n"
          "  The basic start argument will start a basic program.\n"
          "  The sys start argument will auto detect the start address by searching the\n"
          "  basic start for a sys command.\n"
-         "  The systrim start argument works like the sys start argument but it will\n"
-         "  also trim the sys line from the loaded infile.\n"
-         , appl));
+         "  the <jmpaddress> start argument will jmp to the given address.\n"
+         "  -t<target>    sets the decruncher target, must be one of 1, 20, 23, 52, 55\n", appl));
     LOG(level,
-        ("  the <jmpaddress> start argument will jmp to the given address.\n"
-         "  -t<target>    sets the decruncher target, must be one of 1, 20, 23, 52, 55\n""                16, 4, 64, 128, 162 or 168, default is 64\n"
+        ("                16, 4, 64, 128, 162 or 168, default is 64\n"
          "  -X<custom slow effect assembler fragment>\n"
          "  -x[1-3]|<custom fast effect assembler fragment>\n"
          "                decrunch effect, assembler fragment (don't change X-reg, Y-reg\n"
          "                or carry) or 1 - 3 for different fast border flash effects\n"
-         "  -n            no effect, can't be combined with -X or -x\n"));
+         "  -n            no effect, can't be combined with -X or -x\n"
+         "  -D<symbol>=<value>\n"
+         "                predefines symbols for the sfx assembler\n"));
     LOG(level,
-        ("  -D<symbol>=<value>\n"
-         "                predefines symbols for the sfx assembler\n"
-         "  -s<custom enter assembler fragment>\n"
-         "                assembler fragment to execute when the decruncher starts.\n"
-         "                (don't change Y-reg)\n"
-         "  -f<custom exit assembler fragment>\n"
-         "                assembler fragment o execute when the decruncher has\n"
-         "                finished\n"));
+        ("  -s<custom enter assembler fragment>\n"
+         "  -f<custom exit assembler fragment>\n"));
     print_crunch_flags(level, default_outfile);
     LOG(level,
         (" All infiles are merged into the outfile. They are loaded in the order\n"
@@ -461,7 +444,7 @@ void level(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: no input files to process.\n"));
         print_level_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     /* append the files instead of merging them */
@@ -512,8 +495,6 @@ void level(const char *appl, int argc, char *argv[])
     LOG(LOG_NORMAL, (" the largest safety offset is %d.\n",
                      max_safety));
 
-    LOG(LOG_BRIEF, (" Writing %d bytes to \"%s\".\n",
-                    membuf_memlen(out), flags->outfile));
     write_file(flags->outfile, out);
 
     membuf_free(out);
@@ -561,7 +542,7 @@ void mem(const char *appl, int argc, char *argv[])
                     ("Error: invalid address for -l option, "
                      "must be in the range of [0 - 0xffff]\n"));
                 print_mem_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             break;
         default:
@@ -579,7 +560,7 @@ void mem(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: no input files to process.\n"));
         print_mem_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     {
@@ -588,10 +569,10 @@ void mem(const char *appl, int argc, char *argv[])
         int in_len;
         int safety;
 
-        in_load = do_loads(infilec, infilev, in, -1, -1, NULL, NULL, 0);
+        in_load = do_loads(infilec, infilev, in, -1, -1, NULL, NULL);
         in_len = membuf_memlen(in);
 
-        LOG(LOG_NORMAL, (" Crunching from $%04X to $%04X.",
+        LOG(LOG_NORMAL, (" crunching from $%04X to $%04X ",
                          in_load, in_load + in_len));
 
         /* make room for load addr */
@@ -654,17 +635,6 @@ void mem(const char *appl, int argc, char *argv[])
                          info->needed_safety_offset));
     }
 
-    if (prepend_load_addr)
-    {
-        LOG(LOG_BRIEF, (" Writing prg to \"%s\", saving from $%04X to $%04X.\n",
-                        flags->outfile, load_addr,
-                        load_addr + membuf_memlen(out) - 2));
-    }
-    else
-    {
-        LOG(LOG_BRIEF, (" Writing %d bytes to \"%s\".\n",
-                        membuf_memlen(out), flags->outfile));
-    }
     write_file(flags->outfile, out);
 
     membuf_free(out);
@@ -677,18 +647,17 @@ get_target_info(int target)
 {
     static const struct target_info targets[] =
         {
-            {1,   0xbf, 0x0501, 0x10000, "Oric", "tap"},
-            {20,  0x9e, 0x1001, 0x2000,  "Vic20", "prg"},
-            {23,  0x9e, 0x0401, 0x2000,  "Vic20+3kB", "prg"},
-            {52,  0x9e, 0x1201, 0x8000,  "Vic20+32kB", "prg"},
-            {55,  0x9e, 0x1201, 0x8000,  "Vic20+3kB+32kB", "prg"},
-            {16,  0x9e, 0x1001, 0x4000,  "C16", "prg"},
-            {4,   0x9e, 0x1001, 0xfd00,  "plus4", "prg"},
-            {64,  0x9e, 0x0801, 0x10000, "C64", "prg"},
-            {128, 0x9e, 0x1c01, 0xff00,  "C128", "prg"},
-            {162, 0x8c, 0x0801, 0xc000,  "Apple ][+", "bas"},
-            {168, -1,   0x2000, 0xd000,  "Atari 400/800 XL/XE", "xex"},
-            {4032, 0x9e, 0x0401, 0x8000,  "PET CBM 4032"},
+            {1,   0xbf, 0x0501, 0x10000, "Oric"},
+            {20,  0x9e, 0x1001, 0x2000,  "Vic20"},
+            {23,  0x9e, 0x0401, 0x2000,  "Vic20+3kB"},
+            {52,  0x9e, 0x1201, 0x8000,  "Vic20+32kB"},
+            {55,  0x9e, 0x1201, 0x8000,  "Vic20+3kB+32kB"},
+            {16,  0x9e, 0x1001, 0x4000,  "C16"},
+            {4,   0x9e, 0x1001, 0xfd00,  "plus4"},
+            {64,  0x9e, 0x0801, 0x10000, "C64"},
+            {128, 0x9e, 0x1c01, 0xff00,  "C128"},
+            {162, 0x8c, 0x0801, 0xc000,  "Apple ][+"},
+            {168, -1,   0x2000, 0xd000,  "Atari 400/800 XL/XE"},
             {0,   -1,   -1,     -1,  NULL}
         };
     const struct target_info *targetp;
@@ -715,7 +684,7 @@ static void do_effect(const char *appl, int no_effect, char *fast, char *slow)
         LOG(LOG_ERROR,
             ("Error: can't combine any of the -n, -x or -X flags.\n"));
         print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
     if(no_effect)
     {
@@ -735,7 +704,7 @@ static void do_effect(const char *appl, int no_effect, char *fast, char *slow)
                     ("Error: invalid range for effect shorthand, "
                      "must be in the range of [1 - 3]\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
         }
         else
@@ -753,7 +722,7 @@ static void do_effect(const char *appl, int no_effect, char *fast, char *slow)
         {
             LOG(LOG_ERROR, ("Error: Can't use shorthand for -X flag.\n"));
             print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-            exit(1);
+            exit(-1);
         }
         else
         {
@@ -780,7 +749,6 @@ void sfx(const char *appl, int argc, char *argv[])
     int basic_highest_addr = -1;
     int decr_target = 64;
     int sys_addr = -1;
-    int trim_sys = 0;
     int no_effect = 0;
     char *fast = NULL;
     char *slow = NULL;
@@ -808,7 +776,7 @@ void sfx(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: no start argument given.\n"));
         print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     parse_init();
@@ -817,12 +785,8 @@ void sfx(const char *appl, int argc, char *argv[])
     do
     {
         char *p = strtok(argv[1], ",");
-        if (strcmp(p, "sys") == 0 || strcmp(p, "systrim") == 0)
+        if (strcmp(p, "sys") == 0)
         {
-            if (strcmp(p, "systrim") == 0)
-            {
-                trim_sys = 1;
-            }
             /* we should look for a basic sys command. */
             sys_addr = -1;
             p = strtok(NULL, ",");
@@ -834,7 +798,7 @@ void sfx(const char *appl, int argc, char *argv[])
                     ("Error: invalid value for the start of basic text "
                      "address.\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
         }
         else if(strcmp(p, "basic") == 0)
@@ -850,7 +814,7 @@ void sfx(const char *appl, int argc, char *argv[])
                     ("Error: invalid value for the start of basic text "
                      "address.\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             p = strtok(NULL, ",");
             /* look for an optional basic end address */
@@ -861,7 +825,7 @@ void sfx(const char *appl, int argc, char *argv[])
                     ("Error: invalid value for the start of basic "
                      "variables address.\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             p = strtok(NULL, ",");
             /* look for an optional highest address used by basic */
@@ -872,7 +836,7 @@ void sfx(const char *appl, int argc, char *argv[])
                     ("Error: invalid value for the highest address used "
                      "by basic address.\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
         }
         else if(str_to_int(p, &sys_addr) != 0 ||
@@ -883,7 +847,7 @@ void sfx(const char *appl, int argc, char *argv[])
                 ("Error: invalid address for <start>, "
                  "must be in the range of [0 - 0xffff]\n"));
             print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-            exit(1);
+            exit(-1);
         }
     }
     while(0);
@@ -905,7 +869,7 @@ void sfx(const char *appl, int argc, char *argv[])
                      "1, 20, 23, 52, 55, 16, 4, 64, 128, 162 or 168.\n",
                      decr_target));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             break;
         case 'n':
@@ -933,7 +897,7 @@ void sfx(const char *appl, int argc, char *argv[])
                     LOG(LOG_ERROR, ("Error: invalid value for -D "
                                     "<symbol>[=<value>] option.\n"));
                     print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                    exit(1);
+                    exit(-1);
                 }
                 /* This is ugly, we really should allocate our own
                  * copy of the symbol string. */
@@ -945,7 +909,7 @@ void sfx(const char *appl, int argc, char *argv[])
                 LOG(LOG_ERROR, ("Error: invalid value for -D "
                                 "<symbol>=<value> option.\n"));
                 print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             break;
         default:
@@ -978,7 +942,7 @@ void sfx(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: no input files to process.\n"));
         print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     targetp = get_target_info(decr_target);
@@ -988,7 +952,7 @@ void sfx(const char *appl, int argc, char *argv[])
         LOG(LOG_ERROR, ("Start address \"basic\" is not supported for "
                         "the %s target.\n", targetp->model));
         print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
     if(sys_addr == -1 && targetp->id == 162)
     {
@@ -996,7 +960,7 @@ void sfx(const char *appl, int argc, char *argv[])
         LOG(LOG_ERROR, ("Start address \"sys\" is not supported for "
                         "the %s target\n", targetp->model));
         print_sfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     if(basic_txt_start == -1)
@@ -1028,20 +992,20 @@ void sfx(const char *appl, int argc, char *argv[])
 
         in_load = do_loads(infilec, infilev, in,
                            basic_start, targetp->sys_token,
-                           basic_var_startp, sys_addrp, trim_sys);
+                           basic_var_startp, sys_addrp);
         in_len = membuf_memlen(in);
 
         if(in_load + in_len > targetp->end_of_ram)
         {
             LOG(LOG_ERROR, ("Error:\n The memory of the %s target ends at "
-                            "$%04X and can't hold the\n uncrunched data "
+                            "$%04X and can't hold the uncrunched data\n "
                             "that covers $%04X to $%04X.\n",
                             targetp->model, targetp->end_of_ram,
                             in_load, in_load + in_len));
-            exit(1);
+            exit(-1);
         }
 
-        LOG(LOG_NORMAL, (" Crunching from $%04X to $%04X.",
+        LOG(LOG_NORMAL, (" crunching from $%04X to $%04X ",
                          in_load, in_load + in_len));
 
         if(decr_target == 20 || decr_target == 52)
@@ -1054,7 +1018,7 @@ void sfx(const char *appl, int argc, char *argv[])
                 /* all the loaded data is in the memory hole.*/
                 LOG(LOG_ERROR,
                     ("Error: all data loaded to the memory hole.\n"));
-                exit(1);
+                exit(-1);
             }
             else if(in_load >= 0x0400 && in_load < 0x1000 &&
                     in_load + in_len > 0x1000)
@@ -1127,7 +1091,7 @@ void sfx(const char *appl, int argc, char *argv[])
         LOG(LOG_ERROR, ("\nError: can't find sys address (token $%02X)"
                         " at basic text start ($%04X).\n",
                         targetp->sys_token, basic_txt_start));
-        exit(1);
+        exit(-1);
     }
     if(sys_addr != -2)
     {
@@ -1190,69 +1154,36 @@ void sfx(const char *appl, int argc, char *argv[])
         if(assemble(source, out) != 0)
         {
             LOG(LOG_ERROR, ("Parse failure.\n"));
-            exit(1);
         }
         else
         {
-            i32 lowest_addr;
-            i32 max_transfer_len;
-            i32 lowest_addr_out;
-            i32 highest_addr_out;
+            i32 v_safety_addr;
+            i32 transfer_len;
             i32 i_table_addr;
             i32 i_effect;
-            i32 i_ram_enter, i_ram_during, i_ram_exit;
-            i32 i_irq_enter, i_irq_during, i_irq_exit;
-            i32 i_nmi_enter, i_nmi_during, i_nmi_exit;
             i32 c_effect_color;
+            i32 cover_start = in_load;
 
-            resolve_symbol("lowest_addr", NULL, &lowest_addr);
-            resolve_symbol("max_transfer_len", NULL, &max_transfer_len);
-            resolve_symbol("lowest_addr_out", NULL, &lowest_addr_out);
-            resolve_symbol("highest_addr_out", NULL, &highest_addr_out);
+            resolve_symbol("v_safety_addr", NULL, &v_safety_addr);
+            resolve_symbol("transfer_len", NULL, &transfer_len);
             resolve_symbol("i_table_addr", NULL, &i_table_addr);
             resolve_symbol("i_effect2", NULL, &i_effect);
-            resolve_symbol("i_irq_enter", NULL, &i_irq_enter);
-            resolve_symbol("i_irq_during", NULL, &i_irq_during);
-            resolve_symbol("i_irq_exit", NULL, &i_irq_exit);
 
-            LOG(LOG_BRIEF, (" Writing %s to \"%s\", saving from "
-                            "$%04X to $%04X.\n", targetp->outformat,
-                            flags->outfile, lowest_addr_out,
-                            highest_addr_out));
+            if(transfer_len != 0)
+            {
+                cover_start = v_safety_addr;
+            }
 
-            LOG(LOG_NORMAL, ("Memory layout:   |Start |End   |\n"));
-            LOG(LOG_NORMAL, (" Crunched data   | $%04X| $%04X|\n",
-                                 lowest_addr, lowest_addr + max_transfer_len));
-            LOG(LOG_NORMAL, (" Decrunched data | $%04X| $%04X|\n",
-                 in_load, in_load + in_len));
-            LOG(LOG_NORMAL, (" Decrunch table  | $%04X| $%04X|\n",
+            LOG(LOG_NORMAL, ("Memory layout:\n"));
+            LOG(LOG_NORMAL, (" Data covers $%04X to $%04X.\n",
+                             cover_start, in_load + in_len));
+            LOG(LOG_NORMAL, (" Decrunch table is located at $%04X to $%04X.\n",
                              i_table_addr, i_table_addr + 156));
-            LOG(LOG_NORMAL, (" Decruncher      | $00FC| $01SP|\n"));
             if(i_effect == 0 && !resolve_symbol("i_effect_custom", NULL, NULL))
             {
                 resolve_symbol("c_effect_color", NULL, &c_effect_color);
                 LOG(LOG_NORMAL, (" Decrunch effect writes to $%04X.\n",
                                  c_effect_color));
-            }
-            LOG(LOG_NORMAL, ("Decruncher:  |Enter |During|Exit  |\n"));
-            if (decr_target == 1 || decr_target == 64 || decr_target == 128 ||
-                decr_target == 4 || decr_target == 16 || decr_target == 168)
-            {
-                resolve_symbol("i_ram_enter", NULL, &i_ram_enter);
-                resolve_symbol("i_ram_during", NULL, &i_ram_during);
-                resolve_symbol("i_ram_exit", NULL, &i_ram_exit);
-                LOG(LOG_NORMAL, (" RAM config  |   $%02X|   $%02X|   $%02X|\n",
-                     i_ram_enter, i_ram_during, i_ram_exit));
-            }
-            LOG(LOG_NORMAL, (" IRQ enabled |   %3d|   %3d|   %3d|\n",
-                 i_irq_enter, i_irq_during, i_irq_exit));
-            if (decr_target == 168)
-            {
-                resolve_symbol("i_nmi_enter", NULL, &i_nmi_enter);
-                resolve_symbol("i_nmi_during", NULL, &i_nmi_during);
-                resolve_symbol("i_nmi_exit", NULL, &i_nmi_exit);
-                LOG(LOG_NORMAL, (" NMI enabled |   $%02X|   $%02X|   $%02X|\n",
-                     i_nmi_enter, i_nmi_during, i_nmi_exit));
             }
         }
 
@@ -1310,24 +1241,19 @@ void raw(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: exactly one input file must be given.\n"));
         print_raw_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     membuf_init(inbuf);
     membuf_init(outbuf);
 
     load_plain_file(infilev[0], inbuf);
-    LOG(LOG_BRIEF, (" Reading %d bytes from \"%s\".\n",
-                    membuf_memlen(inbuf), infilev[0]));
 
     if(decrunch_mode)
     {
         int seems_backward = 0;
         int seems_forward = 0;
         unsigned char *p;
-        int inlen;
-        int outlen;
-
 
         p = membuf_get(inbuf);
         if(p[0] == 0x80 && p[1] == 0x0)
@@ -1347,28 +1273,32 @@ void raw(const char *appl, int argc, char *argv[])
             backwards_mode = seems_backward;
         }
 
-        inlen = membuf_memlen(inbuf);
         if(backwards_mode)
         {
+            LOG(LOG_NORMAL, ("Decrunching infile \"%s\" to outfile \"%s\" "
+                             " backwards.\n", infilev[0], flags->outfile));
             decrunch_backwards(LOG_NORMAL, inbuf, outbuf);
         }
         else
         {
+            LOG(LOG_NORMAL, ("Decrunching infile \"%s\" to outfile \"%s\".\n",
+                             infilev[0], flags->outfile));
             decrunch(LOG_NORMAL, inbuf, outbuf);
         }
-        outlen = membuf_memlen(outbuf);
-        LOG(LOG_BRIEF, (" Decrunched data expanded %d bytes (%0.2f%%)\n",
-                        outlen - inlen, 100.0 * (outlen - inlen) / inlen));
     }
     else
     {
         struct crunch_info info[1];
         if(backwards_mode)
         {
+            LOG(LOG_NORMAL, ("Crunching infile \"%s\" to outfile \"%s\" "
+                             "backwards.\n", infilev[0], flags->outfile));
             crunch_backwards(inbuf, outbuf, options, info);
         }
         else
         {
+            LOG(LOG_NORMAL, ("Crunching infile \"%s\" to outfile \"%s\".\n",
+                             infilev[0], flags->outfile));
             crunch(inbuf, outbuf, options, info);
         }
 
@@ -1384,8 +1314,6 @@ void raw(const char *appl, int argc, char *argv[])
         reverse_buffer(membuf_get(outbuf), membuf_memlen(outbuf));
     }
 
-    LOG(LOG_BRIEF, (" Writing %d bytes to \"%s\".\n",
-                    membuf_memlen(outbuf), flags->outfile));
     write_file(flags->outfile, outbuf);
 
     membuf_free(outbuf);
@@ -1425,7 +1353,7 @@ void desfx(const char *appl, int argc, char *argv[])
                 LOG(LOG_ERROR,("Error: invalid address for -e option, "
                                "must be in the range of [0 - 0xffff]\n"));
                 print_desfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-                exit(1);
+                exit(-1);
             }
             break;
         default:
@@ -1440,7 +1368,7 @@ void desfx(const char *appl, int argc, char *argv[])
     {
         LOG(LOG_ERROR, ("Error: exactly one input file must be given.\n"));
         print_desfx_usage(appl, LOG_NORMAL, DEFAULT_OUTFILE);
-        exit(1);
+        exit(-1);
     }
 
     membuf_init(mem);
@@ -1467,12 +1395,12 @@ void desfx(const char *appl, int argc, char *argv[])
     if(entry == -1)
     {
         /* look for sys line */
-        entry = find_sys(p + info->start, -1, NULL);
+        entry = find_sys(p + info->start, -1);
     }
     if(entry == -1)
     {
         LOG(LOG_ERROR, ("Error, can't find entry point.\n"));
-        exit(1);
+        exit(-1);
     }
 
     LOG(LOG_NORMAL, (" crunched file entry point $%04X\n", entry));
@@ -1492,8 +1420,6 @@ void desfx(const char *appl, int argc, char *argv[])
     p[0] = start;
     p[1] = start >> 8;
 
-    LOG(LOG_BRIEF, (" Writing prg to \"%s\", saving from $%04X to $%04X, "
-                    "entry at $%04X.\n", outfile, start, cookedend, entry));
     write_file(outfile, mem);
 
     membuf_free(mem);
@@ -1513,7 +1439,7 @@ main(int argc, char *argv[])
         /* missing required command */
         LOG(LOG_ERROR, ("Error: required command is missing.\n"));
         print_command_usage(appl, LOG_ERROR);
-        exit(1);
+        exit(-1);
     }
     ++argv;
     --argc;
@@ -1551,7 +1477,7 @@ main(int argc, char *argv[])
         LOG(LOG_ERROR,
             ("Error: unrecognised command \"%s\".\n", argv[0]));
         print_command_usage(appl, LOG_ERROR);
-        exit(1);
+        exit(-1);
     }
 
     LOG_FREE;
