@@ -90,7 +90,8 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         )
     except subprocess.CalledProcessError as e:
         print(e)
-        print(e.output)
+        print(e.stdout)
+        print(e.stderr)
 
 
 def main():
@@ -108,7 +109,7 @@ def main():
         if "extra-extensions" in json_data:
             extensions.extend(json_data["extra-extensions"])
         for test_extension in extensions:
-            for image in glob.glob("corpus/*.png"):
+            for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
                 result = benchmark(
                     json_data["technology"],
                     test_extension,
@@ -116,8 +117,7 @@ def main():
                     benchmark_file,
                     image)
                 if result is not None:
-                    print(
-                        f'{result.technology}\t{test_extension}+{benchmark_file}+{image}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
+                    print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
     # Now plot the results

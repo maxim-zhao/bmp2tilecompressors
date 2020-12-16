@@ -15,31 +15,31 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld hl,data
-	ld de,$4000
-	ld bc,dataSize
-	call copy
-	ret ; ends the test
-	
+    ld hl,data
+    ld de,$4000
+    ld bc,dataSize
+    call copy
+    ret ; ends the test
+    
 ; This is a space-optimised routine for emitting bc bytes from hl to VRAM address de.
 copy:
-	ld a,b
-	push bc
-		ld c,$bf
-		out (c),e
-		out (c),d
-		or a
-		jr z,+
-		ld bc,$00be
--:		otir
-		dec a
-		jp nz,-
-+:	pop de
-	ld a,e
-	or a
-	ret z
-	ld b,a
-	otir
-	ret
+    ld a,b
+    push bc
+      ld c,$bf
+      out (c),e
+      out (c),d
+      or a
+      jr z,+
+      ld bc,$00be
+-:    otir
+      dec a
+      jp nz,-
++:  pop de
+    ld a,e
+    or a
+    ret z
+    ld b,a
+    otir
+    ret
 
 data: .incbin "data.bin" fsize dataSize
