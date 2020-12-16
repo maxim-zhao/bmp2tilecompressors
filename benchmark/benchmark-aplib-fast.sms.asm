@@ -1,3 +1,5 @@
+; { "technology": "aPLib", "extension": "aplib", "extra-extensions": ["apultra", "oapack"] }
+
 .memorymap
 defaultslot 0
 slotsize $4000
