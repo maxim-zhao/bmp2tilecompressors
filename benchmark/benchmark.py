@@ -18,8 +18,9 @@ class Result:
     cycles: int
     ratio: float
     bytes_per_frame: float
+    filename: str
 
-    def __init__(self, technology, uncompressed, compressed, cycles):
+    def __init__(self, technology, uncompressed, compressed, cycles, filename):
         self.technology = technology
         self.uncompressed = uncompressed
         self.compressed = compressed
@@ -27,6 +28,7 @@ class Result:
         self.ratio = (1.0 * uncompressed - compressed) / uncompressed
         frames = cycles / 59736.0
         self.bytes_per_frame = uncompressed / frames
+        self.filename = filename
 
 
 def benchmark(technology, extension, rename_extension, asm_file, image_file):
@@ -61,7 +63,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         # Link the file
         subprocess.run([
             os.path.join(WLA_PATH, "wlalink.exe"),
-            "-d",
+            "-d", "-r", "-v", "-S", "-A",
             "linkfile",
             "benchmark.sms"],
             check=True, capture_output=True, text=True)
@@ -86,7 +88,8 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
             technology,
             os.stat('expected.bin').st_size,
             os.stat(data_file).st_size,
-            cycles
+            cycles,
+            image_file
         )
     except subprocess.CalledProcessError as e:
         print(e)
@@ -102,6 +105,7 @@ def main():
             first_line = file.readline()
         json_position = first_line.find("{")
         if json_position < 0:
+            print(f"Ignoring {benchmark_file} as it has no metadata")
             continue
         json_data = json.loads(first_line[json_position:])
         extension = json_data["extension"]
@@ -135,5 +139,7 @@ def main():
     matplotlib.pyplot.ylabel("Compression level")
     matplotlib.pyplot.legend()
     matplotlib.pyplot.show()
+    
+    
 
 main()
