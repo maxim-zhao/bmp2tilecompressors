@@ -76,67 +76,123 @@ DecompressLZSA1:
     out (c),d
 .endif
     ld b,0
-    jr _ReadToken
+    jp _ReadToken
 
-_NoLiterals: 
+_copy_256b_bytes_vram_to_vram:
+    ; Emit 256*b bytes
+--: push bc
+      ld b,0
+      ld c,$bf
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+    pop bc
+    djnz --
+    ; Then the rest, if any
+    ld a,c
+    or a
+    jp z, _CopyMatch_Done
+    jp _copy_c_bytes_vram_to_vram
+
+_NoLiterals:
+    ; Get the O, M bits from the token
     xor (hl)
     inc hl
+    ; O = 1 -> "long" offset
     jp m,_LongOffset
 
-_ShortOffset:  
+    ; O = 0 -> "short" offset
+_ShortOffset:
     push de
+      ; Next byte is a negative number for the offset
       ld e,(hl)
       ld d,$FF
 
-      ; short matches have length 0+3..14+3
+      ; MMMM = 15 means a "longer" match length; MMMM < 15 means match length is MMMM + 3
       add 3
       cp 15+3
-      jr nc,_LongerMatch
+      jr nc,_LongerMatch ; unlikely
+      ; fall through with a = match length and de = offset
 
-    ; placed here this saves a JP per iteration
 _CopyMatch:
+      ; Copy an LZ run of length ba from de bytes before the dest pointer
       ld c,a
-@UseC:
+@UseBC:
       inc hl
       ex (sp),hl            ; BC = len, DE = offset, HL = dest, SP ->[dest,src]
       ex de,hl
       add hl,de               ; BC = len, DE = dest, HL = dest-offset, SP->[src]
 .ifdef LZSAToVRAM
-      call _ldir_vram_to_vram
+      ; Copy bc bytes from VRAM address hl to VRAM address de
+      ; Both hl and de are "write" addresses ($4xxx)
+      ; Make hl a read address
+      res 6, h
+      ; Check if the count is below 256
+      ld a,b
+      or a
+      jr nz,_copy_256b_bytes_vram_to_vram ; unlikely
+      ; By emitting <=256 at a time, we can use the out (c),r opcode
+      ; for address setting, which then relieves pressure on a
+      ; and saves some push/pops; and we can use djnz for the loop.
+_copy_c_bytes_vram_to_vram:
+      ld b,c
+      ld c,$bf
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+_CopyMatch_Done:
 .else
       ldi ; Not sure why it does this? If bc = 0..2 it will give us +64K but we don't need it?
       ldi
       ldir            ; BC = 0, DE = dest
 .endif
     pop hl                ; HL = src
-  
-_ReadToken:  ; first a byte token "O|LLL|MMMM" is read from the stream,
-    ; where LLL is the number of literals and MMMM is
-    ; a length of the match that follows after the literals
+    ; fall through
+
+_ReadToken:
+    ; Token is one of
+    ; OLLLMMMM where O = offset size flag, L = literal count, m = match length
+    ;  LLL = 0 -> no literals
+    ;  LLL = 7 -> 
     ld a,(hl)
-    and $70
-    jr z,_NoLiterals
+    and %01110000
+    jr z,_NoLiterals ; unlikely
 
-    cp $70
-    jr z,_MoreLiterals          ; LLL=7 means 7+ literals...
-    rrca
-    rrca
-    rrca
-    rrca
-    ld c,a        ; LLL<7 means 0..6 literals...
+    cp %01110000
+    jr z,_MoreLiterals ; unlikely? ; 7 indicates 7+ literals
 
+    ; Get the literal count into c for 1..6 literals
+    rrca
+    rrca
+    rrca
+    rrca
+    ld c,a
+
+    ;
     ld a,(hl) ; re-get token
     inc hl
 .ifdef LZSAToVRAM
-    push af
+    ex af,af'
       call _ldir_rom_to_vram
-    pop af
+    ex af,af'
 .else
     ldir
 .endif
 
     ; the top bit of token is set if the offset contains two bytes
-    and $8F
+    and %10001111
     jp p,_ShortOffset
 
 _LongOffset: ; read second byte of the offset
@@ -149,102 +205,73 @@ _LongOffset: ; read second byte of the offset
       jp c,_CopyMatch
 
       ; MMMM=15 indicates a multi-byte number of literals
-_LongerMatch:  
+_LongerMatch:
+      ; Next byte is the extra match length
       inc hl
       add (hl)
-      jr nc,_CopyMatch
+      ; If it does not overflow 8 bits then use it
+      jp nc,_CopyMatch ; likely
 
-      ; the codes are designed to overflow;
-      ; the overflow value 1 means read 1 extra byte
-      ; and overflow value 0 means read 2 extra bytes
-@code1:
+      ; If it overflows past 0 then the result is the high byte and we read the low byte.
       ld b,a
       inc hl
       ld c,(hl)
-      jr nz,_CopyMatch@UseC
-@code0:
+      jp nz,_CopyMatch@UseBC ; likely
+
+      ; If it overflows to exactly 0 then we have a two-byte match length to read.
       inc hl
       ld b,(hl)
 
-      ; the two-byte match length equal to zero
-      ; designates the end-of-data marker
+      ; If these two bytes are 0 then we have got to the end of the data
       ld a,b
       or c
-      jr nz,_CopyMatch@UseC
+      jr nz,_CopyMatch@UseBC ; unlikely to have a two-byte length other than 0
     pop de
-    ret
+    ret ; This is the exit point fo the decompressor
 
 _MoreLiterals: ; there are three possible situations here
+    ; Get the O, MMMM bits
     xor (hl)
     inc hl
+    ; Save them temporarily
     ex af,af'
-    ld a,7
-    add (hl)
-    jr c,_ManyLiterals
+      ; Next byte is a literal count minus 7. High values indicate longer counts.
+      ld a,7
+      add (hl)
+      jr c,_ManyLiterals ; unlikely
 
-_CopyLiterals: 
-    ld c,a
-@UseC:
-    inc hl
+      ld c,a ; b is 0?
+
+_CopyLiterals:
+      inc hl
 .ifdef LZSAToVRAM
-    call _ldir_rom_to_vram
+      call _ldir_rom_to_vram
 .else
-    ldir ; source to dest
+      ldir ; source to dest
 .endif
     ex af,af'
-    jp p,_ShortOffset
-    jr _LongOffset
+    ; Then continue on to the LZ part based on the O bit
+    jp p,_ShortOffset ; likely
+    jp _LongOffset
 
 _ManyLiterals:
-@code1:
+    ; value is high byte of count if non-zero
     ld b,a
     inc hl
+    ; get low byte
     ld c,(hl)
-    jr nz,_CopyLiterals@UseC
-@code0:
+    jp nz,_CopyLiterals ; likely
+    ; if zero, get high byte of count
     inc hl
     ld b,(hl)
-    jr _CopyLiterals@UseC
+    jp _CopyLiterals
 
 .ifdef LZSAToVRAM
-_ldir_vram_to_vram:
-  ; Copy bc bytes from VRAM address hl to VRAM address de
-  ; Both hl and de are "write" addresses ($4xxx)
-  ; Make hl a read address
-  res 6, h
-  ; Check if the count is below 256
-  ld a,b
-  or a
-  jp z,_below256 ; likely
-  ; Else emit 256*b bytes
--:push bc
-    ld b,0
-    call +
-  pop bc
-  djnz -
-  ; Then fall through for the rest  
-_below256:
-  ; By emitting <=256 at a time, we can use the out (c),r opcode
-  ; for address setting, which then relieves pressure on a
-  ; and saves some push/pops; and we can use djnz for the loop.
-  ld b,c
-+:ld c,$bf
--:out (c),l
-  out (c),h
-  in a,($be)
-  out (c),e
-  out (c),d
-  out ($be),a
-  inc hl
-  inc de
-  djnz -
-  ret
-  
 _ldir_rom_to_vram:
   ; If b = 0, we can short-circuit. We optimise for this as we expect mostly short runs.
   ld a,b
   or a
-  jr nz,_above256
+  jr nz,+ ; unlikely
 
 _below256_2:
   ; add c to de
@@ -256,17 +283,15 @@ _below256_2:
   ld c,$be
   otir
   ret
-  
-_above256:
-  push bc
+
++:push bc
     ; We copy b*256 bytes
     ld c,$be
-    ld a,b
     ld b,0
 -:  otir
     inc d ; move de on by 256
     dec a
-    jr nz,-
+    jp nz,-
   pop bc
   ; If we have remainder, process it
   ld a,c
