@@ -298,6 +298,5 @@ _ldir_rom_to_vram:
   ld a,c
   or a
   ret z
-  ld b,0
   jp --
 .endif

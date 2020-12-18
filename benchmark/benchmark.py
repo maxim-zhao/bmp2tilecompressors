@@ -121,7 +121,7 @@ def main():
                     benchmark_file,
                     image)
                 if result is not None:
-                    print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
+                    print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
     # Now plot the results

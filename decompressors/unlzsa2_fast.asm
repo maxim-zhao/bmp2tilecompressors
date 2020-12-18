@@ -83,29 +83,53 @@ DecompressLZSA2:
     ld b,0
     scf
     ex af,af'
-    jp _ReadToken
+    jp _ReadToken ; always taken
 
 _ManyLiterals:
     ld a,18
     add (hl)
     inc hl
-    jr nc,_CopyLiterals
+    jp nc,_CopyLiterals ; likely
 
     ld c,(hl)
     inc hl
     ld a,b
     ld b,(hl)
-    jr _ReadToken@NEXTHLuseBC
+    jp _ReadToken@NEXTHLuseBC
+
+.ifdef LZSAToVRAM
+_copy_256b_bytes_vram_to_vram:
+    ; Emit 256*b bytes
+--: push bc
+      ld b,0
+      ld c,$bf
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+    pop bc
+    djnz --
+    ; Then the rest, if any
+    ld a,c
+    or a
+    jp nz,_copy_c_bytes_vram_to_vram ; likely
+    jp _CopyMatch_Done
+.endif
 
 _MoreLiterals:
     ld b,(hl)
     inc hl
     scf
     ex af,af'
-      jr nc,@noUpdate
+    jr nc,+
 
-      ld a,(hl)
-      or $F0
+    ld a,(hl)
+    or $F0
     ex af,af'
     ld a,(hl)
     inc hl
@@ -115,27 +139,25 @@ _MoreLiterals:
     rrca
     rrca
 
-@noUpdate ;sub $F0-3
-    cp 15+3
++:  cp 15+3
     jr z,_ManyLiterals
     inc a
     jr z,_ManyLiterals
     sub $F0-3+1
+    ; fall through
 
 _CopyLiterals:
     ld c,a
-    ld a,b
-    ld b,0
+    ld a,b ; save b
 .ifdef LZSAToVRAM
-    push af
-      call _ldir_rom_to_vram
-    pop af
+    call _ldir_rom_to_vram_c_only
 .else
+    ld b,0
     ldir
 .endif
     push de
       or a
-      jp p,_CASE0xx
+      jp p,_CASE0xx ; can't jr on sign flag
 
       cp %11000000
       jr c,_CASE10x
@@ -148,13 +170,10 @@ _CASE11x:
 _CASE111:
       ld e,ixl
       ld d,ixh
-      jr _MatchLen
-
-
-
+      jp _MatchLen
 
 _Literals0011:
-    jr nz,_MoreLiterals
+    jr nz,_MoreLiterals ; unlikely?
 
     ; if "LL" of the byte token is equal to 0,
     ; there are no literals to copy
@@ -191,7 +210,7 @@ _MatchLen:
 
 _CopyMatch:
       ld c,a
-@useC:
+@useBC:
       ex (sp),hl            ; BC = len, DE = offset, HL = dest, SP ->[dest,src]
       ex de,hl
       add hl,de            ; BC = len, DE = dest, HL = dest-offset, SP->[src]
@@ -203,7 +222,7 @@ _CopyMatch:
       ; Check if the count is below 256
       ld a,b
       or a
-      jp nz,_copy_256b_bytes_vram_to_vram ; unlikely
+      jr nz,_copy_256b_bytes_vram_to_vram ; unlikely
       ; By emitting <=256 at a time, we can use the out (c),r opcode
       ; for address setting, which then relieves pressure on a
       ; and saves some push/pops; and we can use djnz for the loop.
@@ -226,6 +245,7 @@ _CopyMatch_Done:
 .endif
 @popSrc:
     pop hl
+    ; fall through
 
     ; compressed data stream contains records
     ; each record begins with the byte token "XYZ|LL|MMM"
@@ -263,7 +283,7 @@ _CASE1xx:
 _CASE10x:
       ld c,a
       ex af,af'
-      jr nc,@noUpdate
+      jr nc,+
 
       ld a,(hl)
       or $F0
@@ -276,25 +296,24 @@ _CASE10x:
       rrca
       rrca
 
-@noUpdate:
-      ld d,a
++:    ld d,a
       ld a,c
       cp %10100000
       dec d
       rl d
-      jr _ReadOffsetE
+      jp _ReadOffsetE
 
     ; "110": 16-bit offset
 _CASE110:
-    ld d,(hl)
-    inc hl
-    jr _ReadOffsetE
+      ld d,(hl)
+      inc hl
+      jp _ReadOffsetE
 
     ; "00x": the case of the 5-bit offset
 _CASE00x:
       ld c,a
       ex af,af'
-      jr nc,@noUpdate
+      jr nc,+
 
       ld a,(hl)
       or $F0
@@ -307,8 +326,7 @@ _CASE00x:
       rrca
       rrca
 
-@noUpdate:
-      ld e,a
++:    ld e,a
       ld a,c
       cp %00100000
       rl e
@@ -317,7 +335,7 @@ _CASE00x:
 _LongerMatch:
       scf
       ex af,af'
-      jr nc,@noUpdate
+      jr nc,+
 
       ld a,(hl)
       or $F0
@@ -330,25 +348,41 @@ _LongerMatch:
       rrca
       rrca
 
-@noUpdate:
-      sub $F0-9
++:    sub $F0-9
       cp 15+9
-      jp c,_CopyMatch
+      jp c,_CopyMatch ; too far for jr, likely
 
 _LongMatch:
       add (hl)
       inc hl
-      jp nc,_CopyMatch
+      jp nc,_CopyMatch ; too far for jr, likely
       ld c,(hl)
       inc hl
       ld b,(hl)
       inc hl
-      jp nz,_CopyMatch@useC
+      jp nz,_CopyMatch@useBC ; too far for jr, unlikely?
     pop de
     ret
 
 .ifdef LZSAToVRAM
+_ldir_rom_to_vram_c_only:
+  ; copy c bytes from hl (ROM) to de (VRAM)
+  ; leaves hl, de increased by c at the end
+  ; does not use a
+  ld b,0
+  ex de,hl
+    add hl,bc
+  ex de,hl
+  ld b,c
+  ld c,$be
+  otir
+  ret
+
 _ldir_rom_to_vram:
+  ; copy bc bytes from hl (ROM) to de (VRAM)
+  ; leaves hl, de increased by bc at the end
+  ; trashes a (unlike ldir)
+  
   ; add bc to de to mimic ldir
   ex de,hl
     add hl,bc
@@ -378,29 +412,6 @@ _ldir_rom_to_vram:
   ld a,c
   or a
   ret z
-  ld b,0
   jp --
-  
-_copy_256b_bytes_vram_to_vram:
-    ; Emit 256*b bytes
---: push bc
-      ld b,0
-      ld c,$bf
--:    out (c),l
-      out (c),h
-      in a,($be)
-      out (c),e
-      out (c),d
-      out ($be),a
-      inc hl
-      inc de
-      djnz -
-    pop bc
-    djnz --
-    ; Then the rest, if any
-    ld a,c
-    or a
-    jp z, _CopyMatch_Done
-    jp _copy_c_bytes_vram_to_vram
 
 .endif
