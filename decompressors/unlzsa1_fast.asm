@@ -268,17 +268,17 @@ _ManyLiterals:
 
 .ifdef LZSAToVRAM
 _ldir_rom_to_vram:
+  ; add bc to de to mimic ldir
+  ex de,hl
+    add hl,bc
+  ex de,hl
+
   ; If b = 0, we can short-circuit. We optimise for this as we expect mostly short runs.
   ld a,b
   or a
   jr nz,+ ; unlikely
 
-_below256_2:
-  ; add c to de
-  ex de,hl
-  ld b,0
-  add hl,bc
-  ex de,hl
+--:
   ld b,c
   ld c,$be
   otir
@@ -289,7 +289,7 @@ _below256_2:
     ld c,$be
     ld b,0
 -:  otir
-    inc d ; move de on by 256
+    ;inc d ; move de on by 256
     dec a
     jp nz,-
   pop bc
@@ -297,5 +297,6 @@ _below256_2:
   ld a,c
   or a
   ret z
-  jp _below256_2
+  ld b,0
+  jp --
 .endif
