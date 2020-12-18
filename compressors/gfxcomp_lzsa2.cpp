@@ -34,8 +34,8 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
         outFilename,
         nullptr,
         LZSA_FLAG_RAW_BLOCK | LZSA_FLAG_FAVOR_RATIO, // TODO: make this optional (without it favours speed a bit)
-        0, // TODO: make this optional
-        1, // TODO: make this optional?
+        0,
+        2,
         nullptr,
         nullptr,
         &compressedSize,
@@ -78,13 +78,13 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
-    return "LZSA1";
+    return "LZSA2";
 }
 
 extern "C" __declspec(dllexport) const char* getExt()
 {
     // A string suitable for use as a file extension
-    return "lzsa1";
+    return "lzsa2";
 }
 
 extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destinationLength)

@@ -1,6 +1,6 @@
 ; This file is an assembler port for WLA-DX by Maxim.
 ; It is forwards-only with no unrolling (as that used self-modifying code).
-; Define LZSAToVRAM to enable VRAM mode.
+; Define LZSAToVRAM to enable VRAM mode for SMS.
 ; Usage:
 ;
 ;  ld hl,data
@@ -78,6 +78,7 @@ DecompressLZSA1:
     ld b,0
     jp _ReadToken
 
+.ifdef LZSAToVRAM
 _copy_256b_bytes_vram_to_vram:
     ; Emit 256*b bytes
 --: push bc
@@ -99,6 +100,7 @@ _copy_256b_bytes_vram_to_vram:
     or a
     jp z, _CopyMatch_Done
     jp _copy_c_bytes_vram_to_vram
+.endif
 
 _NoLiterals:
     ; Get the O, M bits from the token
@@ -289,7 +291,6 @@ _ldir_rom_to_vram:
     ld c,$be
     ld b,0
 -:  otir
-    ;inc d ; move de on by 256
     dec a
     jp nz,-
   pop bc
