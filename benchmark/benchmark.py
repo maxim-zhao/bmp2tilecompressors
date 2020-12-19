@@ -136,6 +136,9 @@ def main():
         )
     matplotlib.pyplot.xlabel("Bytes per frame")
     matplotlib.pyplot.xscale("log")
+    matplotlib.pyplot.minorticks_on
+    matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.ylabel("Compression level")
     matplotlib.pyplot.legend()
     matplotlib.pyplot.show()
