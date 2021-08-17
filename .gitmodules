@@ -14,3 +14,7 @@
 	path = compressors/pucrunch
 	url = https://github.com/mist64/pucrunch.git
 	branch = master
+[submodule "compressors/ZX0"]
+	path = compressors/ZX0
+	url = https://github.com/einar-saukas/ZX0.git
+	branch = main
