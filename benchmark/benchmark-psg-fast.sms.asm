@@ -1,4 +1,4 @@
-; { "technology": "Phantasy Star Gaiden", "extension": "psgcompr" }
+; { "technology": "Phantasy Star Gaiden (fast)", "extension": "psgcompr" }
 
 .memorymap
 defaultslot 0

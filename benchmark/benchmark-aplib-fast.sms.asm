@@ -1,4 +1,4 @@
-; { "technology": "aPLib", "extension": "aplib", "extra-extensions": ["apultra", "oapack"] }
+; { "technology": "aPLib (fast)", "extension": "aplib", "extra-extensions": ["apultra", "oapack"] }
 
 .memorymap
 defaultslot 0

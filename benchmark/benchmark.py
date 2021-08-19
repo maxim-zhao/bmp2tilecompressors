@@ -125,6 +125,11 @@ def main():
                     results.append(result)
 
     # Now plot the results
+    NUM_COLORS = len([x for x in itertools.groupby(results, lambda r: r.technology)])
+
+    cm = matplotlib.pyplot.get_cmap('tab20')
+    matplotlib.pyplot.gca().set_prop_cycle(color=[cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
     for technology, data in itertools.groupby(results, lambda r: r.technology):
         group_results = list(data)
         matplotlib.pyplot.plot(
@@ -141,6 +146,7 @@ def main():
     matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.ylabel("Compression level")
     matplotlib.pyplot.legend()
+
     matplotlib.pyplot.show()
     
     

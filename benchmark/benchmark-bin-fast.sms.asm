@@ -1,4 +1,4 @@
-; { "technology": "null", "extension": "bin" }
+; { "technology": "Uncompressed (fast)", "extension": "bin" }
 
 .memorymap
 defaultslot 0
