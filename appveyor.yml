@@ -20,5 +20,5 @@ deploy:
 - provider: GitHub
   release: Build ${appveyor_build_number}
   auth_token:
-    secure: KbY6wD6RTuotJxi7BdGQWg4e6rEc9OMP1u0keEYIrO9CrV9C8OJNSTjaOAmNH1LJ
+    secure: rKUfRHMGs7wVh/SYX9kJ67VqiPlztPwvnh3yjC3C2NX/Wpn9XsZrxIx0BXe9ZztT
   force_update: true
