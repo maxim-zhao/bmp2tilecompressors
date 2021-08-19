@@ -1,4 +1,4 @@
-; { "technology": "LZSA1", "extension": "lzsa1" }
+; { "technology": "ZX0", "extension": "zx0" }
 
 .memorymap
 defaultslot 0
@@ -17,10 +17,12 @@ banks 1
 .org 0
 	ld hl,data
 	ld de,$4000
-	call DecompressLZSA1
+	call dzx0_standard
 	ret ; ends the test
 	
-.define LZSAToVRAM
-.include "../decompressors/unlzsa1_fast.asm"
+.define ZX0ToVRAM
+.block "decompressor"
+.include "../decompressors/dzx0_standard_sms.asm"
+.endb
 
-data: .incbin "data.lzsa1"
+data: .incbin "data.zx0"

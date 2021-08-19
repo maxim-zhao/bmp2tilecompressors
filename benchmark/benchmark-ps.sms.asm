@@ -20,6 +20,8 @@ banks 1
 	call LoadTiles4BitRLENoDI
 	ret ; ends the test
 	
+.block "decompressor"
 .include "../decompressors/Phantasy Star decompressor.asm"
+.endb
 
 data: .incbin "data.pscompr"

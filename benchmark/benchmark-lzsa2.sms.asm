@@ -21,6 +21,9 @@ banks 1
 	ret ; ends the test
 	
 .define LZSAToVRAM
+.block "decompressor"
 .include "../decompressors/unlzsa2_fast.asm"
+.endb
+
 .org $1000
 data: .incbin "data.lzsa2"

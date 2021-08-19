@@ -23,6 +23,8 @@ banks 1
 
 .define exo_mapbasebits $c000
 .define ExomizerToVRAM
+.block "decompressor"
 .include "../decompressors/Exomizer v2 decompressor.asm"
+.endb
 
 data: .incbin "data.exomizer"

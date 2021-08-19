@@ -26,7 +26,7 @@ Compressors
 | aPLib    | aPLib       | aPLib | [aPLib](http://ibsensoftware.com/products_aPLib.html) compression library | ✅ | ✅ |
 | apultra  | apultra     | aPLib (apultra) | [apultra](https://github.com/emmanuel-marty/apultra) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
-| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression | ✅ | ✅ |
+| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠️ Seems to crash on some inputs, decompressor fails sometimes | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
 | lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library | ✅ | ✅ |
@@ -35,9 +35,33 @@ Compressors
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
+| pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm. ⚠️ Decompressor fails | ✅ | ✅ |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
-| zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression  library tweaked for performance | ✅ | ✅ |
+| zx0      | zx0         | ZX0 | [ZX0](https://github.com/einar-saukas/ZX0) compression library | ✅ | ✅ |
+| zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression library tweaked for performance | ✅ | ✅ |
+
+Decompressors
+----
+
+All are for emitting data direct to VRAM on Master System, using Z80 decompressors. Decompression to RAM will generally be smaller.
+
+| Description           | ROM (bytes) | RAM (bytes, not including stack) |
+|:----------------------|-----:|----:|
+| aPLib                 |  303 |   5 |
+| aPLib (fast)          |  333 |   0 |
+| Exomizer v2 (⚠️ Broken) |  208 | 156 |
+| LZ4                   |  136 |   0 |
+| LZSA1                 |  207 |   0 |
+| LZSA2                 |  332 |   0 |
+| Phantasy Star RLE     |  188 |   0 |
+| PS Gaiden             |  223 |  34 |
+| PS Gaiden (fast)      | 1028 |  32 |
+| Pucrunch (⚠️ Broken)  |  412 |  44 |
+| Sonic                 |  162 |   8 |
+| ZX0                   |  157 |   0 |
+| ZX0 (fast)            |  274 |   0 |
+| ZX7                   |  117 |   0 |
 
 Benchmark
 ----
@@ -45,6 +69,12 @@ Benchmark
 Based on a benchmark corpus made of tilesets and title screens, here's a scatter of the results.
 
 ![](/benchmark.png?raw=true)
+
+How to read:
+
+- Further to the right is faster
+- Further up is better compression
+- The scatter for a particular colour group is across a corpus of realistic Master System tile data
 
 There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your data.
 

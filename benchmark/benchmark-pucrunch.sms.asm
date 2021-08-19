@@ -23,6 +23,8 @@ banks 1
 
 .define PucrunchVars $c000
 .define PuCrunchToVRAM
+.block "decompressor"
 .include "../decompressors/PuCrunch decompressor.asm"
+.endb
 
 data: .incbin "data.pucrunch"

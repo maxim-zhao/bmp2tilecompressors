@@ -21,6 +21,8 @@ banks 1
   ret ; ends the test
   
 .define ZX0ToVRAM
+.block "decompressor"
 .include "../decompressors/dzx0_fast_sms.asm"
+.endb
 
 data: .incbin "data.zx0"

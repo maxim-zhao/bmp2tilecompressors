@@ -20,7 +20,9 @@ banks 1
 	call Sonic1TileLoader_Decompress
 	ret ; ends the test
 
-.define Sonic1TileLoaderMemory $c000	
+.define Sonic1TileLoaderMemory $c000
+.block "decompressor"
 .include "../decompressors/Sonic decompressor.asm"
+.endb
 
 data: .incbin "data.soniccompr"

@@ -21,6 +21,8 @@ banks 1
 	ret ; ends the test
 	
 .define ZX7ToVRAM
+.block "decompressor"
 .include "../decompressors/ZX7 decompressor.asm"
+.endb
 
 data: .incbin "data.zx7"

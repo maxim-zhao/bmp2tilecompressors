@@ -21,6 +21,8 @@ banks 1
 	ret ; ends the test
 	
 .define PSGaiden_decomp_buffer $c000
+.block "decompressor"
 .include "../decompressors/Phantasy Star Gaiden decompressor (fast).asm"
+.endb
 
 data: .incbin "data.psgcompr"

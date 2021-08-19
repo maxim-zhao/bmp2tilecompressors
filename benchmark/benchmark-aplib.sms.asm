@@ -22,7 +22,9 @@ banks 1
 
 .define aPLibMemory $c000
 .define aPLibToVRAM
+.block "decompressor"
 .include "../decompressors/aPLib decompressor.asm"
+.endb
 
 data:
 .incbin "data.aplib"
