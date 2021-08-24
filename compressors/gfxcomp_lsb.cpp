@@ -14,10 +14,10 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "lsbtilemap";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destSize)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationSize)
 {
 	const size_t outputSize = width * height;
-	if (outputSize > destSize)
+	if (outputSize > destinationSize)
 	{
 		return 0;
 	}
@@ -25,9 +25,9 @@ extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint3
 	for (size_t i = 0; i < outputSize; ++i)
 	{
 		// Copy one...
-		*dest++ = *source++;
+		*pDestination++ = *pSource++;
 		// ...skip one
-		++source;
+		++pSource;
 	}
 	return outputSize;
 }

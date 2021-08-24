@@ -5,7 +5,7 @@
 // Pucrunch's main function
 int main(int argc, char *argv[]);
 
-int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // Pucrunch only likes to work on files so we have to write them to disk...
     char inFilename[L_tmpnam_s];
@@ -18,7 +18,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     {
         return -1;
     }
-    fwrite(source, 1, sourceLen, f);
+    fwrite(pSource, 1, sourceLength, f);
     fclose(f);
 
     char outFilename[L_tmpnam_s];
@@ -30,7 +30,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 
     // We invoke the Pucrunch main function directly...
     const char* argv[] = { "", "-d", "-c0", inFilename, outFilename };
-    const auto status = main(5, const_cast<char**>(argv));
+    const auto status = main(5, const_cast<char**>(argv));  // NOLINT(clang-diagnostic-main)
 
     remove(inFilename);
 
@@ -51,7 +51,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 
     const size_t compressedSize = ftell(f);
 
-    if (compressedSize > destLen)
+    if (compressedSize > destinationLength)
     {
         fclose(f);
         remove(outFilename);
@@ -59,7 +59,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     }
 
     if (fseek(f, 0, SEEK_SET) != 0 ||
-        fread_s(dest, destLen, 1, compressedSize, f) != compressedSize)
+        fread_s(pDestination, destinationLength, 1, compressedSize, f) != compressedSize)
     {
         fclose(f);
         remove(outFilename);
@@ -84,16 +84,14 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "pucrunch";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest,
-                                                        uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
     // Compress tiles
-    return compress(source, numTiles * 32, dest, destinationLength);
+    return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height,
-                                                          uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
     // Compress tilemap
-    return compress(source, width * height * 2, dest, destLen);
+    return compress(pSource, width * height * 2, pDestination, destinationLength);
 }

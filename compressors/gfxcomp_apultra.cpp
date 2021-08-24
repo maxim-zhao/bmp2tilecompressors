@@ -2,23 +2,23 @@
 #include <algorithm>
 #include "libapultra.h"
 
-int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
 	// Allocate memory
-	auto packedSize = apultra_get_max_compressed_size(sourceLen);
+    const auto packedSize = apultra_get_max_compressed_size(sourceLength);
 	auto* pPacked = new uint8_t[packedSize];
 
-	const auto size = apultra_compress(source, pPacked, sourceLen, packedSize, 0, 0, 0, nullptr, nullptr);
+	const auto size = apultra_compress(pSource, pPacked, sourceLength, packedSize, 0, 0, 0, nullptr, nullptr);
 
 	// Check size
-	if (size > destLen)
+	if (size > destinationLength)
 	{
 		delete [] pPacked;
 		return 0;
 	}
 
-	// Copy to dest
-	std::copy(pPacked, pPacked + size, dest);
+	// Copy to pDestination
+	std::copy_n(pPacked, size, pDestination);
 
 	// Free other memory
 	delete [] pPacked;
@@ -40,15 +40,15 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "apultra";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	// Compress tiles
-	return compress(source, numTiles * 32, dest, destinationLength);
+	return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	// Compress tilemap
-	return compress(source, width * height * 2, dest, destLen);
+	return compress(pSource, width * height * 2, pDestination, destinationLength);
 }
 

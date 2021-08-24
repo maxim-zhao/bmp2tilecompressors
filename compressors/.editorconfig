@@ -1,0 +1,8 @@
+
+[*]
+
+# ReSharper properties
+resharper_cpp_max_line_length = 159
+resharper_indent_preprocessor_directives = normal
+resharper_linkage_specification_braces = next_line
+resharper_linkage_specification_indentation = all

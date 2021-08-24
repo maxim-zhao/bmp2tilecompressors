@@ -4,7 +4,7 @@
 
 #include "lzsa/src/lib.h"
 
-int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // LZSA only likes to work on files so we have to write them to disk...
     char inFilename[L_tmpnam_s];
@@ -17,7 +17,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
     {
         return -1;
     }
-    fwrite(source, 1, sourceLen, f);
+    fwrite(pSource, 1, sourceLength, f);
     fclose(f);
 
     char outFilename[L_tmpnam_s];
@@ -51,7 +51,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
         return -1;
     }
 
-    if (compressedSize > destLen)
+    if (compressedSize > destinationLength)
     {
         remove(outFilename);
         return 0; // Buffer too small
@@ -64,7 +64,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
         return -1;
     }
 
-    if (fread_s(dest, destLen, 1, static_cast<size_t>(compressedSize), f) != compressedSize)
+    if (fread_s(pDestination, destinationLength, 1, static_cast<size_t>(compressedSize), f) != compressedSize)
     {
         fclose(f);
         remove(outFilename);
@@ -87,14 +87,14 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "lzsa2";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
     // Compress tiles
-    return compress(source, numTiles * 32, dest, destinationLength);
+    return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
     // Compress tilemap
-    return compress(source, width * height * 2, dest, destLen);
+    return compress(pSource, width * height * 2, pDestination, destinationLength);
 }

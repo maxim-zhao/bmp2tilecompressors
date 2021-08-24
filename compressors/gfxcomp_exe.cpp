@@ -10,7 +10,8 @@
 // TODO: allow stdin/stdout?
 
 #pragma warning(push,3)
-#include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <cstdint>
 #include <string>
 #include <sstream>
@@ -24,7 +25,7 @@ extern "C" BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD, LPVOID)
 	return TRUE;
 }
 
-std::string getConfigFilename()
+const std::string& getConfigFilename()
 {
 	static std::string filename;
 	if (!filename.empty())
@@ -42,7 +43,7 @@ std::string getConfigFilename()
 
 		// Try to get the DLL filename.
 		// This returns the number of chars copied on success, 0 otherwise.
-		DWORD result = GetModuleFileName(g_hInstance, buffer, bufferSize);
+        const DWORD result = GetModuleFileName(g_hInstance, buffer, bufferSize);
 		success = result != bufferSize;
 		bufferSize *= 2;
 	}
@@ -56,27 +57,29 @@ std::string getConfigFilename()
 std::string getSetting(const std::string& name)
 {
 	const std::string& configFilename = getConfigFilename();
-	std::string setting;
 
-	char* buffer = nullptr;
-	unsigned int bufferSize = 256;
-	bool success = false;
-	while (!success)
+    char* buffer = nullptr;
+    for (unsigned int bufferSize = 256;; bufferSize *= 2)
 	{
 		delete [] buffer;
 		buffer = new char[bufferSize];
 
 		// Try to get the setting value.
-		// This returns the number of chars copied on success, 0 otherwise.
-		DWORD result = GetPrivateProfileString("Settings", name.c_str(), nullptr, buffer, bufferSize, configFilename.c_str());
-		success = result != bufferSize;
+		// This returns the number of chars copied (not including the null terminator).
+		// Thus if it tells us bufferSize - 1 then it may be truncated and we retry with a bigger buffer.
+        const DWORD result = GetPrivateProfileString("Settings", name.c_str(), nullptr, buffer, bufferSize, configFilename.c_str());
+		if (result != bufferSize - 1)
+		{
+			// Success
+		    break;
+		}
 	}
-	setting = std::string(buffer);
+	std::string setting(buffer);
 	delete [] buffer;
 	return setting;
 }
 
-int getSettingInt(const std::string& name, int defaultValue)
+int getSettingInt(const std::string& name, const int defaultValue)
 {
 	const std::string& configFilename = getConfigFilename();
 	return GetPrivateProfileInt("Settings", name.c_str(), defaultValue, configFilename.c_str());
@@ -84,7 +87,7 @@ int getSettingInt(const std::string& name, int defaultValue)
 
 extern "C" __declspec(dllexport) const char* getName()
 {
-	static std::string name = getSetting("Name").c_str();
+	static std::string name = getSetting("Name");
 	return name.c_str();
 }
 
@@ -105,7 +108,7 @@ extern "C" __declspec(dllexport) const char* getExt()
 
 void replace(std::string& haystack, const std::string& needle, const std::string& replacement)
 {
-	for (std::string::size_type pos = haystack.find(needle); pos != std::string::npos; pos = haystack.find(needle))
+	for (auto pos = haystack.find(needle); pos != std::string::npos; pos = haystack.find(needle))
 	{
 		// Replace while we find it
 		// This can go on forever with badly-chosen needles and replacements...
@@ -113,31 +116,31 @@ void replace(std::string& haystack, const std::string& needle, const std::string
 	}
 }
 
-int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
 	// We get a couple of temp filenames...
 	char tempPathBuf[MAX_PATH];
-	DWORD tempPathResult = GetTempPath(MAX_PATH, tempPathBuf);
+    const DWORD tempPathResult = GetTempPath(MAX_PATH, tempPathBuf);
 	if (tempPathResult == 0 || tempPathResult >= MAX_PATH)
 	{
 		return -1;
 	}
 	std::ostringstream ss;
 	ss << tempPathBuf << "gfxcomp_exe_temp_in_" << rand() << ".bin";
-	std::string inFilename(ss.str());
+    const std::string inFilename(ss.str());
 	ss.str(std::string());
 	ss << tempPathBuf << "gfxcomp_exe_temp_out_" << rand() << ".bin";
-	std::string outFilename(ss.str());
+    const std::string outFilename(ss.str());
 
 	// We write the data to the first filename...
 	// Since we're using Windows API for creating the process, let's use it for files too...
-	HANDLE fIn = CreateFile(inFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    const HANDLE fIn = CreateFile(inFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (fIn == INVALID_HANDLE_VALUE)
 	{
 		return -1;
 	}
 	DWORD numberOfBytesWritten;
-	if (!WriteFile(fIn, source, sourceLen, &numberOfBytesWritten, nullptr) || numberOfBytesWritten != sourceLen)
+	if (!WriteFile(fIn, pSource, sourceLength, &numberOfBytesWritten, nullptr) || numberOfBytesWritten != sourceLength)
 	{
 		// Failed to write
 		CloseHandle(fIn);
@@ -155,9 +158,9 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	char* commandLine = _strdup(command.c_str());
 
 	// Then we run it and wait for it to complete
-	PROCESS_INFORMATION processInformation = {};
-	STARTUPINFO startupInfo = {};
-	BOOL created = CreateProcess(nullptr, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInformation);
+	PROCESS_INFORMATION processInformation{};
+	STARTUPINFO startupInfo{};
+    const BOOL created = CreateProcess(nullptr, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInformation);
 	free(commandLine);
 
 	if (!created)
@@ -174,15 +177,15 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	DeleteFile(inFilename.c_str());
 
 	// Then read in the output file
-	HANDLE fOut = CreateFile(outFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    const HANDLE fOut = CreateFile(outFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (fOut == INVALID_HANDLE_VALUE)
 	{
 		DeleteFile(outFilename.c_str());
 		return -1;
 	}
 	// Check the size
-	DWORD fileSize = GetFileSize(fOut, nullptr);
-	if (fileSize > destLen)
+    const DWORD fileSize = GetFileSize(fOut, nullptr);
+	if (fileSize > destinationLength)
 	{
 		// Dest buffer too small
 		CloseHandle(fOut);
@@ -191,7 +194,7 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	}
 	// Read it in
 	DWORD numberOfBytesRead;
-	if (!ReadFile(fOut, dest, fileSize, &numberOfBytesRead, nullptr) || numberOfBytesRead != fileSize)
+	if (!ReadFile(fOut, pDestination, fileSize, &numberOfBytesRead, nullptr) || numberOfBytesRead != fileSize)
 	{
 		// Problem reading
 		CloseHandle(fOut);
@@ -204,12 +207,12 @@ int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLe
 	return fileSize;
 }
 
-extern "C" __declspec(dllexport) int compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
-	return compress(source, numTiles * 32, dest, destLen);
+	return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
-	return compress(source, width * height * 2, dest, destLen);
+	return compress(pSource, width * height * 2, pDestination, destinationLength);
 }

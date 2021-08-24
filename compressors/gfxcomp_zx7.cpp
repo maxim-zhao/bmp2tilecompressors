@@ -20,14 +20,14 @@ extern "C" __declspec(dllexport) const char* getExt()
 }
 
 // The actual compressor function, calling into the zx7 code
-uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
+uint32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // ReSharper disable once CommentTypo
     // The compressor allocates using calloc, so we have to free() the results
     std::size_t outputSize;
     long delta; // we don't care about this
-    const auto optimised = optimize(pSource, sourceLength, 0);
-    const auto pOutputData = compress(optimised, pSource, sourceLength, 0, &outputSize, &delta);
+    const auto optimised = optimize(const_cast<unsigned char*>(pSource), sourceLength, 0);
+    const auto pOutputData = compress(optimised, const_cast<unsigned char*>(pSource), sourceLength, 0, &outputSize, &delta);
     free(optimised);
 
     if (outputSize > destinationLength)
@@ -43,12 +43,12 @@ uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination
     return outputSize;
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* pSource, uint32_t numTiles, uint8_t* pDestination, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* pSource, uint32_t width, uint32_t height, uint8_t* pDestination, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
     return compress(pSource, width * height * 2, pDestination, destinationLength);
 }

@@ -2,26 +2,26 @@
 #include <algorithm>
 #include "aPLib/aplib.h"
 
-int compress(uint8_t* source, uint32_t sourceLen, uint8_t* dest, uint32_t destLen)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
 	// Allocate memory
-	auto* pPacked = new uint8_t[aP_max_packed_size(sourceLen)];
-	auto* pWorkMemory = new uint8_t[aP_workmem_size(sourceLen)];
+	auto* pPacked = new uint8_t[aP_max_packed_size(sourceLength)];
+	auto* pWorkMemory = new uint8_t[aP_workmem_size(sourceLength)];
 
-	const auto size = aP_pack(source, pPacked, sourceLen, pWorkMemory, nullptr, nullptr);
+	const auto size = aP_pack(pSource, pPacked, sourceLength, pWorkMemory, nullptr, nullptr);
 
 	// Free work memory
 	delete [] pWorkMemory;
 
 	// Check size
-	if (size > destLen)
+	if (size > destinationLength)
 	{
 		delete [] pPacked;
 		return 0;
 	}
 
-	// Copy to dest
-	memcpy_s(dest, destLen, pPacked, size);
+	// Copy to pDestination
+	memcpy_s(pDestination, destinationLength, pPacked, size);
 
 	// Free other memory
 	delete [] pPacked;
@@ -43,15 +43,15 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "aPLib";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* dest, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	// Compress tiles
-	return compress(source, numTiles * 32, dest, destinationLength);
+	return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* source, uint32_t width, uint32_t height, uint8_t* dest, uint32_t destLen)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	// Compress tilemap
-	return compress(source, width * height * 2, dest, destLen);
+	return compress(pSource, width * height * 2, pDestination, destinationLength);
 }
 

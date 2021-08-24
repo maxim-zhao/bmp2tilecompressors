@@ -19,40 +19,40 @@ extern "C" __declspec(dllexport) const char* getExt()
 }
 
 // The actual compressor function
-uint32_t compress(uint8_t* pSource, uint32_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
+uint32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
-	struct membuf inbuf{};
-	membuf_init(&inbuf);
-	membuf_append(&inbuf, pSource, sourceLength);
+	struct membuf sourceBuffer{};
+	membuf_init(&sourceBuffer);
+	membuf_append(&sourceBuffer, pSource, sourceLength);
 
-	struct membuf outbuf{};
-	membuf_init(&outbuf);
+	struct membuf destinationBuffer{};
+	membuf_init(&destinationBuffer);
 
-	crunch(&inbuf, &outbuf, nullptr, nullptr);
+	crunch(&sourceBuffer, &destinationBuffer, nullptr, nullptr);
 
-	membuf_free(&inbuf);
+	membuf_free(&sourceBuffer);
 
-	const uint32_t length = membuf_memlen(&outbuf);
+	const uint32_t length = membuf_memlen(&destinationBuffer);
 	if (length > destinationLength)
 	{
-		membuf_free(&outbuf);
+		membuf_free(&destinationBuffer);
 		return 0;
 	}
 
-	const auto* pBegin = static_cast<const uint8_t*>(membuf_get(&outbuf));
+	const auto* pBegin = static_cast<const uint8_t*>(membuf_get(&destinationBuffer));
 
 	memcpy_s(pDestination, destinationLength, pBegin, length);
 
-	membuf_free(&outbuf);
+	membuf_free(&destinationBuffer);
 	return length;
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* pSource, uint32_t numTiles, uint8_t* pDestination, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTilemap(uint8_t* pSource, uint32_t width, uint32_t height, uint8_t* pDestination, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	// Compress tilemap
 	return compress(pSource, width * height * 2, pDestination, destinationLength);

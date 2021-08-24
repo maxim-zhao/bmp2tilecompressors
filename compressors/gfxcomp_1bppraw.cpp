@@ -13,7 +13,7 @@ extern "C" __declspec(dllexport) const char* getExt()
 	return "1bpp";
 }
 
-extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_t numTiles, uint8_t* destination, uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
 {
 	const uint32_t sourceLength = numTiles * 32;
 	const uint32_t outputLength = sourceLength / 4;
@@ -24,8 +24,8 @@ extern "C" __declspec(dllexport) uint32_t compressTiles(uint8_t* source, uint32_
 
 	for (uint32_t i = 0; i < outputLength; ++i)
 	{
-		*destination++ = *source++;
-		source += 3;
+		*pDestination++ = *pSource++;
+		pSource += 3;
 	}
 	return outputLength;
 }
