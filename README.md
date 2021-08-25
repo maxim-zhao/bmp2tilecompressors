@@ -26,7 +26,7 @@ Compressors
 | aPLib    | aPLib       | aPLib | [aPLib](http://ibsensoftware.com/products_aPLib.html) compression library | ✅ | ✅ |
 | apultra  | apultra     | aPLib (apultra) | [apultra](https://github.com/emmanuel-marty/apultra) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
-| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠️ Seems to crash on some inputs, decompressor fails sometimes | ✅ | ✅ |
+| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠ Seems to crash on some inputs | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
 | lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library | ✅ | ✅ |
@@ -35,7 +35,7 @@ Compressors
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
-| pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm. ⚠️ Decompressor fails | ✅ | ✅ |
+| pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm | ✅ | ✅ |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | zx0      | zx0         | ZX0 | [ZX0](https://github.com/einar-saukas/ZX0) compression library | ✅ | ✅ |
@@ -50,18 +50,21 @@ All are for emitting data direct to VRAM on Master System, using Z80 decompresso
 |:----------------------|-----:|----:|
 | aPLib                 |  303 |   5 |
 | aPLib (fast)          |  333 |   0 |
-| Exomizer v2 (⚠️ Broken) |  208 | 156 |
+| Exomizer v2 (⚠ Broken) |  208 | 156 |
 | LZ4                   |  136 |   0 |
 | LZSA1                 |  207 |   0 |
 | LZSA2                 |  332 |   0 |
 | Phantasy Star RLE     |  188 |   0 |
 | PS Gaiden             |  223 |  34 |
 | PS Gaiden (fast)      | 1028 |  32 |
-| Pucrunch (⚠️ Broken)  |  412 |  44 |
+| Pucrunch (⚠ Broken)  |  412 |  44 |
 | Sonic                 |  162 |   8 |
 | ZX0                   |  157 |   0 |
 | ZX0 (fast)            |  274 |   0 |
 | ZX7                   |  117 |   0 |
+
+Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
+They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
 
 Benchmark
 ----
