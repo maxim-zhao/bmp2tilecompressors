@@ -1,4 +1,4 @@
-; { "technology": "aPLib (fast)", "extension": "aplib", "extra-extensions": ["apultra", "oapack"] }
+; { "technology": "aPLib (fast, apultra)", "extension": "apultra" }
 
 .memorymap
 defaultslot 0
@@ -27,4 +27,4 @@ banks 1
 .endb
 
 data:
-.incbin "data.aplib"
+.incbin "data.apultra"
