@@ -9,13 +9,13 @@ extern unsigned char* data;
 extern int packedBits;
 extern int size;
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, uint32_t destinationLength)
+int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     data = const_cast<unsigned char*>(pSource);
     size = static_cast<int>(sourceLength);
 
     packedBits = FindOptimalSolution();
-    const auto compressedSize = static_cast<uint32_t>(EmitCompressed());
+    const auto compressedSize = static_cast<size_t>(EmitCompressed());
 
     // Check size
     if (compressedSize > destinationLength)
@@ -27,7 +27,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     memcpy_s(pDestination, destinationLength, &packedData, compressedSize);
 
     // Done
-    return compressedSize;
+    return static_cast<int>(compressedSize);
 }
 
 extern "C" __declspec(dllexport) const char* getName()

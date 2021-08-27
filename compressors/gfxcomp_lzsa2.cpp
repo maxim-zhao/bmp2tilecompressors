@@ -6,72 +6,25 @@
 
 int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
-    // LZSA only likes to work on files so we have to write them to disk...
-    char inFilename[L_tmpnam_s];
-    if (tmpnam_s(inFilename))
-    {
-        return -1;
-    }
-    FILE* f;
-    if (fopen_s(&f, inFilename, "wb") != 0 || f == nullptr)
-    {
-        return -1;
-    }
-    fwrite(pSource, 1, sourceLength, f);
-    fclose(f);
-
-    char outFilename[L_tmpnam_s];
-    if (tmpnam_s(outFilename))
-    {
-        remove(inFilename);
-        return -1;
-    }
-
-    long long compressedSize;
-
-    const auto status = lzsa_compress_file(
-        inFilename,
-        outFilename,
-        nullptr,
-        LZSA_FLAG_RAW_BLOCK | LZSA_FLAG_FAVOR_RATIO, // TODO: make this optional (without it favours speed a bit)
+    const auto compressedSize = lzsa_compress_inmem(
+        const_cast<unsigned char*>(pSource),
+        pDestination,
+        sourceLength,
+        destinationLength,
+        LZSA_FLAG_RAW_BLOCK | LZSA_FLAG_FAVOR_RATIO,
         0,
-        2,
-        nullptr,
-        nullptr,
-        &compressedSize,
-        nullptr,
-        nullptr,
-        nullptr);
+        2);
 
-    remove(inFilename);
-
-    if (status != LZSA_OK)
+    if (compressedSize == static_cast<size_t>(-1))
     {
-        remove(outFilename);
-        return -1;
+        return -1; // Failed to compress
     }
 
     if (compressedSize > destinationLength)
     {
-        remove(outFilename);
         return 0; // Buffer too small
     }
 
-    // Read the file back in again
-    if (fopen_s(&f, outFilename, "rb") != 0 || f == nullptr)
-    {
-        remove(outFilename);
-        return -1;
-    }
-
-    if (fread_s(pDestination, destinationLength, 1, static_cast<size_t>(compressedSize), f) != compressedSize)
-    {
-        fclose(f);
-        remove(outFilename);
-        return -1;
-    }
-
-    fclose(f);
     return static_cast<int>(compressedSize);
 }
 

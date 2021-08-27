@@ -27,7 +27,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
 	delete [] pPacked;
 
 	// Done
-	return size;
+	return static_cast<int>(size);
 }
 
 extern "C" __declspec(dllexport) const char* getName()
