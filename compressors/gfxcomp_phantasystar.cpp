@@ -1,9 +1,9 @@
 #include <vector>
 #include <cstdint>
 
-const uint8_t MAX_RUN_SIZE = 0x7f;
-const uint8_t RLE_MASK = 0x00;
-const uint8_t RAW_MASK = 0x80;
+constexpr uint8_t MAX_RUN_SIZE = 0x7f;
+constexpr uint8_t RLE_MASK = 0x00;
+constexpr uint8_t RAW_MASK = 0x80;
 
 class Block
 {
@@ -71,7 +71,10 @@ uint32_t getRunLength(std::vector<uint8_t>::const_iterator begin, std::vector<ui
     return it - begin;
 }
 
-void writeRaw(std::vector<uint8_t>& dest, std::vector<uint8_t>::const_iterator begin, std::vector<uint8_t>::const_iterator end)
+void writeRaw(
+    std::vector<uint8_t>& dest,
+    std::vector<uint8_t>::const_iterator begin,
+    std::vector<uint8_t>::const_iterator end)
 {
     while (begin < end)
     {
@@ -104,7 +107,10 @@ void writeRun(std::vector<uint8_t>& destination, uint8_t value, uint32_t count)
     }
 }
 
-void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::const_iterator source, std::vector<uint8_t>::const_iterator sourceEnd)
+void compressPlane(
+    std::vector<uint8_t>& destination,
+    std::vector<uint8_t>::const_iterator source,
+    std::vector<uint8_t>::const_iterator sourceEnd)
 {
     // First we decompose into blocks
     std::vector<Block> blocks;
@@ -115,7 +121,7 @@ void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::cons
         if (runLength < 2)
         {
             // Not good enough; keep looking for a run
-            it += runLength;
+            it += static_cast<int>(runLength);
             continue;
         }
 
@@ -126,7 +132,7 @@ void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::cons
         }
         blocks.emplace_back(runLength, *it);
 
-        it += runLength;
+        it += static_cast<int>(runLength);
         rawStart = it;
     }
 
@@ -179,8 +185,6 @@ void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::cons
         case Block::Run:
             writeRun(destination, block.data[0], block.data.size());
             break;
-        default:
-            break;
         }
     }
 
@@ -188,7 +192,12 @@ void compressPlane(std::vector<uint8_t>& destination, std::vector<uint8_t>::cons
     destination.push_back(0);
 }
 
-uint32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength, uint32_t interleaving)
+uint32_t compress(
+    const uint8_t* pSource,
+    const size_t sourceLength,
+    uint8_t* pDestination,
+    const size_t destinationLength,
+    uint32_t interleaving)
 {
     // Compress sourceLength bytes from pSource to pDestination;
     // return length, or 0 if destinationLength is too small, or -1 if there is an error
@@ -237,14 +246,23 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "pscompr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(
+    const uint8_t* pSource,
+    const uint32_t numTiles,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     // Compress tiles
-    return compress(pSource, numTiles * 32, pDestination, destinationLength, 4);
+    return static_cast<int>(compress(pSource, numTiles * 32, pDestination, destinationLength, 4));
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTilemap(
+    const uint8_t* pSource,
+    const uint32_t width,
+    uint32_t height,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     // Compress tilemap
-    return compress(pSource, width * height * 2, pDestination, destinationLength, 2);
+    return static_cast<int>(compress(pSource, width * height * 2, pDestination, destinationLength, 2));
 }

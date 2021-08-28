@@ -21,22 +21,39 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "lz4";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(
+    const uint8_t* pSource,
+    const uint32_t numTiles,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     const auto sourceLength = numTiles * 32;
     if (destinationLength < static_cast<uint32_t>(LZ4_compressBound(sourceLength)))
     {
         return 0;
     }
-    return LZ4_compress_default(reinterpret_cast<const char*>(pSource), reinterpret_cast<char*>(pDestination), sourceLength, destinationLength);
+    return LZ4_compress_default(
+        reinterpret_cast<const char*>(pSource),
+        reinterpret_cast<char*>(pDestination),
+        static_cast<int>(sourceLength),
+        static_cast<int>(destinationLength));
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, const uint32_t height, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTilemap(
+    const uint8_t* pSource,
+    const uint32_t width,
+    const uint32_t height,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     const auto sourceLen = width * height * 2;
     if (destinationLength < static_cast<uint32_t>(LZ4_compressBound(sourceLen)))
     {
         return 0;
     }
-    return LZ4_compress_default(reinterpret_cast<const char*>(pSource), reinterpret_cast<char*>(pDestination), sourceLen, destinationLength);
+    return LZ4_compress_default(
+        reinterpret_cast<const char*>(pSource),
+        reinterpret_cast<char*>(pDestination),
+        static_cast<int>(sourceLen),
+        static_cast<int>(destinationLength));
 }

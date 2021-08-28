@@ -46,7 +46,11 @@ void addRow(std::vector<uint8_t>& buf, const uint32_t row)
     buf.push_back((row >> 24) & 0xff);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(
+    const uint8_t* pSource,
+    const uint32_t numTiles,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     if (numTiles > 0xffff)
     {
@@ -123,12 +127,12 @@ extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const
     destination.insert(destination.end(), duplicateRows.begin(), duplicateRows.end());
 
     // Now we know the art data offset...
-    const int artDataOffset = destination.size();
+    const auto artDataOffset = destination.size();
     destination[4] = (artDataOffset >> 0) & 0xff;
     destination[5] = (artDataOffset >> 8) & 0xff;
 
     // Copy over the art data
-    for (unsigned int row : artData)
+    for (const unsigned int row : artData)
     {
         addRow(destination, row);
     }
@@ -141,5 +145,5 @@ extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const
     // copy to dest
     memcpy_s(pDestination, destinationLength, &destination[0], destination.size());
     // return length
-    return destination.size();
+    return static_cast<int>(destination.size());
 }

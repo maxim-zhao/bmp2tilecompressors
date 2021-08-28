@@ -43,15 +43,22 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "oapack";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination,
-                                                        const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(
+    const uint8_t* pSource,
+    const uint32_t numTiles,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     // Compress tiles
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(const uint8_t* pSource, const uint32_t width, uint32_t height, uint8_t* pDestination,
-                                                          const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTilemap(
+    const uint8_t* pSource,
+    const uint32_t width,
+    uint32_t height,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     // Compress tilemap
     return compress(pSource, width * height * 2, pDestination, destinationLength);

@@ -39,7 +39,7 @@ void findMostCommonValue(std::vector<uint8_t>::const_iterator data, uint8_t& val
     }
     // find the highest count and its value
     count = 0;
-    for (auto& pair : counts)
+    for (const auto& pair : counts)
     {
         if (pair.second > count)
         {
@@ -237,7 +237,11 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "psgcompr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const uint32_t numTiles, uint8_t* pDestination, const uint32_t destinationLength)
+extern "C" __declspec(dllexport) int compressTiles(
+    const uint8_t* pSource,
+    const uint32_t numTiles,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
     if (numTiles > 0xffff)
     {
@@ -271,5 +275,5 @@ extern "C" __declspec(dllexport) int compressTiles(const uint8_t* pSource, const
     // copy to dest
     memcpy_s(pDestination, destinationLength, &destination[0], destination.size());
     // return length
-    return destination.size();
+    return static_cast<int>(destination.size());
 }

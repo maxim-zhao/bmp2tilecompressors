@@ -2,7 +2,14 @@
 [*]
 
 # ReSharper properties
-resharper_cpp_max_line_length = 159
+resharper_cpp_align_multiline_parameter = false
+resharper_cpp_max_line_length = 120
+resharper_cpp_wrap_after_declaration_lpar = true
+resharper_cpp_wrap_after_invocation_lpar = true
+resharper_cpp_wrap_arguments_style = chop_if_long
+resharper_cpp_wrap_parameters_style = chop_if_long
 resharper_indent_preprocessor_directives = normal
 resharper_linkage_specification_braces = next_line
 resharper_linkage_specification_indentation = all
+resharper_toplevel_function_definition_return_type_style = do_not_change
+resharper_use_continuous_line_indent_in_method_pars = true
