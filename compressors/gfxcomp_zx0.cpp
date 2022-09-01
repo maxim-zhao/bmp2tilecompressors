@@ -40,6 +40,7 @@ uint32_t compress(
         static_cast<int>(sourceLength),
         0,
         0,
+        0,
         &outputSize,
         &delta);
 
