@@ -4,7 +4,10 @@ import re
 import glob
 import json
 import matplotlib.pyplot
+from matplotlib.patches import Ellipse
 import itertools
+import statistics
+import numpy
 
 WLA_PATH = "C:\\Users\\maxim\\Documents\\Code\\C\\wla-dx\\binaries"
 BMP2TILE_PATH = "C:\\Users\\maxim\\Documents\\Code\\C#\\bmp2tile"
@@ -124,21 +127,61 @@ def main():
                     print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
+    # Dummy results for fast testing
+    # results = [Result("foo", 100, 100, 1000, ""), Result("foo", 90, 100, 1100, ""), Result("bar", 80, 100, 800, ""), Result("bar", 110, 100, 800, "")]
+
     # Now plot the results
     NUM_COLORS = len([x for x in itertools.groupby(results, lambda r: r.technology)])
 
     cm = matplotlib.pyplot.get_cmap('tab20')
-    matplotlib.pyplot.gca().set_prop_cycle(color=[cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+    colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
+    index = 0
 
     for technology, data in itertools.groupby(results, lambda r: r.technology):
+        # Get data series and stats
         group_results = list(data)
+        x = [r.bytes_per_frame for r in group_results]
+        y = [r.ratio for r in group_results]
+        mean_x = statistics.mean(x)
+        mean_y = statistics.mean(y)
+        stdev_x = statistics.stdev(x)
+        stdev_y = statistics.stdev(y)
+
+        # Pick the next colour
+        color = colors[index]
+        index += 1
+
+        # Draw the mean and stdev ellipse (if non-zero stdev)
+        if stdev_x > 0 and stdev_y > 0:
+            matplotlib.pyplot.gca().add_artist(Ellipse(
+                xy=[mean_x, mean_y],
+                width=stdev_x,
+                height=stdev_y,
+                fill=False,
+                edgecolor=color,
+                linestyle='-',
+                zorder = index-200 # SDs at the bottom
+            ))
+            matplotlib.pyplot.plot(
+                mean_x,
+                mean_y,
+                marker='+',
+                color=color,
+                label='_', # hide from legend
+                zorder=index+200 # means above dots
+            )
+
+        # Draw the dots
         matplotlib.pyplot.plot(
-            [r.bytes_per_frame for r in group_results],
-            [r.ratio for r in group_results],
+            x,
+            y,
             marker='.',
             linestyle='none',
-            label=technology
+            label=technology,
+            color=color,
+            zorder=index+100 # dots from 100
         )
+
     matplotlib.pyplot.xlabel("Bytes per frame")
     matplotlib.pyplot.xscale("log")
     matplotlib.pyplot.minorticks_on
@@ -146,9 +189,13 @@ def main():
     matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.ylabel("Compression level")
     matplotlib.pyplot.legend()
+    matplotlib.pyplot.gcf().set_figwidth(10)
+    matplotlib.pyplot.gcf().set_figheight(6)
+    
+    matplotlib.pyplot.savefig("../benchmark.png", bbox_inches="tight")
 
     matplotlib.pyplot.show()
-    
-    
+
+
 
 main()
