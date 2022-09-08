@@ -73,7 +73,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="gfxcomp_lz4.cpp" />
-    <ClCompile Include="lz4\lz4.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

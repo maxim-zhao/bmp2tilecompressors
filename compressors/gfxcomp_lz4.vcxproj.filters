@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lz4\lz4.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="gfxcomp_lz4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
