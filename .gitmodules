@@ -18,3 +18,7 @@
 	path = compressors/ZX0
 	url = https://github.com/einar-saukas/ZX0.git
 	branch = main
+[submodule "compressors/smallz4"]
+	path = compressors/smallz4
+	url = https://github.com/stbrumme/smallz4.git
+	branch = master
