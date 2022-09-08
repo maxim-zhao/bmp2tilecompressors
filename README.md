@@ -79,8 +79,9 @@ How to read:
 - Further to the right is faster
 - Further up is better compression
 - The scatter for a particular colour group is across a corpus of realistic Master System tile data
+- Each colour group has an ellipse showing the standard deviation, with a + in the middle showing the mean, across the test corpus.
 
-There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your data.
+There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
 
 Other compressors
 ----
