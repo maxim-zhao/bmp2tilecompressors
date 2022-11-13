@@ -9,7 +9,7 @@ import itertools
 import statistics
 import numpy
 
-WLA_PATH = "C:\\Users\\maxim\\Documents\\Code\\C\\wla-dx\\binaries"
+WLA_PATH = "C:\\Users\\maxim\\Documents\\Code\\C\\wla-dx\\binaries\\Release"
 BMP2TILE_PATH = "C:\\Users\\maxim\\Documents\\Code\\C#\\bmp2tile"
 Z80BENCH_PATH = "C:\\Users\\maxim\\Documents\\Code\\C#\\z80bench\\bin\\Release"
 

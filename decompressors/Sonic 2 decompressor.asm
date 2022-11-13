@@ -10,14 +10,17 @@
 Sonic2TileLoader_TileCount        dw
 Sonic2TileLoader_DataPointer      dw
 Sonic2TileLoader_BitStreamPointer dw
-Sonic2TileLoader_TileBuffer       dsb 32
+Sonic2TileLoader_EmptyTileBuffer       dsb 32
 Sonic2TileLoader_DecompressedData dsb 32
+Sonic2TileLoader_BitstreamTileCounter db
 .ende
 
-; A definition
-.define SMS_VDP_DATA $be
-
 Sonic2TileLoader_Decompress:
+  ; Set VDP address
+  ld c,$bf
+  out (c),e
+  out (c),d
+  
   push hl
     ; Skip header
     inc hl
@@ -41,8 +44,8 @@ Sonic2TileLoader_Decompress:
   ld (Sonic2TileLoader_BitStreamPointer), hl
 
   ; Zero the buffer
-  ld hl, Sonic2TileLoader_TileBuffer
-  ld de, Sonic2TileLoader_TileBuffer + 1
+  ld hl, Sonic2TileLoader_EmptyTileBuffer
+  ld de, Sonic2TileLoader_EmptyTileBuffer + 1
   ld bc, 31
   ld (hl), 0
   ldir
@@ -55,14 +58,14 @@ Sonic2TileLoader_Decompress:
   cp 0
   jr nz, +
   ; Type 0 = all zero
-  call _emitBuffer
+  call _emitZeroBuffer
   jr ++
 
 +:cp $02
   jr nz, +
   ; Type 2 = compressed
   call _decompress
-  call _emitBuffer2
+  call _emitBuffer
   jr ++
 
 +:cp $03
@@ -70,12 +73,12 @@ Sonic2TileLoader_Decompress:
   ; Type 3 = compressed + XOR
   call _decompress
   call _xor
-  call _emitBuffer2
+  call _emitBuffer
   jr ++
 
 +:; Type 1 = raw
   call _raw
-  call _emitBuffer2
+  call _emitBuffer
   ; fall through
 
 ++:
@@ -179,7 +182,7 @@ _getTileType:
   rrca
   jp -
 
-+:and %11 ; MAsk to two bits
++:and %11 ; Mask to two bits
   push af
     ld a, (Sonic2TileLoader_BitstreamTileCounter)
     inc a
@@ -187,39 +190,22 @@ _getTileType:
   pop af
   ret
 
-_emitBuffer:  
-  ld hl, _RAM_D320_
+_emitZeroBuffer:  
+  ld hl, Sonic2TileLoader_EmptyTileBuffer
   ld de, Sonic2TileLoader_DecompressedData
-  ld bc, $0020
+  ld bc, 32
   ldir
   ; fall through
-_emitBuffer2: 
-  ld a, (_RAM_D34C_)
-  or a
-  jp nz, +
+_emitBuffer: 
   ld hl, Sonic2TileLoader_DecompressedData
   ld b, 32
 -:ld a, (hl)
-  out (Port_VDPData), a
+  out ($be), a
   push hl ; delay
   pop hl
   inc hl
   djnz -
   ret
-  
-+:  
-    ld hl, Sonic2TileLoader_DecompressedData
-    ld b, $20
--:  
-    ld e, (hl)
-    ld d, $01 ; Index into table at $100 for tile flipping
-    ld a, (de)
-    out (Port_VDPData), a
-    push hl
-    pop hl
-    inc hl
-    djnz -
-    ret
 .ends
 .endb
 
