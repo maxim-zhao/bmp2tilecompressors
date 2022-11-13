@@ -1,6 +1,6 @@
 ; Sonic 2 tile decompressor
 ;
-; Needs 32 bytes of RAM for temporary storage. Define Sonic2TileLoaderMemory as the start address of the RAM to use.
+; Needs 39 bytes of RAM for temporary storage. Define Sonic2TileLoaderMemory as the start address of the RAM to use.
 
 .block "TileLoaderSonic2"
 .section "Tile loader (Sonic 2)" free
@@ -10,7 +10,6 @@
 Sonic2TileLoader_TileCount        dw
 Sonic2TileLoader_DataPointer      dw
 Sonic2TileLoader_BitStreamPointer dw
-Sonic2TileLoader_EmptyTileBuffer       dsb 32
 Sonic2TileLoader_DecompressedData dsb 32
 Sonic2TileLoader_BitstreamTileCounter db
 .ende
@@ -33,116 +32,142 @@ Sonic2TileLoader_Decompress:
     ld (Sonic2TileLoader_TileCount+1), a
     inc hl
     ; Read bitstream pointer
-      ld e, (hl)
-      inc hl
-      ld d, (hl)
-      inc hl
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    inc hl
     ; Data starts here
-      ld (Sonic2TileLoader_DataPointer), hl
+    ld (Sonic2TileLoader_DataPointer), hl
   pop hl
   add hl, de
   ld (Sonic2TileLoader_BitStreamPointer), hl
-
-  ; Zero the buffer
-  ld hl, Sonic2TileLoader_EmptyTileBuffer
-  ld de, Sonic2TileLoader_EmptyTileBuffer + 1
-  ld bc, 31
-  ld (hl), 0
-  ldir
 
   ; Reset the consumed tile counter
   xor a
   ld (Sonic2TileLoader_BitstreamTileCounter), a
   
--:call _getTileType
-  cp 0
+➿:
+  ; Inlined "_getTileType" function >============================>
+  ld a, (Sonic2TileLoader_BitstreamTileCounter)
+  cp 4
   jr nz, +
+  ; Read next byte from bitstream
+  ld hl, (Sonic2TileLoader_BitStreamPointer)
+  inc hl
+  ld (Sonic2TileLoader_BitStreamPointer), hl
+  xor a
+  ld (Sonic2TileLoader_BitstreamTileCounter), a
+
++:; Get the current bitstream byte
+  ld b, a
+  ld hl, (Sonic2TileLoader_BitStreamPointer)
+  ld a, (hl)
+  ; Get the right two bits in the low two according to the value of Sonic2TileLoader_BitstreamTileCounter
+-:dec b
+  jp m, +
+  rrca
+  rrca
+  jp -
+
++:ld hl,Sonic2TileLoader_BitstreamTileCounter
+  inc (hl)
+  and %11 ; Mask to two bits
+  ; Inlined "_getTileType" function <============================<
+
   ; Type 0 = all zero
-  call _emitZeroBuffer
-  jr ++
+  jr z, _emitZeroBuffer
+  
+  dec a
+  ; Type 1 = raw
+  jr z,_raw
 
-+:cp $02
-  jr nz, +
-  ; Type 2 = compressed
-  call _decompress
-  call _emitBuffer
-  jr ++
+  push af
+    ; Type 2 or 3 both need this
+    
+    ; Inlined "_decompress" function >============================>
+    ; Output pointer
+    ld ix, Sonic2TileLoader_DecompressedData
+    ; Get 32 bits of flags
+    ld hl, (Sonic2TileLoader_DataPointer)
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    inc hl
+    ld c, (hl)
+    inc hl
+    ld b, (hl)
+    inc hl
+    ld a, 32 ; bit counter
+-:  push af
+      ; Rotate a bit out
+      rr b
+      rr c
+      rr d
+      rr e
+      jr c, +
+      ; 0 => emit a 0
+      ld (ix+0), 0
+      jr ++
 
-+:cp $03
-  jr nz, +
-  ; Type 3 = compressed + XOR
-  call _decompress
-  call _xor
-  call _emitBuffer
-  jr ++
++:    ; 1 => emit a byte
+      ld a, (hl)
+      ld (ix+0), a
+      inc hl
+      
+++:   inc ix
+    pop af
+    ; Repeat 32 times
+    dec a
+    jr nz, -
+    ld (Sonic2TileLoader_DataPointer), hl
+    ; Inlined "_decompress" function <============================<
+  pop af
+  dec a
+  ; Only XOR for type 3
+  call nz, _xor
+  ; Fall through
 
-+:; Type 1 = raw
-  call _raw
-  call _emitBuffer
+  ld hl, Sonic2TileLoader_DecompressedData
+  ld b, 32
+-:ld a, (hl)
+  out ($be), a
+  inc hl
+  djnz -
   ; fall through
 
-++:
+_tileDone:
   ; Count down the tile count until done
   ld hl, (Sonic2TileLoader_TileCount)
   dec hl
   ld (Sonic2TileLoader_TileCount), hl
   ld a, l
   or h
-  jr nz, -
-  ret
+  ret z
+  jp ➿
 
 _raw:
-  ; Copy 32 bytes
-  ld bc, 32
+  ; Emit 32 bytes
   ld hl, (Sonic2TileLoader_DataPointer)
-  ld de, Sonic2TileLoader_DecompressedData
-  ldir
-  ld (Sonic2TileLoader_DataPointer), hl
-  ret
+  ld b, 32
+-:ld a, (hl)
+  out ($be), a
+  inc hl
+  djnz -
+  ld (Sonic2TileLoader_DataPointer),hl
+  jp _tileDone
 
-_decompress:
-  ; Output pointer
-  ld ix, Sonic2TileLoader_DecompressedData
-  ; Get 32 bits of flags
-  ld hl, (Sonic2TileLoader_DataPointer)
-  ld e, (hl)
-  inc hl
-  ld d, (hl)
-  inc hl
-  ld c, (hl)
-  inc hl
-  ld b, (hl)
-  inc hl
-  ld a, 32 ; bit counter
--:
-  push af
-    ; Rotate a bit out
-    rr b
-    rr c
-    rr d
-    rr e
-    jr c, +
-    ; 0 => emit a 0
-    ld (ix+0), 0
-    jr ++
-
-+:  ; 1 => emit a byte
-    ld a, (hl)
-    ld (ix+0), a
-    inc hl
-    
-++: inc ix
-  pop af
-  ; Repeat 32 times
-  dec a
-  jr nz, -
-  ld (Sonic2TileLoader_DataPointer), hl
-  ret
+_emitZeroBuffer:
+  ; a must be 0 to get here
+.repeat 32
+  out ($be),a
+.endr
+  jp _tileDone
 
 _xor:
   ld ix, Sonic2TileLoader_DecompressedData
   ld b, 7
 -:; XOR bytes against each other across bitplanes on a few rows
+  ; We end up using XORed bytes as values XORed later so this is not symmetric, it must be done in reverse order when compressing
   ld a, (ix+0)
   xor (ix+2)
   ld (ix+2), a
@@ -157,53 +182,6 @@ _xor:
   ld (ix+19), a
   inc ix
   inc ix
-  djnz -
-  ret
-
-_getTileType:
-  ld a, (Sonic2TileLoader_BitstreamTileCounter)
-  cp 4
-  jr nz, +
-  ; Read next byte from bitstream
-  ld hl, (Sonic2TileLoader_BitStreamPointer)
-  inc hl
-  ld (Sonic2TileLoader_BitStreamPointer), hl
-  xor a
-  ld (Sonic2TileLoader_BitstreamTileCounter), a
-
-+:; 
-  ld b, a
-  ld hl, (Sonic2TileLoader_BitStreamPointer)
-  ld a, (hl)
-  ; Get the right two bits in the low two according to the value of Sonic2TileLoader_BitstreamTileCounter
--:dec b
-  jp m, +
-  rrca
-  rrca
-  jp -
-
-+:and %11 ; Mask to two bits
-  push af
-    ld a, (Sonic2TileLoader_BitstreamTileCounter)
-    inc a
-    ld (Sonic2TileLoader_BitstreamTileCounter), a
-  pop af
-  ret
-
-_emitZeroBuffer:  
-  ld hl, Sonic2TileLoader_EmptyTileBuffer
-  ld de, Sonic2TileLoader_DecompressedData
-  ld bc, 32
-  ldir
-  ; fall through
-_emitBuffer: 
-  ld hl, Sonic2TileLoader_DecompressedData
-  ld b, 32
--:ld a, (hl)
-  out ($be), a
-  push hl ; delay
-  pop hl
-  inc hl
   djnz -
   ret
 .ends
