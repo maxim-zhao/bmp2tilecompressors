@@ -298,6 +298,12 @@ _below256:
   ; and saves some push/pops; and we can use djnz for the loop.
   ld b,c
   ld c,$bf
+
+  call +
+
+  pop af
+  ret
+
 +:
 -:out (c),l
   out (c),h
@@ -309,7 +315,6 @@ _below256:
   inc de
   djnz -
   ld c,0
-  pop af
   ret
 
 _ldir_rom_to_vram:
