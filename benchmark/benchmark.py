@@ -34,22 +34,19 @@ class Result:
         self.filename = filename
 
 
-def benchmark(technology, extension, rename_extension, asm_file, image_file):
+def benchmark(technology, extension, rename_extension, asm_file, image_file, is_test):
     try:
         data_file = f"data.{extension}"
-        args = [
+
+        # Run BMP2Tile
+        subprocess.run([
             os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
             image_file,
+            "--noremovedupes" if is_test else "--removedupes",
             "-savetiles",
             data_file,
             "-savetiles",
-            "expected.bin"]
-        # Check if we are testing the blank one
-        if "blank.png" in image_file:
-            args.insert(2, "--noremovedupes")
-        # Run BMP2Tile
-        subprocess.run(args,
-            check=True, capture_output=True, text=True)
+            "expected.bin"], check=True, capture_output=True, text=True)
 
         # Rename output file to expected name
         if rename_extension is not None and rename_extension != extension:
@@ -122,13 +119,15 @@ def main():
             extensions.extend(json_data["extra-extensions"])
         for test_extension in extensions:
             for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
+                is_test = "test" in image
                 result = benchmark(
                     json_data["technology"],
                     test_extension,
                     extension,
                     benchmark_file,
-                    image)
-                if result is not None:
+                    image,
+                    is_test)
+                if result is not None and not is_test:
                     print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
