@@ -37,14 +37,18 @@ class Result:
 def benchmark(technology, extension, rename_extension, asm_file, image_file):
     try:
         data_file = f"data.{extension}"
-        # Run BMP2Tile
-        subprocess.run([
+        args = [
             os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
             image_file,
             "-savetiles",
             data_file,
             "-savetiles",
-            "expected.bin"],
+            "expected.bin"]
+        # Check if we are testing the blank one
+        if "blank.png" in image_file:
+            args.insert(2, "--noremovedupes")
+        # Run BMP2Tile
+        subprocess.run(args,
             check=True, capture_output=True, text=True)
 
         # Rename output file to expected name
@@ -144,15 +148,16 @@ def main():
         y = [r.ratio for r in group_results]
         mean_x = statistics.mean(x)
         mean_y = statistics.mean(y)
-        stdev_x = statistics.stdev(x)
-        stdev_y = statistics.stdev(y)
+        if len(x) > 1:
+            stdev_x = statistics.stdev(x)
+            stdev_y = statistics.stdev(y)
 
         # Pick the next colour
         color = colors[index]
         index += 1
 
         # Draw the mean and stdev ellipse (if non-zero stdev)
-        if stdev_x > 0 and stdev_y > 0:
+        if len(x) > 1 and stdev_x > 0 and stdev_y > 0:
             matplotlib.pyplot.gca().add_artist(Ellipse(
                 xy=[mean_x, mean_y],
                 width=stdev_x,
