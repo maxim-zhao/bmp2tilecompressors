@@ -112,6 +112,7 @@ _below256:
     call +
 _done:
   pop af
+  ld c,0
   ret
 
 +:

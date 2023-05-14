@@ -277,46 +277,51 @@ _ldir_vram_to_vram:
   ; Both hl and de are "write" addresses ($4xxx)
   push af
     ; Make hl a read address
-    ld a,h
-    xor $40
-    ld h,a
-    ; Check if the count is below 256
+    res 6,h
+    ; Check if the count is below 256 (expected)
     ld a,b
     or a
-    jr z,_below256
-    ; Else emit 256*b bytes
--:  push bc
-      ld c,$bf
-      ld b,0
-      call +
-    pop bc
-    djnz -
-    ; Then fall through for the rest - if c>0
-    ld a,c
-    or a
-    jr z,_done
-_below256:
-    ; By emitting 256 at a time, we can use the out (c),r opcode
-    ; for address setting, which then relieves pressure on a
-    ; and saves some push/pops; and we can use djnz for the loop.
+    jr nz,++
+---:; Emit 256*c bytes
     ld b,c
     ld c,$bf
-    call +
+-:  out (c),l
+    out (c),h
+    in a,($be)
+    out (c),e
+    out (c),d
+    out ($be),a
+    inc hl
+    inc de
+    djnz -
 _done:
   pop af
+  ; ldir leaves bc=0
+  ld c,0
   ret
-  
-+:
--:out (c),l
-  out (c),h
-  in a,($be)
-  out (c),e
-  out (c),d
-  out ($be),a
-  inc hl
-  inc de
-  djnz -
-  ret
+
+++:
+  ; Above 256 bytes
+  ; Emit b*256 bytes
+--: push bc
+      ld c,$bf
+      ld b,0
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+    pop bc
+    djnz --
+    ; Then the rest - if c>0
+    ld a,c
+    or a
+    jr z,---
+    jp _done
 
 _ldir_rom_to_vram:
   ; copy bc bytes from hl (ROM) to de (VRAM)
