@@ -426,23 +426,30 @@ _ldir_vram_to_vram:
       call +
     pop bc
     djnz -
-    ; Then fall through for the rest  
+    ; Then fall through for the rest - if c>0
+    ld a,c
+    or a
+    jr z,_done
 _below256:
     ; By emitting 256 at a time, we can use the out (c),r opcode
     ; for address setting, which then relieves pressure on a
     ; and saves some push/pops; and we can use djnz for the loop.
     ld b,c
     ld c,VDP_ADDRESS_PORT
-+:
--:  out (c),l
-    out (c),h
-    in a,(VDP_DATA_PORT)
-    out (c),e
-    out (c),d
-    out (VDP_DATA_PORT),a
-    inc hl
-    inc de
-    djnz -
+    call +
+_done:
   ex af, af'
+  ret
+
++:
+-:out (c),l
+  out (c),h
+  in a,(VDP_DATA_PORT)
+  out (c),e
+  out (c),d
+  out (VDP_DATA_PORT),a
+  inc hl
+  inc de
+  djnz -
   ret
 .endif
