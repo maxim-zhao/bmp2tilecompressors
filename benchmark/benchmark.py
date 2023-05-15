@@ -34,15 +34,19 @@ class Result:
         self.filename = filename
 
 
-def benchmark(technology, extension, rename_extension, asm_file, image_file, is_test):
+def benchmark(technology, extension, rename_extension, asm_file, image_file):
     try:
         data_file = f"data.{extension}"
 
         # Run BMP2Tile
+        # We extract commandline args from the image filename (!)
+        extra_args = image_file.split(".")[1:-1]
+        is_test = "test" in image_file
         subprocess.run([
-            os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
+            os.path.join(BMP2TILE_PATH, "bmp2tile.exe"), 
+            image_file] 
+            + extra_args + [
             image_file,
-            "--noremovedupes" if is_test else "--removedupes",
             "-savetiles",
             data_file,
             "-savetiles",
@@ -88,6 +92,10 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file, is_
             else:
                 cycles = int(match.groups('cycles')[0])
 
+        if is_test:
+            print(f"Test passed: {image_file} for {technology}. {os.stat('expected.bin').st_size}->{os.stat(data_file).st_size} in {cycles} cycles")
+            return None
+
         return Result(
             technology,
             os.stat('expected.bin').st_size,
@@ -119,15 +127,13 @@ def main():
             extensions.extend(json_data["extra-extensions"])
         for test_extension in extensions:
             for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
-                is_test = "test" in image
                 result = benchmark(
                     json_data["technology"],
                     test_extension,
                     extension,
                     benchmark_file,
-                    image,
-                    is_test)
-                if result is not None and not is_test:
+                    image)
+                if result is not None:
                     print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
