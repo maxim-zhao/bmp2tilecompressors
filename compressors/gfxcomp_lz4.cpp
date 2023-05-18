@@ -31,7 +31,7 @@ uint32_t g_destinationRemaining;
 size_t getBytes(void* data, size_t numBytes, void* /*userPtr*/)
 {
     const auto count = std::min(g_sourceRemaining, numBytes);
-    memcpy_s(data, numBytes, g_pSource, g_sourceRemaining);
+    memcpy_s(data, count, g_pSource, g_sourceRemaining);
     g_pSource += count;
     g_sourceRemaining -= count;
     return count;
@@ -45,23 +45,33 @@ void sendBytes(const void* data, size_t numBytes, void* /*userPtr*/)
     g_destinationRemaining -= count;
 }
 
+int compress(const uint8_t* pSource, const uint32_t numBytes, uint8_t* pDestination, const uint32_t destinationLength)
+{
+    g_pSource = pSource;
+    g_sourceRemaining = numBytes;
+    g_pDestination = pDestination;
+    g_destinationRemaining = destinationLength;
+    smallz4::lz4(getBytes, sendBytes, 65535, true);
+    // Check if we ran out of space
+    if (g_destinationRemaining == 0)
+    {
+        // Need a bigger buffer
+        return 0;
+    }
+    // Remove framing
+    constexpr auto headerSize = 8; // Header + block size
+    const auto size = destinationLength - g_destinationRemaining - headerSize;
+    memcpy_s(pDestination, destinationLength, pDestination + headerSize, size);
+    return static_cast<int>(size);
+}
+
 extern "C" __declspec(dllexport) int compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
     const uint32_t destinationLength)
 {
-    g_pSource = pSource;
-    g_sourceRemaining = numTiles * 32;
-    g_pDestination = pDestination;
-    g_destinationRemaining = destinationLength;
-    smallz4::lz4(getBytes, sendBytes);
-    // Remove framing
-    constexpr auto headerSize = 7 + 4; // Header + block size
-    constexpr auto footerSize = 4; // Empty block terminator
-    const auto size = destinationLength - g_destinationRemaining - headerSize - footerSize;
-    memcpy_s(pDestination, destinationLength, pDestination + headerSize, size);
-    return static_cast<int>(size);
+    return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
 extern "C" __declspec(dllexport) int compressTilemap(
@@ -71,15 +81,5 @@ extern "C" __declspec(dllexport) int compressTilemap(
     uint8_t* pDestination,
     const uint32_t destinationLength)
 {
-    g_pSource = pSource;
-    g_sourceRemaining = width * height * 2;
-    g_pDestination = pDestination;
-    g_destinationRemaining = destinationLength;
-    smallz4::lz4(getBytes, sendBytes);
-    // Remove framing
-    constexpr auto headerSize = 7 + 4; // Header + block size
-    constexpr auto footerSize = 4; // Empty block terminator
-    const auto size = destinationLength - g_destinationRemaining - headerSize - footerSize;
-    memcpy_s(pDestination, destinationLength, pDestination + headerSize, size);
-    return static_cast<int>(size);
+    return compress(pSource, width * height * 2, pDestination, destinationLength);
 }
