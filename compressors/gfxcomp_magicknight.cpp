@@ -15,29 +15,29 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "mkre2";
 }
 
-void rle_emit_raw(std::vector<uint8_t>& result, std::vector<uint8_t>& raw_bytes)
+void rleEmitRaw(std::vector<uint8_t>& result, std::vector<uint8_t>& rawBytes)
 {
     // Emits raw_bytes to result as raw runs, and clears it
-    while (!raw_bytes.empty())
+    while (!rawBytes.empty())
     {
-        const auto raw_length = std::min(0x7f, static_cast<int>(raw_bytes.size()));
-        result.push_back(static_cast<uint8_t>(raw_length));
-        std::copy_n(raw_bytes.begin(), raw_length, std::back_inserter(result));
-        raw_bytes.erase(raw_bytes.begin(), raw_bytes.begin() + raw_length);
+        const auto rawLength = std::min(0x7f, static_cast<int>(rawBytes.size()));
+        result.push_back(static_cast<uint8_t>(rawLength));
+        std::copy_n(rawBytes.begin(), rawLength, std::back_inserter(result));
+        rawBytes.erase(rawBytes.begin(), rawBytes.begin() + rawLength);
     }
 }
 
-std::vector<uint8_t> compress_rle(const std::vector<uint8_t>& data)
+std::vector<uint8_t> compressRle(const std::vector<uint8_t>& data)
 {
     std::vector<uint8_t> result;
     result.push_back(0); // RLE marker
 
     // First we deinterleave the data
     std::vector<std::vector<uint8_t>> bitplanes(4);
-    for (std::size_t initial_offset = 0; initial_offset < 4; ++initial_offset)
+    for (std::size_t initialOffset = 0; initialOffset < 4; ++initialOffset)
     {
-        auto& bitplane = bitplanes[initial_offset];
-        for (std::size_t offset = initial_offset; offset < data.size(); offset += 4)
+        auto& bitplane = bitplanes[initialOffset];
+        for (std::size_t offset = initialOffset; offset < data.size(); offset += 4)
         {
             bitplane.push_back(data[offset]);
         }
@@ -47,42 +47,42 @@ std::vector<uint8_t> compress_rle(const std::vector<uint8_t>& data)
     for (const auto& bitplane : bitplanes)
     {
         // At each position in the data...
-        std::vector<uint8_t> raw_bytes;
+        std::vector<uint8_t> rawBytes;
         for (std::size_t offset = 0; offset < bitplane.size(); /* increment in loop */)
         {
             // A run costs a byte to encode so a run of 3 or more is worth doing.
             // 2 would encode no better than a raw run.
             auto b = bitplane[offset];
-            auto run_length = 1;
+            auto runLength = 1;
             for (std::size_t other = offset + 1; other < bitplane.size(); ++other)
             {
                 if (bitplane[other] != b)
                 {
                     break;
                 }
-                ++run_length;
+                ++runLength;
             }
-            if (run_length > 2)
+            if (runLength > 2)
             {
                 // Emit any raw we have stored up
-                rle_emit_raw(result, raw_bytes);
+                rleEmitRaw(result, rawBytes);
 
                 // Truncate if needed
-                run_length = std::min(0x7f, run_length);
+                runLength = std::min(0x7f, runLength);
                 // Emit it
-                result.push_back(static_cast<uint8_t>(0x80 | run_length));
+                result.push_back(static_cast<uint8_t>(0x80 | runLength));
                 result.push_back(b);
-                offset += run_length;
+                offset += runLength;
             }
             else
             {
                 // No RLE. Store in a raw buffer.
-                raw_bytes.push_back(b);
+                rawBytes.push_back(b);
                 ++offset;
             }
         }
         // Emit any trailing raw run
-        rle_emit_raw(result, raw_bytes);
+        rleEmitRaw(result, rawBytes);
 
         // Emit a 0 for end of data
         result.push_back(0);
@@ -91,7 +91,7 @@ std::vector<uint8_t> compress_rle(const std::vector<uint8_t>& data)
     return result;
 }
 
-void add_bitstream_bit(std::vector<uint8_t>& result, int& currentOffset, int& currentBitCount, const int bit)
+void addBitstreamBit(std::vector<uint8_t>& result, int& currentOffset, int& currentBitCount, const int bit)
 {
     // If we do not have a byte to use, make one
     if (currentOffset == -1)
@@ -103,8 +103,7 @@ void add_bitstream_bit(std::vector<uint8_t>& result, int& currentOffset, int& cu
 
     // Add it in
     auto b = result[currentOffset];
-    b <<= 1;
-    b |= bit;
+    b |= (bit << currentBitCount);
     result[currentOffset] = b;
     ++currentBitCount;
 
@@ -115,28 +114,30 @@ void add_bitstream_bit(std::vector<uint8_t>& result, int& currentOffset, int& cu
     }
 }
 
-std::vector<uint8_t> compress_lz(const std::vector<uint8_t>& data)
+std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
 {
     std::vector<uint8_t> result;
-    auto current_bitmask_offset = -1;
-    auto current_bitmask_bit_count = 0;
+    // Marker 1 for LZ
+    result.push_back(1);
+    auto currentBitmaskOffset = -1;
+    auto currentBitmaskBitCount = 0;
 
     // We split the data into either raw bytes or LZ references.
     // LZ runs must be between 3 and 18 bytes long, at a max distance of 0xf000 = -4096 bytes from the current address.
     for (int offset = 0; offset < static_cast<int>(data.size()); /* increment in loop */)
     {
         // Look for the longest run in data before the current offset which matches the current data
-        auto best_lz_offset = -1;
-        auto best_lz_length = -1;
+        auto bestLzOffset = -1;
+        auto bestLzLength = -1;
 
         // Minimum distance is -1
         // Maximum distance is -4096
-        const auto min_lz_offset = std::max(0, offset - 4096);
-        const auto max_lz_offset = offset;
-        for (auto i = min_lz_offset; i < max_lz_offset; ++i)
+        const auto minLzOffset = std::max(0, offset - 4096);
+        const auto maxLzOffset = offset - 1;
+        for (auto i = minLzOffset; i <= maxLzOffset; ++i)
         {
             // Check for the match length at i compared to offset
-            const auto maxMatchLength = std::min(19, static_cast<int>(data.size()) - offset);
+            const auto maxMatchLength = std::min(18, static_cast<int>(data.size()) - offset);
             for (auto matchLength = 0; matchLength < maxMatchLength; ++matchLength)
             {
                 if (data[i + matchLength] != data[offset + matchLength])
@@ -145,50 +146,52 @@ std::vector<uint8_t> compress_lz(const std::vector<uint8_t>& data)
                     break;
                 }
                 // Else see if it's a new record
-                if (matchLength > best_lz_length)
+                // matchLength will be n here if we have matched n+1 bytes so far
+                if (matchLength + 1 > bestLzLength)
                 {
-                    best_lz_length = matchLength;
-                    best_lz_offset = i;
+                    bestLzLength = matchLength + 1;
+                    bestLzOffset = i;
                 }
             }
-            if (best_lz_length >= 18)
+            if (bestLzLength == maxMatchLength)
             {
-                // No point finding anything longer
+                // No point searching for anything better, we already found the max
                 break;
             }
         }
 
         // Did we find anything?
-        if (best_lz_length > 2)
+        if (bestLzLength > 2)
         {
             // Yes: emit an LZ reference
             // A 1 bit in the bitstream
-            add_bitstream_bit(result, current_bitmask_offset, current_bitmask_bit_count, 1);
+            addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 0);
             // Then the length - 3 in the high 4 bits
-            const auto length = std::min(18, best_lz_length);
-            auto lz_word = (length - 3) << 12;
+            auto lzWord = (bestLzLength - 3) << 12;
             // And the relative offset in the remaining 12 bits, as 2's complement
-            const auto relative_offset = best_lz_offset - offset;
-            lz_word |= relative_offset & 0xfff;
+            const auto relativeOffset = bestLzOffset - offset;
+            lzWord |= relativeOffset & 0xfff;
             // And then emit it
-            result.push_back((lz_word >> 0) & 0xff);
-            result.push_back((lz_word >> 8) & 0xff);
+            result.push_back((lzWord >> 0) & 0xff);
+            result.push_back((lzWord >> 8) & 0xff);
+            printf("LZ: %d bytes @ %04x (%d)\n", bestLzLength, bestLzOffset, relativeOffset);
             // And move on
-            offset += length;
+            offset += bestLzLength;
         }
         else
         {
             // No: emit a raw byte
             // A 0 bit in the bitstream
-            add_bitstream_bit(result, current_bitmask_offset, current_bitmask_bit_count, 0);
+            addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 1);
             // Then the raw byte
             result.push_back(data[offset]);
+            printf("Raw: %02x\n", data[offset]);
             // And move on
             ++offset;
         }
     }
     // Then terminate with a 0 LZ reference
-    add_bitstream_bit(result, current_bitmask_offset, current_bitmask_bit_count, 1);
+    addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 0);
     result.push_back(0);
     result.push_back(0);
 
@@ -205,8 +208,8 @@ extern "C" __declspec(dllexport) int compressTiles(
     // First get bytes into a vector
     std::vector<uint8_t> source;
     std::copy_n(pSource, numTiles * 32, std::back_inserter(source));
-    const auto& rle = compress_rle(source);
-    const auto& lz = compress_lz(source);
+    const auto& rle = compressRle(source);
+    const auto& lz = compressLz(source);
 
     printf("Raw: %d bytes. RLE: %d bytes. LZ: %d bytes.\n", source.size(), rle.size(), lz.size());
 
@@ -220,5 +223,5 @@ extern "C" __declspec(dllexport) int compressTiles(
     // Else emit the smaller
     std::ranges::copy(smaller, std::bit_cast<uint8_t*>(pDestination));
 
-    return static_cast<int>(smaller.size() + 1);
+    return static_cast<int>(smaller.size());
 }

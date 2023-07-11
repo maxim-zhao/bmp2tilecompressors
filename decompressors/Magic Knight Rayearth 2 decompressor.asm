@@ -89,7 +89,7 @@ _lz:
 -:
     rr c ; rotate a bit out of c
     jr nc, +
-    ; Bit was 0:
+    ; Bit was 1:
     ; Emit a raw byte
     ld a, (hl)
     out ($be), a
@@ -98,7 +98,7 @@ _lz:
     djnz -
     jr --
 
-+:  ; Bit was 1:
++:  ; Bit was 0:
     call +
     djnz -
     jr --
