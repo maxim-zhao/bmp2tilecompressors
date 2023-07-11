@@ -1,7 +1,6 @@
 ; Magic Knight Rayearth 2 tile decompressor
 ; No RAM used apart from stack
 
-.block "TileLoaderMKRE2"
 .section "Tile loader (Magic Knight Rayearth 2)" free
 
 MKRE2_Decompress:
@@ -153,4 +152,3 @@ __:
 
 
 .ends
-.endb

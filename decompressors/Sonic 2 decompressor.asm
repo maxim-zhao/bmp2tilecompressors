@@ -2,7 +2,6 @@
 ;
 ; Needs 39 bytes of RAM for temporary storage. Define Sonic2TileLoaderMemory as the start address of the RAM to use.
 
-.block "TileLoaderSonic2"
 .section "Tile loader (Sonic 2)" free
 
 ; RAM usage
@@ -185,7 +184,3 @@ _xor:
   djnz -
   ret
 .ends
-.endb
-
-
-

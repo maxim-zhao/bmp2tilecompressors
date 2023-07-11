@@ -13,10 +13,6 @@
 ; of VRAM to VRAM copies, which also makes it pretty slow.
 ; This file is using WLA-DX syntax quite heavily, you'd better use it too...
 
-.define calcblocks
-; comment out this line to suppress the block size notifications
-; (useful for optimising to see size changes)
-
 .struct aPLibMemoryStruct
 bits     db ; A bitmask for the bit to read next. It is initialised to 1, and rotated right each time a bit is read. When the 1 falls into the carry, the next byte is read into "byte".
 byte     db ; not directly referenced, assumed to come after bits
@@ -35,9 +31,6 @@ mem instanceof aPLibMemoryStruct
 ; the main loop.
 
 .section "aPLib" free
-.ifdef calcblocks
-.block "aPLib"
-.endif
 
 ; Gets a bit from the bitstream into the Z flag
 ; Always leaves carry flag unset
@@ -364,7 +357,4 @@ _below256:
   ret
 .endif
   
-.ifdef calcblocks
-.endb
-.endif
 .ends
