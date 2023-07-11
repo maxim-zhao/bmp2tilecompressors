@@ -32,6 +32,7 @@ Compressors
 | lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library | ✅ | ✅ |
 | lzsa1    | lzsa1       | LZSA1 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | lzsa2    | lzsa2       | LZSA2 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
+| magicknight | mkre2    | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
@@ -56,6 +57,7 @@ All are for emitting data direct to VRAM on Master System, using Z80 decompresso
 | LZ4                   |  136 |   0 |
 | LZSA1                 |  207 |   0 |
 | LZSA2                 |  332 |   0 |
+| Magic Knight Rayearth 2 | 139 |  0 |
 | Phantasy Star RLE     |  188 |   0 |
 | PS Gaiden             |  223 |  34 |
 | PS Gaiden (fast)      | 1028 |  32 |
