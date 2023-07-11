@@ -20,7 +20,6 @@ banks 1
 	call MKRE2_Decompress
 	ret ; ends the test
 
-.define Sonic2TileLoaderMemory $c000
 .block "decompressor"
 .include "../decompressors/Magic Knight Rayearth 2 decompressor.asm"
 .endb
