@@ -218,7 +218,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     }
 
     // Else emit the smaller
-    std::ranges::copy(smaller, std::bit_cast<uint8_t*>(pDestination));
+    std::ranges::copy(smaller, stdext::checked_array_iterator(pDestination, destinationLength));
 
     return static_cast<int>(smaller.size());
 }

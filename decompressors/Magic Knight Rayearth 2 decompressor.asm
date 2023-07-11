@@ -142,15 +142,11 @@ _lz:
           out (c), l
           out (c), h
           inc hl
-          push hl ; Delay
-          pop hl
           in a, ($be)
-          push hl ; Delay
-          pop hl
           ; Write byte
           out (c), e
           out (c), d
-          out ($be), a ; No delay here
+          out ($be), a
         ei
         inc de
         djnz -
