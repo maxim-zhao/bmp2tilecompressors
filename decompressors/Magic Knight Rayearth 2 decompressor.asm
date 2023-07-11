@@ -115,6 +115,9 @@ _lz:
       jr z, +
       ; Else:
       push hl
+        ; Get low 12 bits of bc as a signed 16-bit number and add to de
+        ; This is the relative offset of the match, e.g. $fff means -1,
+        ; $000 means -4096
         ; hl = (bc | $F000) + de
         ld a, b
         or $F0

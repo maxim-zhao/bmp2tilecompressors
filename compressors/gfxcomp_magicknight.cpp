@@ -124,6 +124,7 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
 
     // We split the data into either raw bytes or LZ references.
     // LZ runs must be between 3 and 18 bytes long, at a max distance of 0xf000 = -4096 bytes from the current address.
+    // However, a run of length 3 at offset -4096 is a sentinel for the end of the data, so must be avoided.
     for (int offset = 0; offset < static_cast<int>(data.size()); /* increment in loop */)
     {
         // Look for the longest run in data before the current offset which matches the current data
@@ -147,7 +148,7 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
                 }
                 // Else see if it's a new record
                 // matchLength will be n here if we have matched n+1 bytes so far
-                if (matchLength + 1 > bestLzLength)
+                if (matchLength + 1 > bestLzLength && !(matchLength + 1 == 3 && bestLzOffset == offset - 4096))
                 {
                     bestLzLength = matchLength + 1;
                     bestLzOffset = i;
@@ -174,7 +175,6 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
             // And then emit it
             result.push_back((lzWord >> 0) & 0xff);
             result.push_back((lzWord >> 8) & 0xff);
-            printf("LZ: %d bytes @ %04x (%d)\n", bestLzLength, bestLzOffset, relativeOffset);
             // And move on
             offset += bestLzLength;
         }
@@ -185,7 +185,6 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
             addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 1);
             // Then the raw byte
             result.push_back(data[offset]);
-            printf("Raw: %02x\n", data[offset]);
             // And move on
             ++offset;
         }
@@ -210,8 +209,6 @@ extern "C" __declspec(dllexport) int compressTiles(
     std::copy_n(pSource, numTiles * 32, std::back_inserter(source));
     const auto& rle = compressRle(source);
     const auto& lz = compressLz(source);
-
-    printf("Raw: %d bytes. RLE: %d bytes. LZ: %d bytes.\n", source.size(), rle.size(), lz.size());
 
     const auto& smaller = rle.size() < lz.size() ? rle : lz;
 
