@@ -193,12 +193,13 @@ def main():
             zorder=index+100 # dots from 100
         )
 
-    matplotlib.pyplot.xlabel("Bytes per frame")
+    matplotlib.pyplot.xlabel("Bytes per frame (more is better)")
     matplotlib.pyplot.xscale("log")
     matplotlib.pyplot.minorticks_on
     matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
-    matplotlib.pyplot.ylabel("Compression level")
+    matplotlib.pyplot.ylabel("Compression level (more is better)")
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     matplotlib.pyplot.legend()
     matplotlib.pyplot.gcf().set_figwidth(10)
     matplotlib.pyplot.gcf().set_figheight(6)
