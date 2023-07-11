@@ -21,7 +21,7 @@ void rleEmitRaw(std::vector<uint8_t>& result, std::vector<uint8_t>& rawBytes)
     while (!rawBytes.empty())
     {
         const auto rawLength = std::min(0x7f, static_cast<int>(rawBytes.size()));
-        result.push_back(static_cast<uint8_t>(rawLength));
+        result.push_back(static_cast<uint8_t>(rawLength | 0x80));
         std::copy_n(rawBytes.begin(), rawLength, std::back_inserter(result));
         rawBytes.erase(rawBytes.begin(), rawBytes.begin() + rawLength);
     }
@@ -50,7 +50,7 @@ std::vector<uint8_t> compressRle(const std::vector<uint8_t>& data)
         std::vector<uint8_t> rawBytes;
         for (std::size_t offset = 0; offset < bitplane.size(); /* increment in loop */)
         {
-            // A run costs a byte to encode so a run of 3 or more is worth doing.
+            // A run costs 2 bytes to encode so a run of 3 or more is worth doing.
             // 2 would encode no better than a raw run.
             auto b = bitplane[offset];
             auto runLength = 1;
@@ -70,7 +70,7 @@ std::vector<uint8_t> compressRle(const std::vector<uint8_t>& data)
                 // Truncate if needed
                 runLength = std::min(0x7f, runLength);
                 // Emit it
-                result.push_back(static_cast<uint8_t>(0x80 | runLength));
+                result.push_back(static_cast<uint8_t>(runLength));
                 result.push_back(b);
                 offset += runLength;
             }

@@ -29,7 +29,7 @@ _rle:
     ; fall through for fourth
 
 __:
-    ; Read bitmask. 0 means end of data.
+    ; Read byte. 0 means end of data.
     ld a, (hl)
     inc hl
     or a
