@@ -156,7 +156,6 @@ _ldir_rom_to_vram:
       ld c,$be
       ld b,0
 -:    otir
-      inc d ; move de on by 256
       dec a
       jp nz,-
     pop bc
