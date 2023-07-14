@@ -42,7 +42,10 @@
 ;     misrepresented as being the original software.
 ;  3. This notice may not be removed or altered from any source distribution.
 
-.define PrevOffset $c010
+.ifndef PrevOffset
+.error "PrevOffset is not defined. This is a 2 bytes RAM buffer."
+.endif
+
 DecompressZX0:
 .ifdef ZX0ToVRAM
   ; Set VRAM address
