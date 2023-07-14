@@ -205,6 +205,7 @@ def main():
     matplotlib.pyplot.gcf().set_figheight(6)
     
     matplotlib.pyplot.savefig("../benchmark.png", bbox_inches="tight")
+    matplotlib.pyplot.savefig("../benchmark.svg", bbox_inches="tight")
 
     matplotlib.pyplot.show()
 

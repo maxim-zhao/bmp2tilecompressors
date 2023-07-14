@@ -29,7 +29,7 @@ Compressors
 | exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠ Seems to crash on some inputs | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
-| lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library | ✅ | ✅ |
+| lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library, using [smallz4](https://create.stephan-brumme.com/smallz4/). [lz4ultra](https://github.com/emmanuel-marty/lz4ultra) has negligibly different results. | ✅ | ✅ |
 | lzsa1    | lzsa1       | LZSA1 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | lzsa2    | lzsa2       | LZSA2 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | magicknight | mkre2    | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
@@ -76,7 +76,7 @@ Benchmark
 
 Based on a benchmark corpus made of tilesets and title screens, here's a scatter of the results.
 
-![](/benchmark.png?raw=true)
+![](/benchmark.svg?raw=true)
 
 How to read:
 
