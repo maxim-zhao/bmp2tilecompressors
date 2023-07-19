@@ -22,3 +22,7 @@
 	path = compressors/smallz4
 	url = https://github.com/stbrumme/smallz4.git
 	branch = master
+[submodule "compressors/shrinkler"]
+	path = compressors/shrinkler
+	url = https://github.com/askeksa/Shrinkler.git
+	branch = master
