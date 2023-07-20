@@ -30,8 +30,8 @@ class Result:
         self.uncompressed = uncompressed
         self.compressed = compressed
         self.cycles = cycles
-        self.ratio = (1.0 * uncompressed - compressed) / uncompressed
-        frames = cycles / 59736.0
+        self.ratio = (uncompressed - compressed) / uncompressed
+        frames = cycles / 59736
         self.bytes_per_frame = uncompressed / frames
         self.filename = filename
         
@@ -95,7 +95,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
                 cycles = int(match.groups('cycles')[0])
 
         if is_test:
-            print(f"Test passed: {image_file} for {technology}. {os.stat('expected.bin').st_size}->{os.stat(data_file).st_size} in {cycles} cycles")
+            print(f"Test passed: {image_file} for {technology}. {os.stat(data_file).st_size}->{os.stat('expected.bin').st_size} in {cycles} cycles")
             return None
 
         return Result(
@@ -151,8 +151,8 @@ def compute():
 def sevenzip():
     # Now try 7-zip on the lot
     for ext in ["zip", "7z"]:
-        sum_uncompressed = 0
-        sum_compressed = 0
+        uncompressed = []
+        compressed = []
         for image_file in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
             if "test" in image_file:
                 # Skip test files
@@ -186,15 +186,23 @@ def sevenzip():
             for line in iter(proc.stdout.splitlines()):
                 match = re.search(r" +(\d+) +(\d+) +1 files", line)
                 if match is not None:
-                    sum_uncompressed += int(match.group(1))
-                    sum_compressed += int(match.group(2))
+                    uncompressed.append(int(match.group(1)))
+                    compressed.append(int(match.group(2)))
                     break
         # Print a result
-        print(f"{ext}: {sum_uncompressed} => {sum_compressed} = {(sum_uncompressed - sum_compressed) / (sum_uncompressed) * 100}%")
+        # The overall average compression is not the same as the average of the items' compressions.
+        # As this is what we show elsewhere, we compute that instead.
+        total = sum(uncompressed)
+        total_compressed = sum(compressed)
+        total_compression = (total - total_compressed) / total
+        average_compression = statistics.mean([(u-c)/u for u, c in zip(uncompressed, compressed)])
+        print(f"{ext}: {total} => {total_compressed} = {total_compression * 100}% overall, {average_compression * 100}% average")
+        # Then we need to manipulate a number to recompute that :)
+        # If average_compression = (u-c)/u, if u = 1 then we want to compute c = 1-a
         yield Result(
             ext,
-            sum_uncompressed,
-            sum_compressed,
+            1,
+            1 - average_compression,
             -1,
             "line")
 
@@ -265,12 +273,12 @@ def plot(results):
             zorder=index+100 # dots from 100
         )
 
-    matplotlib.pyplot.xlabel("Bytes per frame (more is better)")
+    matplotlib.pyplot.xlabel("⬅ worse ️         Bytes per frame          better ➡️")
     #matplotlib.pyplot.xscale("log")
     #matplotlib.pyplot.minorticks_on
     matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
-    matplotlib.pyplot.ylabel("Compression level (more is better)")
+    matplotlib.pyplot.ylabel("⬅️ worse          Compression percentage          better ➡️")
     matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     matplotlib.pyplot.legend(markerscale=10)
     matplotlib.pyplot.grid(axis='both', which='major', ls='dashed', alpha=0.4)
@@ -295,6 +303,6 @@ def main():
         with open("benchmark-results.pickle", "rb") as f:
             plot(pickle.load(f))
     elif verb == "sevenzip":
-        sevenzip()
+        [x for x in sevenzip()]
 
 main()

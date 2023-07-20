@@ -14,11 +14,11 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     PackParams params
     {
         .parity_context = false, // "Disable parity context - better on byte-oriented data"
-        .iterations = 9, // 1..9, default 3. Seems to get better, then worse, if you use more?
-        .length_margin = 100, // 1..100, default 3
-        .skip_length = 100000, // 2..100000, default 3000
-        .match_patience = 100000, // 0..100000, default 300
-        .max_same_length = 100000, // 1..100000, default 30
+        .iterations = 3, // 1..9, default 3. Seems to get better, then worse, if you use more?
+        .length_margin = 3, // 1..100, default 3
+        .skip_length = 3000, // 2..100000, default 3000
+        .match_patience = 300, // 0..100000, default 300
+        .max_same_length = 30, // 1..100000, default 30
     };
 
     RefEdgeFactory edgeFactory(100000000); // 1000..100000000, default 100000
