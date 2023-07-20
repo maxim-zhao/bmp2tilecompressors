@@ -14,7 +14,7 @@ import numpy
 WLA_PATH = "C:\\Users\\maxim\\Documents\\Code\\C\\wla-dx\\binaries"
 BMP2TILE_PATH = "C:\\Users\\maxim\\Documents\\Code\\C#\\bmp2tile"
 Z80BENCH_PATH = "C:\\Users\\maxim\\Documents\\Code\\C#\\z80bench\\bin\\Release"
-
+SEVENZIP_PATH = "C:\\Program Files\\7-Zip\\7z.exe"
 
 class Result:
     technology: str
@@ -138,22 +138,86 @@ def compute():
                 if result is not None:
                     print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
-
+                    
+    results.extend(sevenzip())
+                    
     # Save results to file
     with open("benchmark-results.pickle", "wb") as f:
         pickle.dump(results, f)
 
     return results
-        
+    
+    
+def sevenzip():
+    # Now try 7-zip on the lot
+    for ext in ["zip", "7z"]:
+        sum_uncompressed = 0
+        sum_compressed = 0
+        for image_file in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
+            if "test" in image_file:
+                # Skip test files
+                continue
+            # Make uncompressed version
+            subprocess.run([
+                os.path.join(BMP2TILE_PATH, "bmp2tile.exe"), 
+                image_file,
+                "-savetiles",
+                "expected.bin"], check=True, capture_output=True, text=True)
+            # Make filename
+            filename = f".temp.{ext}"
+            # Delete file if there
+            if os.path.exists(filename):
+                os.remove(filename)
+            # Compress it
+            subprocess.run([
+                SEVENZIP_PATH,
+                "a",
+                "-mx9",
+                filename,
+                "expected.bin"],
+                check=True, capture_output=True, text=True)
+            # Get 7z to tell us the compressed size
+            proc = subprocess.run([
+                SEVENZIP_PATH,
+                'l',
+                filename],
+                check=True, capture_output=True, text=True)
 
+            for line in iter(proc.stdout.splitlines()):
+                match = re.search(r" +(\d+) +(\d+) +1 files", line)
+                if match is not None:
+                    sum_uncompressed += int(match.group(1))
+                    sum_compressed += int(match.group(2))
+                    break
+        # Print a result
+        print(f"{ext}: {sum_uncompressed} => {sum_compressed} = {(sum_uncompressed - sum_compressed) / (sum_uncompressed) * 100}%")
+        yield Result(
+            ext,
+            sum_uncompressed,
+            sum_compressed,
+            -1,
+            "line")
+
+
+        
 def plot(results):
     # Now plot the results
+    
+    # First we extract the lines
+    lines = [x for x in results if x.cycles < 0]
+    
     NUM_COLORS = len([x for x in itertools.groupby(results, lambda r: r.technology)])
 
     cm = matplotlib.pyplot.get_cmap('tab20')
     colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
     index = 0
+    
+    for line in lines:
+        color = colors[index]
+        index += 1
+        matplotlib.pyplot.axhline(y=line.ratio, color=color, linestyle='--', label=line.technology)
 
+    results = [x for x in results if x.cycles > 0]
     for technology, data in itertools.groupby(results, lambda r: r.technology):
         # Get data series and stats
         group_results = list(data)
@@ -194,6 +258,7 @@ def plot(results):
             x,
             y,
             marker='.',
+            markersize=2,
             linestyle='none',
             label=technology,
             color=color,
@@ -201,13 +266,16 @@ def plot(results):
         )
 
     matplotlib.pyplot.xlabel("Bytes per frame (more is better)")
-    matplotlib.pyplot.xscale("log")
-    matplotlib.pyplot.minorticks_on
+    #matplotlib.pyplot.xscale("log")
+    #matplotlib.pyplot.minorticks_on
     matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
     matplotlib.pyplot.ylabel("Compression level (more is better)")
     matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    matplotlib.pyplot.legend()
+    matplotlib.pyplot.legend(markerscale=10)
+    matplotlib.pyplot.grid(axis='both', which='major', ls='dashed', alpha=0.4)
+
+    # Overall size
     matplotlib.pyplot.gcf().set_figwidth(10)
     matplotlib.pyplot.gcf().set_figheight(6)
     
@@ -226,5 +294,7 @@ def main():
     elif verb == "plot":
         with open("benchmark-results.pickle", "rb") as f:
             plot(pickle.load(f))
+    elif verb == "sevenzip":
+        sevenzip()
 
 main()
