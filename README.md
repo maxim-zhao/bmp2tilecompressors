@@ -19,7 +19,7 @@ Compressors
 ----
 
 | DLL name |  Short name | Longer name | Description | Tiles supported | Tilemap supported |
-|:---------|:------------|:------------|:------------|-------|---------|
+|:---------|:------------|:------------|:------------|:-----:|:-------:|
 | 1bppraw  | 1bpp        | 1bpp raw (uncompressed) binary | One bit per pixel tiles - discards upper bits   | ✅ |   |
 | 2bppraw  | 2bpp        | 2bpp raw (uncompressed) binary | Two bits per pixel tiles - discards upper bits  | ✅ |   |
 | 3bppraw  | 3bpp        | 3bpp raw (uncompressed) binary | Three bits per pixel tiles - discards upper bit | ✅ |   |
@@ -48,30 +48,36 @@ Compressors
 Decompressors
 ----
 
-All are for emitting data direct to VRAM on Master System, using Z80 decompressors. Decompression to RAM will generally be smaller.
+All size stats are for emitting data direct to VRAM on Master System, using Z80 decompressors in non-interrupt-safe mode if available. Decompression to RAM will generally use less ROM.
 
-| Description           | ROM (bytes) | RAM (bytes, not including stack) |
-|:----------------------|-----:|-----:|
-| aPLib                 |  303 |    5 |
-| aPLib (fast)          |  333 |    0 |
-| Exomizer v2 (⚠ Broken) | 208 | 156 |
-| LZ4                   |  136 |    0 |
-| LZSA1                 |  207 |    0 |
-| LZSA2                 |  332 |    0 |
-| Magic Knight Rayearth 2 | 139 |   0 |
-| Phantasy Star RLE     |  188 |    0 |
-| PS Gaiden             |  223 |   34 |
-| PS Gaiden (fast)      | 1028 |   32 |
-| Pucrunch (⚠ Broken)  |  412 |   44 |
-| Shrinkler             |  259 | 2048 |
-| Sonic                 |  162 |    8 |
-| Sonic 2               |  289 |   39 |
-| ZX0                   |  157 |    0 |
-| ZX0 (fast)            |  274 |    0 |
-| ZX7                   |  117 |    0 |
+| Description              | ROM (bytes) | RAM (bytes, not including stack) | Interrupt-safe | Non-VRAM support |
+|:-------------------------|------------:|---------------------------------:|:--------------:|:----------------:|
+| aPLib                    |         303 |                                5 |       ❌       |       ✅        |
+| aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
+| Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
+| LZ4                      |         136 |                                0 |       ❌       |       ❌        |
+| LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
+| LZSA2                    |         332 |                                0 |       ❌       |       ✅        |
+| Magic Knight Rayearth 2  |         139 |                                0 |       ❌       |       ❌       |
+| Phantasy Star RLE        |         188 |                                0 |       ✅       |       ❌       |
+| PS Gaiden                |         223 |                               34 |       ❌       |       ❌       |
+| PS Gaiden (fast)         |        1028 |                               32 |       ❌       |       ❌       |
+| Pucrunch (⚠ Broken)     |         412 |                               44 |       ❌       |       ❌       |
+| Shrinkler                |         259 |                             2048 |       ❌       |       ✅     |
+| Sonic                    |         162 |                                8 |       ❌       |       ❌       |
+| Sonic 2                  |         289 |                               39 |       ❌       |       ❌       |
+| Simple tile Compression 0 |         57 |                                0 |       ❌       |       ❌       |
+| ZX0                      |         157 |                                0 |       ❌       |       ✅       |
+| ZX0 (fast)               |         274 |                                0 |       ❌       |       ✅       |
+| ZX7                      |         117 |                                0 |       ✅       |       ✅       |
 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
 They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
+
+Interrupt-safe decompressors can run safely while interrupts are happening and interfering with the VDP state. 
+This will introduce some overhead - if nothing else, they need to disable interrupts - and they will therefore also change the interrupts enabled state.
+
+Some compressors have assembly-time definitions to switch between decompressing directly to VRAM on SMS and decompressing to RAM.
 
 Benchmark
 ----
@@ -84,6 +90,7 @@ How to read:
 
 - Further to the right is faster
 - Further up is better compression
+- 60% compression means that the compressed data is 40% of the size of the uncompressed data (for example)
 - The scatter for a particular colour group is across a corpus of realistic Master System tile data
 - Each colour group has an ellipse showing the standard deviation, with a + in the middle showing the mean, across the test corpus.
 
@@ -95,5 +102,5 @@ Other compressors
 Here's some other compressors people have made.
 
 | Name | Link | Description | Tiles supported | Tilemap supported |
-|:-----|:-----|:------------|-----------------|-------------------|
+|:-----|:-----|:------------|:---------------:|:-----------------:|
 | ShrunkTileMap | https://github.com/sverx/STMcomp | Compresses tilemaps with specific support for sequential tile indices |   | ✅ |
