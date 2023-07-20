@@ -12,3 +12,4 @@ benchmark/data.*
 benchmark/expected.bin
 /benchmark/venv
 /compressors/data.sonic2compr
+*.pickle

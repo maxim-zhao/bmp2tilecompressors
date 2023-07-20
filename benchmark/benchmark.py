@@ -1,8 +1,10 @@
 import os
+import sys
 import subprocess
 import re
 import glob
 import json
+import pickle
 import matplotlib.pyplot
 from matplotlib.patches import Ellipse
 import itertools
@@ -32,7 +34,7 @@ class Result:
         frames = cycles / 59736.0
         self.bytes_per_frame = uncompressed / frames
         self.filename = filename
-
+        
 
 def benchmark(technology, extension, rename_extension, asm_file, image_file):
     try:
@@ -108,9 +110,9 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         print(e)
         print(e.stdout)
         print(e.stderr)
-
-
-def main():
+        
+        
+def compute():
     results = []
     for benchmark_file in glob.glob("benchmark-*.asm"):
         # Open the file and check the formats we want to use
@@ -137,9 +139,14 @@ def main():
                     print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
                     results.append(result)
 
-    # Dummy results for fast testing
-    # results = [Result("foo", 100, 100, 1000, ""), Result("foo", 90, 100, 1100, ""), Result("bar", 80, 100, 800, ""), Result("bar", 110, 100, 800, "")]
+    # Save results to file
+    with open("benchmark-results.pickle", "wb") as f:
+        pickle.dump(results, f)
 
+    return results
+        
+
+def plot(results):
     # Now plot the results
     NUM_COLORS = len([x for x in itertools.groupby(results, lambda r: r.technology)])
 
@@ -210,5 +217,14 @@ def main():
     matplotlib.pyplot.show()
 
 
+
+def main():
+    verb = sys.argv[1] if len(sys.argv) > 1 else "compute"
+    
+    if verb == "compute":
+        plot(compute())
+    elif verb == "plot":
+        with open("benchmark-results.pickle", "rb") as f:
+            plot(pickle.load(f))
 
 main()
