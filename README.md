@@ -63,7 +63,7 @@ All are for emitting data direct to VRAM on Master System, using Z80 decompresso
 | PS Gaiden             |  223 |   34 |
 | PS Gaiden (fast)      | 1028 |   32 |
 | Pucrunch (⚠ Broken)  |  412 |   44 |
-| Shrinkler             |  256 | 2048 |
+| Shrinkler             |  259 | 2048 |
 | Sonic                 |  162 |    8 |
 | Sonic 2               |  289 |   39 |
 | ZX0                   |  157 |    0 |
