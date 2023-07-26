@@ -24,46 +24,6 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "hskcompr";
 }
 
-void writeRaw(
-    std::vector<uint8_t>& buffer,
-    std::vector<uint8_t>::const_iterator begin,
-    const std::vector<uint8_t>::const_iterator end)
-{
-    while (begin < end)
-    {
-        size_t blockLength = end - begin;
-        if (blockLength > MAX_RUN_SIZE)
-        {
-            blockLength = MAX_RUN_SIZE;
-        }
-        buffer.push_back(static_cast<uint8_t>(RAW_MASK | blockLength));
-        for (size_t i = 0; i < blockLength; ++i)
-        {
-            buffer.push_back(*begin++);
-        }
-    }
-}
-
-void writeRun(std::vector<uint8_t>& buffer, const uint8_t value, size_t count)
-{
-    if (count == 0)
-    {
-        return;
-    }
-
-    while (count > 0)
-    {
-        uint32_t blockLength = count;
-        if (blockLength > MAX_RUN_SIZE)
-        {
-            blockLength = MAX_RUN_SIZE;
-        }
-        buffer.push_back(static_cast<uint8_t>(RLE_MASK | blockLength));
-        buffer.push_back(value);
-        count -= blockLength;
-    }
-}
-
 int32_t compress(
     const uint8_t* pSource,
     const uint32_t sourceLength,
@@ -71,20 +31,22 @@ int32_t compress(
     const uint32_t destinationLength,
     const int interleaving)
 {
-    // Compress sourceLength bytes from pSource to pDestination;
-    // return length, or 0 if destinationLength is too small, or -1 if there is an error
-
     // Copy the data into a buffer
-    auto bufSource = Utils::toVector(pSource, sourceLength);
+    auto source = Utils::toVector(pSource, sourceLength);
 
     // Deinterleave it
-    Utils::deinterleave(bufSource, interleaving);
+    Utils::deinterleave(source, interleaving);
 
     // Make a buffer to hold the result
     std::vector<uint8_t> result;
 
+    // Header is the size divided by the interleaving
+    const auto size = sourceLength / interleaving;
+    result.push_back((size >> 0) & 0xff);
+    result.push_back((size >> 8) & 0xff);
+
     // Compress everything in one go
-    auto blocks = rle::process(bufSource.cbegin(), bufSource.cend());
+    auto blocks = rle::process(source.cbegin(), source.cend());
     rle::optimize(blocks, 1, MAX_RUN_SIZE, MAX_RUN_SIZE);
 
     for (const auto& block : blocks)

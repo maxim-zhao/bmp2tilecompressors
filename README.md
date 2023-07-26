@@ -55,6 +55,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | aPLib                    |         303 |                                5 |       ❌       |       ✅        |
 | aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
 | Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
+| High School Kimengumi (unoptimised) | 119 |                             4 |       ❌       |       ❌        |
 | LZ4                      |         136 |                                0 |       ❌       |       ❌        |
 | LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |       ❌       |       ✅        |
