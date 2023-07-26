@@ -2,6 +2,7 @@
 #include <iterator>
 #include <vector>
 
+#include "rle.h"
 #include "utils.h"
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -17,24 +18,12 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "mkre2compr";
 }
 
-void rleEmitRaw(std::vector<uint8_t>& result, std::vector<uint8_t>& rawBytes)
-{
-    // Emits raw_bytes to result as raw runs, and clears it
-    while (!rawBytes.empty())
-    {
-        const auto rawLength = std::min(0x7f, static_cast<int>(rawBytes.size()));
-        result.push_back(static_cast<uint8_t>(rawLength | 0x80));
-        std::copy_n(rawBytes.begin(), rawLength, std::back_inserter(result));
-        rawBytes.erase(rawBytes.begin(), rawBytes.begin() + rawLength);
-    }
-}
-
 std::vector<uint8_t> compressRle(const std::vector<uint8_t>& data)
 {
     std::vector<uint8_t> result;
     result.push_back(0); // RLE marker
 
-    // First we deinterleave the data
+    // First we split the data into bitplanes
     std::vector<std::vector<uint8_t>> bitplanes(4);
     for (std::size_t initialOffset = 0; initialOffset < 4; ++initialOffset)
     {
@@ -48,43 +37,23 @@ std::vector<uint8_t> compressRle(const std::vector<uint8_t>& data)
     // Then we compress each in turn
     for (const auto& bitplane : bitplanes)
     {
-        // At each position in the data...
-        std::vector<uint8_t> rawBytes;
-        for (std::size_t offset = 0; offset < bitplane.size(); /* increment in loop */)
-        {
-            // A run costs 2 bytes to encode so a run of 3 or more is worth doing.
-            // 2 would encode no better than a raw run.
-            auto b = bitplane[offset];
-            auto runLength = 1;
-            for (std::size_t other = offset + 1; other < bitplane.size(); ++other)
-            {
-                if (bitplane[other] != b)
-                {
-                    break;
-                }
-                ++runLength;
-            }
-            if (runLength > 2)
-            {
-                // Emit any raw we have stored up
-                rleEmitRaw(result, rawBytes);
+        auto blocks = rle::process(bitplane.begin(), bitplane.end());
+        rle::optimize(blocks, 1, 0x7f, 0x7f);
 
-                // Truncate if needed
-                runLength = std::min(0x7f, runLength);
-                // Emit it
-                result.push_back(static_cast<uint8_t>(runLength));
-                result.push_back(b);
-                offset += runLength;
-            }
-            else
+        for (const auto& block : blocks)
+        {
+            switch (block.getType())
             {
-                // No RLE. Store in a raw buffer.
-                rawBytes.push_back(b);
-                ++offset;
+            case rle::Block::Type::Raw:
+                result.push_back(static_cast<uint8_t>(0x80 | block.getSize()));
+                std::ranges::copy(block.getData(), std::back_inserter(result));
+                break;
+            case rle::Block::Type::Run:
+                result.push_back(static_cast<uint8_t>(0x00 | block.getSize()));
+                result.push_back(block.getData()[0]);
+                break;
             }
         }
-        // Emit any trailing raw run
-        rleEmitRaw(result, rawBytes);
 
         // Emit a 0 for end of data
         result.push_back(0);
