@@ -136,7 +136,7 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
         if (bestLzLength > 2)
         {
             // Yes: emit an LZ reference
-            // A 1 bit in the bitstream
+            // A 0 bit in the bitstream
             addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 0);
             // Then the length - 3 in the high 4 bits
             auto lzWord = (bestLzLength - 3) << 12;
@@ -152,7 +152,7 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
         else
         {
             // No: emit a raw byte
-            // A 0 bit in the bitstream
+            // A 1 bit in the bitstream
             addBitstreamBit(result, currentBitmaskOffset, currentBitmaskBitCount, 1);
             // Then the raw byte
             result.push_back(data[offset]);
