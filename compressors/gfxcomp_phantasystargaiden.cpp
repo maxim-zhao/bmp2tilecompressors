@@ -2,31 +2,7 @@
 #include <map>
 #include <cstdint>
 
-void deinterleave(std::vector<uint8_t>& buffer, uint32_t interleaving)
-{
-    std::vector<uint8_t> tempBuffer(buffer.size());
-
-    // Deinterleave into tempBuffer
-    const auto bitplaneSize = buffer.size() / interleaving;
-    for (unsigned int src = 0; src < buffer.size(); ++src)
-    {
-        // ReSharper disable CommentTypo
-        // If interleaving is 4 I want to turn
-        // AbcdEfghIjklMnopQrstUvwx
-        // into
-        // AEIMQUbfjnrvcgkoswdhlptx
-        // so for a char at position x
-        // x div 4 = offset within this section
-        // x mod 4 = which section
-        // final position = (x div 4) + (x mod 4) * (section size)
-        // ReSharper restore CommentTypo
-        const size_t dest = src / interleaving + (src % interleaving) * bitplaneSize;
-        tempBuffer[dest] = buffer[src];
-    }
-
-    // Copy results over the original data
-    std::copy(tempBuffer.begin(), tempBuffer.end(), buffer.begin());
-}
+#include "utils.h"
 
 void findMostCommonValue(std::vector<uint8_t>::const_iterator data, uint8_t& value, int& count)
 {
@@ -237,7 +213,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "psgcompr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -245,7 +221,7 @@ extern "C" __declspec(dllexport) int compressTiles(
 {
     if (numTiles > 0xffff)
     {
-        return -1; // error
+        return ReturnValues::CannotCompress;
     }
     std::vector<uint8_t> destination; // the output
     destination.reserve(destinationLength); // avoid reallocation
@@ -262,18 +238,10 @@ extern "C" __declspec(dllexport) int compressTiles(
         std::copy_n(pSource, 32, tile.begin());
         pSource += 32;
         // Deinterleave it
-        deinterleave(tile, 4);
+        Utils::deinterleave(tile, 4);
         // Compress it to dest
         compressTile(tile, destination);
     }
 
-    // check length
-    if (destination.size() > destinationLength)
-    {
-        return 0;
-    }
-    // copy to dest
-    memcpy_s(pDestination, destinationLength, &destination[0], destination.size());
-    // return length
-    return static_cast<int>(destination.size());
+    return Utils::copyToDestination(destination, pDestination, destinationLength);
 }

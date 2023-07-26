@@ -1,30 +1,25 @@
 #include <cstdint>
-#include <algorithm>
+
 #include "libapultra.h"
+#include "utils.h"
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
-    // Allocate memory
-    const auto packedSize = apultra_get_max_compressed_size(sourceLength);
-    auto* pPacked = new uint8_t[packedSize];
+    // Allocate oversized memory buffer
+    std::vector<unsigned char> packed(apultra_get_max_compressed_size(sourceLength));
 
-    const auto size = apultra_compress(pSource, pPacked, sourceLength, packedSize, 0, 0, 0, nullptr, nullptr);
+    const auto size = apultra_compress(pSource, packed.data(), sourceLength, packed.size(), 0, 0, 0, nullptr, nullptr);
 
-    // Check size
-    if (size > destinationLength)
+    // It returns size = -1 on failure
+    if (size == static_cast<size_t>(-1))
     {
-        delete [] pPacked;
-        return 0;
+        return ReturnValues::CannotCompress;
     }
 
-    // Copy to pDestination
-    std::copy_n(pPacked, size, pDestination);
+    // Trim the vector to the right size
+    packed.resize(size);
 
-    // Free other memory
-    delete [] pPacked;
-
-    // Done
-    return static_cast<int>(size);
+    return Utils::copyToDestination(packed, pDestination, destinationLength);
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -40,7 +35,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "apultra";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -50,7 +45,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,

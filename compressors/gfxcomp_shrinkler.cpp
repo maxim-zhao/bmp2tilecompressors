@@ -4,13 +4,13 @@
 #include <ranges>
 
 #pragma warning(push, 0)
+#include "utils.h"
 #include "shrinkler/cruncher/HunkFile.h"
 #include "shrinkler/cruncher/Pack.h"
 #pragma warning(pop)
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
-    // We copy code from Shrinkler's cpp file...
     PackParams params
     {
         .parity_context = false, // "Disable parity context - better on byte-oriented data"
@@ -21,7 +21,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
         .max_same_length = 30, // 1..100000, default 30
     };
 
-    RefEdgeFactory edgeFactory(100000000); // 1000..100000000, default 100000
+    RefEdgeFactory edgeFactory(10000); // 1000..100000000, default 100000
 
     vector<unsigned char> packBuffer;
     RangeCoder rangeCoder(LZEncoder::NUM_CONTEXTS + NUM_RELOC_CONTEXTS, packBuffer);
@@ -40,15 +40,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     printf("\n");
     rangeCoder.finish();
 
-    // Copy to dest
-    if (packBuffer.size() > destinationLength)
-    {
-        return 0;
-    }
-
-    memcpy_s(pDestination, destinationLength, packBuffer.data(), packBuffer.size());
-
-    return static_cast<int>(packBuffer.size());
+    return Utils::copyToDestination(packBuffer, pDestination, destinationLength);
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -63,7 +55,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "shrinkler";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -73,7 +65,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     uint32_t height,

@@ -1,5 +1,9 @@
 #include <vector>
 #include <cstdint>
+#include <iterator>
+
+#include "rle.h"
+#include "utils.h"
 
 constexpr int MAX_RUN_SIZE = 0x7f;
 constexpr int RLE_MASK = 0x00;
@@ -18,32 +22,6 @@ extern "C" __declspec(dllexport) const char* getExt()
     // A string suitable for use as a file extension
     // ReSharper disable once StringLiteralTypo
     return "hskcompr";
-}
-
-void deinterleave(std::vector<uint8_t>& buffer, const unsigned int interleaving)
-{
-    std::vector<uint8_t> tempBuffer(buffer);
-
-    // Deinterleave into tempBuffer
-    const size_t bitplaneSize = buffer.size() / interleaving;
-    for (size_t src = 0; src < buffer.size(); ++src)
-    {
-        // ReSharper disable CommentTypo
-        // If interleaving is 4 I want to turn
-        // AbcdEfghIjklMnopQrstUvwx
-        // into
-        // AEIMQUbfjnrvcgkoswdhlptx
-        // so for a byte at position x
-        // x div 4 = offset within this section
-        // x mod 4 = which section
-        // final position = (x div 4) + (x mod 4) * (section size)
-        // ReSharper restore CommentTypo
-        const size_t dest = src / interleaving + (src % interleaving) * bitplaneSize;
-        tempBuffer[dest] = buffer[src];
-    }
-
-    // Copy results over the original data
-    std::copy(tempBuffer.begin(), tempBuffer.end(), buffer.begin());
 }
 
 void writeRaw(
@@ -86,77 +64,51 @@ void writeRun(std::vector<uint8_t>& buffer, const uint8_t value, size_t count)
     }
 }
 
-size_t getRunLength(const std::vector<uint8_t>::const_iterator buffer, const std::vector<uint8_t>::const_iterator end)
-{
-    // find the number of consecutive identical values
-    const uint8_t c = *buffer;
-    auto it = buffer;
-    for (++it; it != end && *it == c; ++it)
-    {
-    }
-    return it - buffer;
-}
-
-int compress(
+int32_t compress(
     const uint8_t* pSource,
     const uint32_t sourceLength,
     uint8_t* pDestination,
     const uint32_t destinationLength,
-    const uint32_t interleaving)
+    const int interleaving)
 {
     // Compress sourceLength bytes from pSource to pDestination;
     // return length, or 0 if destinationLength is too small, or -1 if there is an error
 
     // Copy the data into a buffer
-    std::vector<uint8_t> bufSource(pSource, pSource + sourceLength);
+    auto bufSource = Utils::toVector(pSource, sourceLength);
 
     // Deinterleave it
-    deinterleave(bufSource, interleaving);
+    Utils::deinterleave(bufSource, interleaving);
 
     // Make a buffer to hold the result
-    std::vector<uint8_t> destinationBuffer;
-    destinationBuffer.reserve(destinationLength);
+    std::vector<uint8_t> result;
 
     // Compress everything in one go
-    auto rawStart = bufSource.cbegin();
-    for (auto it = bufSource.cbegin(); it != bufSource.cend(); /* increment in loop */)
+    auto blocks = rle::process(bufSource.cbegin(), bufSource.cend());
+    rle::optimize(blocks, 1, MAX_RUN_SIZE, MAX_RUN_SIZE);
+
+    for (const auto& block : blocks)
     {
-        const int runLength = static_cast<int>(getRunLength(it, bufSource.cend()));
-        int runLengthNeeded = 3; // normally need a run of 3 to be worth breaking a raw block
-        if (it == bufSource.cbegin() || it + runLength == bufSource.cend()) --runLengthNeeded;
-        // but at the beginning or end, 2 is enough
-        if (runLength < runLengthNeeded)
+        const auto mask = block.getType() == rle::Block::Type::Raw ? 0x80 : 0x00;
+        result.push_back(static_cast<uint8_t>(mask | block.getSize()));
+        switch (block.getType())
         {
-            // Not good enough; keep looking for a run
-            it += runLength;
-            continue;
+        case rle::Block::Type::Raw:
+            std::ranges::copy(block.getData(), std::back_inserter(result));
+            break;
+        case rle::Block::Type::Run:
+            result.push_back(block.getData()[0]);
+            break;
         }
-
-        // We found a good enough run. Write the raw (if any) and then the run
-        writeRaw(destinationBuffer, rawStart, it);
-        writeRun(destinationBuffer, *it, runLength);
-        it += runLength;
-        rawStart = it;
     }
-    // We may have a final run of raw bytes
-    writeRaw(destinationBuffer, rawStart, bufSource.cend());
+
     // Zero terminator
-    destinationBuffer.push_back(0);
+    result.push_back(0);
 
-    // check length
-    if (destinationBuffer.size() > destinationLength)
-    {
-        return 0;
-    }
-
-    // copy to pDestination
-    std::copy(destinationBuffer.begin(), destinationBuffer.end(), pDestination);
-
-    // return length
-    return static_cast<int>(destinationBuffer.size());
+    return Utils::copyToDestination(result, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -166,7 +118,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength, 4);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,

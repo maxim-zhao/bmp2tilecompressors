@@ -1,5 +1,7 @@
 #include <cstdint>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     return "Simple Tile Compressor Zero";
@@ -10,7 +12,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "stc0compr";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -18,7 +20,7 @@ extern "C" __declspec(dllexport) int compressTiles(
 {
     if (destinationLength < numTiles * 40 + 1)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
     // please give me more space for the data (up to 40 bytes per tile needed worst case scenario, plus 1 byte terminator)
 

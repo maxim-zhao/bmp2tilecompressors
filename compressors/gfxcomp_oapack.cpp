@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <algorithm>
 
+#include "utils.h"
+
 // Forward declares for oapack stuff. It uses globals so we have to poke into them to make it work.
 int FindOptimalSolution();
 int EmitCompressed();
@@ -9,7 +11,7 @@ extern unsigned char* data;
 extern int packedBits;
 extern int size;
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     data = const_cast<unsigned char*>(pSource);
     size = static_cast<int>(sourceLength);
@@ -20,7 +22,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     // Check size
     if (compressedSize > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
 
     // Copy to pDestination
@@ -43,7 +45,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "oapack";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -53,7 +55,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     uint32_t height,

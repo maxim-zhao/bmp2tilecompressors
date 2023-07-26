@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <string>
 #include <sstream>
+
+#include "utils.h"
 #pragma warning(pop)
 
 HINSTANCE g_hInstance;
@@ -67,8 +69,13 @@ std::string getSetting(const std::string& name)
         // Try to get the setting value.
         // This returns the number of chars copied (not including the null terminator).
         // Thus if it tells us bufferSize - 1 then it may be truncated and we retry with a bigger buffer.
-        const DWORD result = GetPrivateProfileString("Settings", name.c_str(), nullptr, buffer, bufferSize,
-                                                     configFilename.c_str());
+        const DWORD result = GetPrivateProfileString(
+            "Settings",
+            name.c_str(),
+            nullptr,
+            buffer,
+            bufferSize,
+            configFilename.c_str());
         if (result != bufferSize - 1)
         {
             // Success
@@ -117,14 +124,18 @@ void replace(std::string& haystack, const std::string& needle, const std::string
     }
 }
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(
+    const uint8_t* pSource,
+    const size_t sourceLength,
+    uint8_t* pDestination,
+    const size_t destinationLength)
 {
     // We get a couple of temp filenames...
     char tempPathBuf[MAX_PATH];
     const DWORD tempPathResult = GetTempPath(MAX_PATH, tempPathBuf);
     if (tempPathResult == 0 || tempPathResult >= MAX_PATH)
     {
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     std::ostringstream ss;
     ss << tempPathBuf << "gfxcomp_exe_temp_in_" << rand() << ".bin";
@@ -135,18 +146,24 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
 
     // We write the data to the first filename...
     // Since we're using Windows API for creating the process, let's use it for files too...
-    const HANDLE fIn = CreateFile(inFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS,
-                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+    const HANDLE fIn = CreateFile(
+        inFilename.c_str(),
+        GENERIC_WRITE,
+        FILE_SHARE_WRITE,
+        nullptr,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
     if (fIn == INVALID_HANDLE_VALUE)
     {
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     DWORD numberOfBytesWritten;
-    if (!WriteFile(fIn, pSource, sourceLength, &numberOfBytesWritten, nullptr) || numberOfBytesWritten != sourceLength)
+    if (WriteFile(fIn, pSource, sourceLength, &numberOfBytesWritten, nullptr) == FALSE || numberOfBytesWritten != sourceLength)
     {
         // Failed to write
         CloseHandle(fIn);
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     CloseHandle(fIn);
 
@@ -162,14 +179,23 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     // Then we run it and wait for it to complete
     PROCESS_INFORMATION processInformation{};
     STARTUPINFO startupInfo{};
-    const BOOL created = CreateProcess(nullptr, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo,
-                                       &processInformation);
+    const BOOL created = CreateProcess(
+        nullptr,
+        commandLine,
+        nullptr,
+        nullptr,
+        FALSE,
+        0,
+        nullptr,
+        nullptr,
+        &startupInfo,
+        &processInformation);
     free(commandLine);
 
-    if (!created)
+    if (created == FALSE)
     {
         // Failed to run the command
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 
     WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -191,7 +217,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     if (fOut == INVALID_HANDLE_VALUE)
     {
         DeleteFile(outFilename.c_str());
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     // Check the size
     const DWORD fileSize = GetFileSize(fOut, nullptr);
@@ -200,24 +226,24 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
         // Dest buffer too small
         CloseHandle(fOut);
         DeleteFile(outFilename.c_str());
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
     // Read it in
     DWORD numberOfBytesRead;
-    if (!ReadFile(fOut, pDestination, fileSize, &numberOfBytesRead, nullptr) || numberOfBytesRead != fileSize)
+    if (ReadFile(fOut, pDestination, fileSize, &numberOfBytesRead, nullptr) == FALSE || numberOfBytesRead != fileSize)
     {
         // Problem reading
         CloseHandle(fOut);
         DeleteFile(outFilename.c_str());
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     CloseHandle(fOut);
     DeleteFile(outFilename.c_str());
 
-    return static_cast<int>(fileSize);
+    return static_cast<int32_t>(fileSize);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -226,7 +252,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,

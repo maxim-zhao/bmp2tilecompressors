@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -13,7 +15,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "bin";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -22,13 +24,13 @@ extern "C" __declspec(dllexport) int compressTiles(
     const uint32_t sourceLength = numTiles * 32;
     if (sourceLength > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
-    memcpy_s(pDestination, destinationLength, pSource, sourceLength);
-    return static_cast<int>(sourceLength);
+    std::copy_n(pSource, sourceLength, pDestination);
+    return static_cast<int32_t>(sourceLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     uint32_t height,
@@ -38,32 +40,32 @@ extern "C" __declspec(dllexport) int compressTilemap(
     const uint32_t sourceLength = width * height * 2;
     if (sourceLength > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
-    memcpy_s(pDestination, destinationLength, pSource, sourceLength);
-    return static_cast<int>(sourceLength);
+    std::copy_n(pSource, sourceLength, pDestination);
+    return static_cast<int32_t>(sourceLength);
 }
 
-extern "C" __declspec(dllexport) int decompressTiles(
-    const uint8_t* source,
+extern "C" __declspec(dllexport) int32_t decompressTiles(
+    const uint8_t* pSource,
     const size_t sourceLength,
-    uint8_t* destination,
+    uint8_t* pDestination,
     const size_t destinationLength)
 {
     if (sourceLength > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
-    memcpy_s(destination, destinationLength, source, sourceLength);
-    return static_cast<int>(sourceLength);
+    std::copy_n(pSource, sourceLength, pDestination);
+    return static_cast<int32_t>(sourceLength);
 }
 
-extern "C" __declspec(dllexport) int decompressTilemap(const uint8_t* source, const size_t sourceLength, uint8_t* destination, size_t destinationLength)
+extern "C" __declspec(dllexport) int32_t decompressTilemap(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     if (sourceLength > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
-    memcpy_s(destination, destinationLength, source, sourceLength);
-    return static_cast<int>(sourceLength);
+    std::copy_n(pSource, sourceLength, pDestination);
+    return static_cast<int32_t>(sourceLength);
 }

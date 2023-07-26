@@ -223,7 +223,14 @@ def plot(results):
     for line in lines:
         color = colors[index]
         index += 1
-        matplotlib.pyplot.axhline(y=line.ratio, color=color, linestyle='--', label=line.technology)
+        matplotlib.pyplot.axhline(
+            y=line.ratio, 
+            color=color, 
+            linestyle='--', 
+            #alpha = 0.5,
+            linewidth = 0.5,
+            label=line.technology)
+            
 
     results = [x for x in results if x.cycles > 0]
     for technology, data in itertools.groupby(results, lambda r: r.technology):

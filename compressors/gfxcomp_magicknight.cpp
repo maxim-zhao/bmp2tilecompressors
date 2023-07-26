@@ -2,6 +2,8 @@
 #include <iterator>
 #include <vector>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -197,7 +199,7 @@ std::vector<uint8_t> compressLz(const std::vector<uint8_t>& data)
     return result;
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -212,13 +214,5 @@ extern "C" __declspec(dllexport) int compressTiles(
 
     const auto& smaller = rle.size() < lz.size() ? rle : lz;
 
-    if (smaller.size() >= destinationLength)
-    {
-        return 0; // Need a bigger buffer
-    }
-
-    // Else emit the smaller
-    std::ranges::copy(smaller, stdext::checked_array_iterator(pDestination, destinationLength));
-
-    return static_cast<int>(smaller.size());
+    return Utils::copyToDestination(smaller, pDestination, destinationLength);
 }

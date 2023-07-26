@@ -1,7 +1,10 @@
 #pragma warning(push,0)
 #include "smallz4/smallz4.h"
 #pragma warning(pop)
+#include <iterator>
 #include <string>
+
+#include "utils.h"
 
 extern "C" __declspec(dllexport) const char* getName()
 {
@@ -23,49 +26,54 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "lz4";
 }
 
-const uint8_t* g_pSource;
-uint32_t g_sourceRemaining;
-uint8_t* g_pDestination;
-uint32_t g_destinationRemaining;
-
-size_t getBytes(void* data, size_t numBytes, void* /*userPtr*/)
+int32_t compress(
+    const uint8_t* pSource,
+    const uint32_t sourceLength,
+    uint8_t* pDestination,
+    const uint32_t destinationLength)
 {
-    const auto count = std::min(g_sourceRemaining, numBytes);
-    memcpy_s(data, count, g_pSource, g_sourceRemaining);
-    g_pSource += count;
-    g_sourceRemaining -= count;
-    return count;
-}
-
-void sendBytes(const void* data, size_t numBytes, void* /*userPtr*/)
-{
-    const auto count = std::min(g_destinationRemaining, numBytes);
-    memcpy_s(g_pDestination, g_destinationRemaining, data, count);
-    g_pDestination += count;
-    g_destinationRemaining -= count;
-}
-
-int compress(const uint8_t* pSource, const uint32_t numBytes, uint8_t* pDestination, const uint32_t destinationLength)
-{
-    g_pSource = pSource;
-    g_sourceRemaining = numBytes;
-    g_pDestination = pDestination;
-    g_destinationRemaining = destinationLength;
-    smallz4::lz4(getBytes, sendBytes, 65535, true);
-    // Check if we ran out of space
-    if (g_destinationRemaining == 0)
+    // We put vectors in a little struct for passing around
+    auto source = Utils::toVector(pSource, sourceLength);
+    std::vector<uint8_t> result;
+    struct State
     {
-        // Need a bigger buffer
-        return 0;
-    }
+        std::vector<uint8_t>::iterator it;
+        std::vector<uint8_t>::iterator end;
+        std::back_insert_iterator<std::vector<uint8_t>> dest;
+    };
+    State state
+    {
+        source.begin(),
+        source.end(),
+        std::back_inserter(result)
+    };
+
+    // Pass lambdas for the function pointers it wants. These have to be non-capturing so we pass some state too.
+    smallz4::lz4(
+        [](void* data, size_t numBytes, void* userPtr)
+        {
+            // return min(remaining
+            auto& state = *static_cast<State*>(userPtr);
+            const int toCopy = std::min(state.end - state.it, static_cast<int>(numBytes));
+            std::copy_n(state.it, toCopy, static_cast<uint8_t*>(data));
+            state.it += toCopy;
+            return static_cast<size_t>(toCopy);
+        },
+        [](const void* data, size_t numBytes, void* userPtr)
+        {
+            const auto& state = *static_cast<State*>(userPtr);
+            std::copy_n(static_cast<const int8_t*>(data), numBytes, state.dest);
+        },
+        65535,
+        true,
+        &state);
+
     // Remove framing
-    constexpr auto headerSize = 8; // Header + block size
-    const auto size = destinationLength - g_destinationRemaining - headerSize;
-    memcpy_s(pDestination, destinationLength, pDestination + headerSize, size);
-    return static_cast<int>(size);
+    result.erase(result.begin(), result.begin() + 8); // Header + block size = 8
+    return Utils::copyToDestination(result, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -74,7 +82,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,

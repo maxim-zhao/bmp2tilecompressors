@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <ranges>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -82,7 +84,7 @@ std::vector<uint8_t> compress(const std::vector<uint8_t>& tile)
     return result;
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -90,7 +92,7 @@ extern "C" __declspec(dllexport) int compressTiles(
 {
     if (numTiles > 0xffff)
     {
-        return -1; // error
+        return ReturnValues::CannotCompress; // error
     }
 
     try
@@ -191,18 +193,10 @@ extern "C" __declspec(dllexport) int compressTiles(
             destination.push_back(accumulator);
         }
 
-        // check length
-        if (destination.size() > destinationLength)
-        {
-            return 0;
-        }
-        // copy to dest
-        memcpy_s(pDestination, destinationLength, destination.data(), destination.size());
-        // return length
-        return static_cast<int>(destination.size());
+        return Utils::copyToDestination(destination, pDestination, destinationLength);
     }
     catch (const std::exception&)
     {
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 }

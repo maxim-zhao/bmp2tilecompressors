@@ -1,6 +1,8 @@
 #include <cstdint> // uint8_t, etc
 #include <cstdlib> // free
-#include <iterator>
+#include <memory>
+
+#include "utils.h"
 
 extern "C"
 {
@@ -20,54 +22,46 @@ extern "C" __declspec(dllexport) const char* getExt()
 }
 
 // The actual compressor function, calling into the zx7 code
-uint32_t compress(
+int32_t compress(
     const uint8_t* pSource,
     const size_t sourceLength,
     uint8_t* pDestination,
     const size_t destinationLength)
 {
-    // ReSharper disable once CommentTypo
-    // The compressor allocates using calloc, so we have to free() the results
+    const auto optimised = Utils::makeUniqueForMalloc(
+        optimize(
+            const_cast<unsigned char*>(pSource),
+            sourceLength,
+            0));
     std::size_t outputSize;
     long delta; // we don't care about this
-    const auto optimised = optimize(const_cast<unsigned char*>(pSource), sourceLength, 0);
-    const auto pOutputData = compress(
-        optimised,
-        const_cast<unsigned char*>(pSource),
-        sourceLength,
-        0,
-        &outputSize,
-        &delta);
-    free(optimised);
+    const auto pOutputData = Utils::makeUniqueForMalloc(
+        compress(
+            optimised.get(),
+            const_cast<unsigned char*>(pSource),
+            sourceLength,
+            0,
+            &outputSize,
+            &delta));
 
-    if (outputSize > destinationLength)
-    {
-        free(pOutputData);
-        return 0;
-    }
-
-    // Copy to the provided destination buffer
-    std::copy_n(pOutputData, outputSize, stdext::checked_array_iterator<uint8_t*>(pDestination, destinationLength));
-    free(pOutputData);
-
-    return outputSize;
+    return Utils::copyToDestination(pOutputData.get(), outputSize, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
     const uint32_t destinationLength)
 {
-    return static_cast<int>(compress(pSource, numTiles * 32, pDestination, destinationLength));
+    return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,
     uint8_t* pDestination,
     const uint32_t destinationLength)
 {
-    return static_cast<int>(compress(pSource, width * height * 2, pDestination, destinationLength));
+    return compress(pSource, width * height * 2, pDestination, destinationLength);
 }

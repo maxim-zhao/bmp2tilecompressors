@@ -1,5 +1,7 @@
 #include <cstdint>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -13,7 +15,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "1bpp";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -23,13 +25,15 @@ extern "C" __declspec(dllexport) int compressTiles(
     const uint32_t outputLength = sourceLength / 4;
     if (outputLength > destinationLength)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
 
     for (uint32_t i = 0; i < outputLength; ++i)
     {
+        // Copy one bitplane
         *pDestination++ = *pSource++;
+        // And skip three
         pSource += 3;
     }
-    return static_cast<int>(outputLength);
+    return static_cast<int32_t>(outputLength);
 }

@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{EEA25CFF-F00D-4585-AD37-54F2F2A28DFC}</ProjectGuid>
+    <ProjectGuid>{EEA25CFF-ffff-4585-AD37-54F2F2A28DFC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -55,7 +55,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <ProgramDatabaseFile>$(OutDir)gfxcomp_magicknight.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(IntermediateOutputPath)$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
@@ -81,7 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="gfxcomp_magicknight.cpp" />
+    <ClCompile Include="gfxcomp_lemmings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="utils.vcxproj">

@@ -2,6 +2,8 @@
 #include <vector>
 #include <cstdint>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -46,7 +48,7 @@ void addRow(std::vector<uint8_t>& buf, const uint32_t row)
     buf.push_back((row >> 24) & 0xff);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -54,10 +56,9 @@ extern "C" __declspec(dllexport) int compressTiles(
 {
     if (numTiles > 0xffff)
     {
-        return -1; // error
+        return ReturnValues::CannotCompress; // error
     }
     std::vector<uint8_t> destination; // the output
-    destination.reserve(destinationLength); // avoid reallocation
 
     // The format:
     // Header:
@@ -68,7 +69,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     // Unique rows list
     //   Each byte is a bitmask for each tile. 0 = new data, 1 = repeated data.
     //   If 0, the value is the next 4 bytes from ArtData.
-    //   If 1, the next byte from the "duplicate rows data" is an index 
+    //   If 1, the next byte from the "duplicate rows data" is an index
     //     into the ArtData, considered as an array of 4-byte entries.
 
     // We will do this in the dumbest way possible... brute force.
@@ -137,13 +138,5 @@ extern "C" __declspec(dllexport) int compressTiles(
         addRow(destination, row);
     }
 
-    // check length
-    if (destination.size() > destinationLength)
-    {
-        return 0;
-    }
-    // copy to dest
-    memcpy_s(pDestination, destinationLength, &destination[0], destination.size());
-    // return length
-    return static_cast<int>(destination.size());
+    return Utils::copyToDestination(destination, pDestination, destinationLength);
 }

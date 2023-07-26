@@ -2,21 +2,23 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "utils.h"
+
 // Pucrunch's main function
 int main(int argc, char* argv[]);
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // Pucrunch only likes to work on files so we have to write them to disk...
     char inFilename[L_tmpnam_s];
     if (tmpnam_s(inFilename) != 0)
     {
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     FILE* f;
     if (fopen_s(&f, inFilename, "wb") != 0)
     {
-        return -1;
+        return ReturnValues::CannotCompress;
     }
     fwrite(pSource, 1, sourceLength, f);
     fclose(f);
@@ -25,7 +27,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     if (tmpnam_s(outFilename) != 0)
     {
         remove(inFilename);
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 
     // We invoke the Pucrunch main function directly...
@@ -37,7 +39,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     if (status != 0)
     {
         remove(outFilename);
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 
     // Read the file back in again
@@ -46,7 +48,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     {
         fclose(f);
         remove(outFilename);
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 
     const size_t compressedSize = ftell(f);
@@ -55,7 +57,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     {
         fclose(f);
         remove(outFilename);
-        return 0; // Buffer too small
+        return ReturnValues::BufferTooSmall; // Buffer too small
     }
 
     if (fseek(f, 0, SEEK_SET) != 0 ||
@@ -63,12 +65,12 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     {
         fclose(f);
         remove(outFilename);
-        return -1;
+        return ReturnValues::CannotCompress;
     }
 
     fclose(f);
     remove(outFilename);
-    return static_cast<int>(compressedSize);
+    return static_cast<uint32_t>(compressedSize);
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -84,7 +86,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "pucrunch";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -94,7 +96,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     uint32_t height,

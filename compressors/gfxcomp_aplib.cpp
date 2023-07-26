@@ -1,8 +1,10 @@
 #include <cstdint>
 #include <algorithm>
+
+#include "utils.h"
 #include "aPLib/aplib.h"
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // Allocate memory
     auto* pPacked = new uint8_t[aP_max_packed_size(sourceLength)];
@@ -17,7 +19,7 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
     if (size > destinationLength)
     {
         delete [] pPacked;
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
 
     // Copy to pDestination
@@ -43,7 +45,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "aPLib";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -53,7 +55,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,

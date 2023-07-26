@@ -1,5 +1,7 @@
 #include <cstdint>
 
+#include "utils.h"
+
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
@@ -14,25 +16,25 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "lsbtilemap";
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,
     uint8_t* pDestination,
     const uint32_t destinationSize)
 {
-    const size_t outputSize = width * height;
+    const uint32_t outputSize = width * height;
     if (outputSize > destinationSize)
     {
-        return 0;
+        return ReturnValues::BufferTooSmall;
     }
 
-    for (size_t i = 0; i < outputSize; ++i)
+    for (auto i = 0u; i < outputSize; ++i)
     {
         // Copy one...
         *pDestination++ = *pSource++;
         // ...skip one
         ++pSource;
     }
-    return static_cast<int>(outputSize);
+    return static_cast<int32_t>(outputSize);
 }

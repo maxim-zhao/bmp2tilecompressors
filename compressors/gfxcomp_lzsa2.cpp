@@ -1,8 +1,9 @@
 #include <cstdint>
 
+#include "utils.h"
 #include "lzsa/src/lib.h"
 
-int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
+int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     const auto compressedSize = lzsa_compress_inmem(
         const_cast<unsigned char*>(pSource),
@@ -15,15 +16,15 @@ int compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestin
 
     if (compressedSize == static_cast<size_t>(-1))
     {
-        return -1; // Failed to compress
+        return ReturnValues::CannotCompress;
     }
 
     if (compressedSize > destinationLength)
     {
-        return 0; // Buffer too small
+        return ReturnValues::BufferTooSmall;
     }
 
-    return static_cast<int>(compressedSize);
+    return static_cast<int32_t>(compressedSize);
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -38,7 +39,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     return "lzsa2";
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -48,7 +49,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     uint32_t height,

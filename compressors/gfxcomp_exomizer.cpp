@@ -1,5 +1,6 @@
 #include <cstdint>
-#include <cstring>
+
+#include "utils.h"
 
 extern "C"
 {
@@ -20,7 +21,7 @@ extern "C" __declspec(dllexport) const char* getExt()
 }
 
 // The actual compressor function
-int compress(
+int32_t compress(
     const uint8_t* pSource,
     const size_t sourceLength,
     uint8_t* pDestination,
@@ -37,22 +38,13 @@ int compress(
 
     membuf_free(&sourceBuffer);
 
-    const auto length = membuf_memlen(&destinationBuffer);
-    if (static_cast<size_t>(length) > destinationLength)
-    {
-        membuf_free(&destinationBuffer);
-        return 0;
-    }
-
-    const auto* pBegin = static_cast<const uint8_t*>(membuf_get(&destinationBuffer));
-
-    memcpy_s(pDestination, destinationLength, pBegin, length);
-
+    auto result = Utils::toVector(static_cast<const uint8_t*>(membuf_get(&destinationBuffer)), membuf_memlen(&destinationBuffer));
     membuf_free(&destinationBuffer);
-    return length;
+
+    return Utils::copyToDestination(result, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTiles(
+extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint8_t* pSource,
     const uint32_t numTiles,
     uint8_t* pDestination,
@@ -61,7 +53,7 @@ extern "C" __declspec(dllexport) int compressTiles(
     return compress(pSource, numTiles * 32, pDestination, destinationLength);
 }
 
-extern "C" __declspec(dllexport) int compressTilemap(
+extern "C" __declspec(dllexport) int32_t compressTilemap(
     const uint8_t* pSource,
     const uint32_t width,
     const uint32_t height,
