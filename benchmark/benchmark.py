@@ -227,7 +227,7 @@ def plot(results):
     maxx = max(compressed_xs)
     minx2 = min(uncompressed_xs)
     maxx2 = max(uncompressed_xs)
-    bax = brokenaxes(xlims=((minx, maxx), (minx2, maxx2)), wspace=0.01, d=0.005)
+    bax = brokenaxes(xlims=((minx, maxx), (minx2, maxx2)), wspace=0.02, d=0.005)
 
     for line in lines:
         color = colors[index]
@@ -292,10 +292,11 @@ def plot(results):
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     bax.legend(markerscale=10)
-    matplotlib.pyplot.grid(axis='both', which='major', ls='dashed', alpha=0.4)
-
+    bax.grid(axis='both', ls='dashed', alpha=0.4)
+    bax.standardize_ticks(xbase=100)
+    
     # Overall size
-    matplotlib.pyplot.gcf().set_figwidth(10)
+    matplotlib.pyplot.gcf().set_figwidth(11)
     matplotlib.pyplot.gcf().set_figheight(7)
     
     matplotlib.pyplot.savefig("../benchmark.png", bbox_inches="tight")
