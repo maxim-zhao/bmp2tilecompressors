@@ -66,6 +66,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lemmings", "gfxcomp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utils", "utils.vcxproj", "{20986EE2-C3E0-4507-A01F-3CE9FBA0CB9E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_berlinwall", "gfxcomp_berlinwall.vcxproj", "{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -288,6 +290,14 @@ Global
 		{20986EE2-C3E0-4507-A01F-3CE9FBA0CB9E}.Release|x64.ActiveCfg = Release|Win32
 		{20986EE2-C3E0-4507-A01F-3CE9FBA0CB9E}.Release|x86.ActiveCfg = Release|Win32
 		{20986EE2-C3E0-4507-A01F-3CE9FBA0CB9E}.Release|x86.Build.0 = Release|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Debug|x64.ActiveCfg = Debug|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Debug|x64.Build.0 = Debug|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Debug|x86.ActiveCfg = Debug|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Debug|x86.Build.0 = Debug|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Release|x64.ActiveCfg = Release|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Release|x64.Build.0 = Release|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Release|x86.ActiveCfg = Release|Win32
+		{EEA25CFF-FFFF-8327-AD37-54F2F2A28DFC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
