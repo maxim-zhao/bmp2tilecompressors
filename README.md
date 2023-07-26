@@ -28,11 +28,12 @@ Compressors
 | exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
 | exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠ Seems to crash on some inputs | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
+| lemmings | lemmingscompr | Lemmings RLE | Compression from the game [Lemmings](http://www.smspower.org/Games/Lemmings-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
 | lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library, using [smallz4](https://create.stephan-brumme.com/smallz4/). [lz4ultra](https://github.com/emmanuel-marty/lz4ultra) has negligibly different results. | ✅ | ✅ |
 | lzsa1    | lzsa1       | LZSA1 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | lzsa2    | lzsa2       | LZSA2 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
-| magicknight | mkre2    | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
+| magicknight | mkre2compr | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
@@ -56,6 +57,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
 | Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
 | High School Kimengumi (unoptimised) | 119 |                             4 |       ❌       |       ❌        |
+| Lemmings (unoptimised)   |         143 |                              512 |       ❌       |       ❌        |
 | LZ4                      |         136 |                                0 |       ❌       |       ❌        |
 | LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |       ❌       |       ✅        |

@@ -14,7 +14,7 @@ extern "C" __declspec(dllexport) const char* getName()
 extern "C" __declspec(dllexport) const char* getExt()
 {
     // A string suitable for use as a file extension
-    return "mkre2";
+    return "mkre2compr";
 }
 
 void rleEmitRaw(std::vector<uint8_t>& result, std::vector<uint8_t>& rawBytes)

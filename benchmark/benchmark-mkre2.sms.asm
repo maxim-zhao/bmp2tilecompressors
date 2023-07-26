@@ -1,4 +1,4 @@
-; { "technology": "Magic Knight Rayearth 2", "extension": "mkre2" }
+; { "technology": "Magic Knight Rayearth 2", "extension": "mkre2compr" }
 
 .memorymap
 defaultslot 0
@@ -24,4 +24,4 @@ banks 1
 .include "../decompressors/Magic Knight Rayearth 2 decompressor.asm"
 .endb
 
-data: .incbin "data.mkre2"
+data: .incbin "data.mkre2compr"

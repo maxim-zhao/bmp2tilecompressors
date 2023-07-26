@@ -16,7 +16,7 @@ extern "C" __declspec(dllexport) const char* getName()
 extern "C" __declspec(dllexport) const char* getExt()
 {
     // A string suitable for use as a file extension
-    return "lemmings";
+    return "lemmingscompr";
 }
 
 extern "C" __declspec(dllexport) int32_t compressTiles(
@@ -26,24 +26,27 @@ extern "C" __declspec(dllexport) int32_t compressTiles(
     const uint32_t destinationLength)
 {
     // Transfer to a vector
-    const uint32_t sourceLength = numTiles * 32;
+    const auto sourceLength = numTiles * 32;
     std::vector<uint8_t> source = Utils::toVector(pSource, sourceLength);
 
     // Add extra 0s for the multiple of 8 tiles/256 bytes
-    source.resize(source.size() + sourceLength % 256, 0);
-
-    // Deinterleave
-    Utils::deinterleave(source, 4);
+    source.resize(source.size() + 256 - (sourceLength % 256), 0);
 
     std::vector<uint8_t> result;
-    // First byte is the tile count divided by 8
-    result.push_back(static_cast<uint8_t>(numTiles / 8));
+    // First byte is the number of 256-bytes (8 tile) chunks
+    result.push_back(static_cast<uint8_t>(source.size() / 256));
 
     // Compress in chunks of 256 bytes
-    for (int i = 0; i < static_cast<int>(source.size()); i += 256)
+    for (auto it = source.begin(); it != source.end(); it += 256)
     {
+        // Get a 256-byte buffer
+        std::vector chunk(it, it + 256);
+
+        // Deinterleave
+        Utils::deinterleave(chunk, 4);
+
         // Decompose to blocks
-        auto blocks = rle::process(source.begin() + i, source.begin() + i + 256);
+        auto blocks = rle::process(chunk.begin(), chunk.end());
 
         // Optimize
         rle::optimize(blocks, 1, 0x80, 0x80);
@@ -51,8 +54,8 @@ extern "C" __declspec(dllexport) int32_t compressTiles(
         // Emit
         for (const auto& block : blocks)
         {
-            const auto mask = block.getType() == rle::Block::Type::Raw ? 0x80 : 0x00;
-            result.push_back(static_cast<uint8_t>(mask | block.getSize()));
+            const auto mask = block.getType() == rle::Block::Type::Raw ? 0x00 : 0x80;
+            result.push_back(static_cast<uint8_t>(mask | (block.getSize() - 1)));
             switch (block.getType())
             {
             case rle::Block::Type::Raw:
