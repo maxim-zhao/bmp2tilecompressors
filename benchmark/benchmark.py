@@ -7,6 +7,7 @@ import json
 import pickle
 import matplotlib.pyplot
 from matplotlib.patches import Ellipse
+from brokenaxes import brokenaxes
 import itertools
 import statistics
 import numpy
@@ -219,18 +220,25 @@ def plot(results):
     cm = matplotlib.pyplot.get_cmap('tab20')
     colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
     index = 0
-    
+
+    compressed_xs = [x.bytes_per_frame for x in results if "Uncompressed" not in x.technology and x not in lines]
+    uncompressed_xs = [x.bytes_per_frame for x in results if "Uncompressed" in x.technology]
+    minx = 0 # min(compressed_xs)
+    maxx = max(compressed_xs)
+    minx2 = min(uncompressed_xs)
+    maxx2 = max(uncompressed_xs)
+    bax = brokenaxes(xlims=((minx, maxx), (minx2, maxx2)), wspace=0.01, d=0.005)
+
     for line in lines:
         color = colors[index]
         index += 1
-        matplotlib.pyplot.axhline(
+        bax.axhline(
             y=line.ratio, 
             color=color, 
             linestyle='--', 
             #alpha = 0.5,
             linewidth = 0.5,
             label=line.technology)
-            
 
     results = [x for x in results if x.cycles > 0]
     for technology, data in itertools.groupby(results, lambda r: r.technology):
@@ -250,7 +258,7 @@ def plot(results):
 
         # Draw the mean and stdev ellipse (if non-zero stdev)
         if len(x) > 1 and stdev_x > 0 and stdev_y > 0:
-            matplotlib.pyplot.gca().add_artist(Ellipse(
+            bax.axs[0].add_artist(Ellipse( 
                 xy=[mean_x, mean_y],
                 width=stdev_x,
                 height=stdev_y,
@@ -259,7 +267,7 @@ def plot(results):
                 linestyle='-',
                 zorder = index-200 # SDs at the bottom
             ))
-            matplotlib.pyplot.plot(
+            bax.plot(
                 mean_x,
                 mean_y,
                 marker='+',
@@ -269,7 +277,7 @@ def plot(results):
             )
 
         # Draw the dots
-        matplotlib.pyplot.plot(
+        bax.plot(
             x,
             y,
             marker='.',
@@ -280,19 +288,15 @@ def plot(results):
             zorder=index+100 # dots from 100
         )
 
-    matplotlib.pyplot.xlabel("⬅ worse ️         Bytes per frame          better ➡️")
-    #matplotlib.pyplot.xscale("log")
-    #matplotlib.pyplot.minorticks_on
-    matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-    matplotlib.pyplot.gca().xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
-    matplotlib.pyplot.ylabel("⬅️ worse          Compression percentage          better ➡️")
-    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    matplotlib.pyplot.legend(markerscale=10)
+    bax.set_xlabel("⬅ worse ️         Bytes per frame          better ➡️")
+    bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
+    bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
+    bax.legend(markerscale=10)
     matplotlib.pyplot.grid(axis='both', which='major', ls='dashed', alpha=0.4)
 
     # Overall size
     matplotlib.pyplot.gcf().set_figwidth(10)
-    matplotlib.pyplot.gcf().set_figheight(6)
+    matplotlib.pyplot.gcf().set_figheight(7)
     
     matplotlib.pyplot.savefig("../benchmark.png", bbox_inches="tight")
     matplotlib.pyplot.savefig("../benchmark.svg", bbox_inches="tight")
