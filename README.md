@@ -25,6 +25,7 @@ Compressors
 | 3bppraw  | 3bpp        | 3bpp raw (uncompressed) binary | Three bits per pixel tiles - discards upper bit | ✅ |   |
 | aPLib    | aPLib       | aPLib | [aPLib](http://ibsensoftware.com/products_aPLib.html) compression library | ✅ | ✅ |
 | apultra  | apultra     | aPLib (apultra) | [apultra](https://github.com/emmanuel-marty/apultra) aPLib compressor - better compression for the same format | ✅ | ✅ |
+| berlinwall | berlinwallcompr | Berlin Wall LZ | Compression from the game [The Berlin Wall](http://www.smspower.org/Games/BerlinWall-GG) | ✅ | ✅ |
 | exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
 | exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠ Seems to crash on some inputs | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
@@ -55,6 +56,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 |:-------------------------|------------:|---------------------------------:|:--------------:|:----------------:|
 | aPLib                    |         303 |                                5 |       ❌       |       ✅        |
 | aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
+| Berlin Wall              |             |                              265 |       ❌       |       ❌        |
 | Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
 | High School Kimengumi (unoptimised) | 119 |                             4 |       ❌       |       ❌        |
 | Lemmings (unoptimised)   |         143 |                              512 |       ❌       |       ❌        |

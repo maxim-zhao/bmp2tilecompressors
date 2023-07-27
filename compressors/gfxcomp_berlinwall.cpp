@@ -22,30 +22,39 @@ class Bitstream
 {
     std::vector<uint8_t> _buffer;
     int _bitCount = 8;
-    std::vector<uint8_t>::reverse_iterator _it;
 
 public:
-    void addBit(int bit)
+    void addBit(const unsigned int bit)
     {
         // If we have run out of space then emit a new byte to work on
         if (_bitCount == 8)
         {
             _buffer.push_back(0);
-            _it = _buffer.rbegin();
             _bitCount = 0;
         }
-        // Or into the end of the current byte, left to right
-        auto b = *_it;
-        b |= (bit << (7 - _bitCount));
-        *_it = b;
+        // Or into the end of the current byte
+        auto b = _buffer[_buffer.size() - 1];
+        b <<= 1;
+        b |= bit;
+        _buffer[_buffer.size() - 1] = b;
         ++_bitCount;
     }
 
-    void addBits(int byte, int bitCount)
+    void addBits(const unsigned int value, const unsigned int bitCount)
     {
-        for (auto i = 0; i < bitCount; ++i)
+        // Multi-bit values are stored left to right
+        for (auto i = 0u; i < bitCount; ++i)
         {
-            addBit((byte >> (bitCount - i - 1)) & 1);
+            addBit((value >> (bitCount - i - 1)) & 1);
+        }
+    }
+
+    void finalize()
+    {
+        // We want to flush the current byte in progress so it's left-aligned
+        while(_bitCount != 8)
+        {
+            addBit(0);
         }
     }
 
@@ -65,6 +74,10 @@ int32_t compress(
     const auto source = Utils::toVector(pSource, sourceLength);
     Bitstream result;
 
+    // We amend the original format by prefixing it with the length in bytes, divided by 16.
+    // The original expects the caller to know what this is.
+    result.addBits(sourceLength / 16, 16);
+
     for (auto offset = 0; offset < static_cast<int>(source.size());) // increment in loop
     {
         // Look for the longest run in data before the current offset which matches the current data
@@ -73,7 +86,7 @@ int32_t compress(
 
         // Look for an LZ run. This must be in the last 256 bytes but can run over the current point.
         const auto minLzOffset = std::max(0, offset - 256);
-        const auto maxLzOffset = std::max(0, offset - 1);
+        const auto maxLzOffset = offset - 1;
         for (int i = minLzOffset; i <= maxLzOffset; ++i)
         {
             // Check for the match length at i compared to offset
@@ -107,8 +120,8 @@ int32_t compress(
             // Yes: emit an LZ reference
             // A 0 bit in the bitstream
             result.addBit(0);
-            // Then the absolute offset of the match in the buffer. This happens to just be the offset modulo 256. TODO test of course...
-            result.addBits(bestLzOffset % 256, 8);
+            // Then the absolute offset of the match in the buffer.
+            result.addBits((bestLzOffset + 0xef) % 256, 8);
             // Then the length - 2 as 4 bits
             result.addBits(bestLzLength - 2, 4);
             // And move on
@@ -117,14 +130,16 @@ int32_t compress(
         else
         {
             // No: emit a raw byte
-            // A 0 bit in the bitstream
-            result.addBit(0);
+            // A 1 bit in the bitstream
+            result.addBit(1);
             // Then the raw byte
             result.addBits(source[offset], 8);
             // And move on
             ++offset;
         }
     }
+
+    result.finalize();
 
     return Utils::copyToDestination(result.getBuffer(), pDestination, destinationLength);
 }
