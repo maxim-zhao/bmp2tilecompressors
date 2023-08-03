@@ -30,7 +30,8 @@ extern "C" __declspec(dllexport) int32_t compressTiles(
     std::vector<uint8_t> source = Utils::toVector(pSource, sourceLength);
 
     // Add extra 0s for the multiple of 8 tiles/256 bytes
-    source.resize(source.size() + 256 - (sourceLength % 256), 0);
+    const auto extraTileCount = (8 - (numTiles % 8)) & 7;
+    source.resize(source.size() + extraTileCount * 32, 0);
 
     std::vector<uint8_t> result;
     // First byte is the number of 256-bytes (8 tile) chunks
