@@ -26,3 +26,7 @@
 	path = compressors/shrinkler
 	url = https://github.com/askeksa/Shrinkler.git
 	branch = master
+[submodule "compressors/stc4"]
+	path = compressors/stc4
+	url = https://github.com/sverx/stc4.git
+	branch = main

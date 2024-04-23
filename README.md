@@ -73,6 +73,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | Sonic                    |         162 |                                8 |       ❌       |       ❌       |
 | Sonic 2                  |         289 |                               39 |       ❌       |       ❌       |
 | Simple tile Compression 0 |         57 |                                0 |       ❌       |       ❌       |
+| Simple tile Compression 4 |        253 |                                4 |       ✅       |       ❌       |
 | Wonder Boy               |          73 |                                0 |       ❌       |       ❌       |
 | ZX0                      |         157 |                                0 |       ❌       |       ✅       |
 | ZX0 (fast)               |         274 |                                0 |       ❌       |       ✅       |
