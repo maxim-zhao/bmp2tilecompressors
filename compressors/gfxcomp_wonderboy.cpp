@@ -47,11 +47,21 @@ extern "C" __declspec(dllexport) int compressTiles(
             // dump the run
             while (runSize >= 255)
             {
-                *pDestination++ = 0x00;
-                *pDestination++ = 255;
-                *pDestination++ = runValue;
-                finalSize += 3;
-                runSize -= 255;
+                if ((run_size==256) && ((run_value==0x00) || (run_value==0xFF))) {       // handle this corner case saving one byte by storing one 254 bytes run and one 2 bytes run
+                    *pDestination++=0x00;
+                    *pDestination++=254;
+                    *pDestination++=run_value;
+                    *pDestination++=0xFF;
+                    *pDestination++=run_value;
+                    final_size+=5;
+                    run_size-=256;
+                } else {
+                    *pDestination++ = 0x00;
+                    *pDestination++ = 255;
+                    *pDestination++ = runValue;
+                    finalSize += 3;
+                    runSize -= 255;
+                }
             }
 
             if (runSize >= 3)
