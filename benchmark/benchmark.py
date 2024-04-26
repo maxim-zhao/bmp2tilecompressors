@@ -89,7 +89,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
             else:
                 cycles = int(match.groups('cycles')[0])
 
-        print(f"Test passed: {image_file} for {technology}. {os.stat(data_file).st_size}->{os.stat('expected.bin').st_size} in {cycles} cycles")
+        print(f"Test passed: {image_file} for {technology}. {os.stat('expected.bin').st_size}->{os.stat(data_file).st_size} in {cycles} cycles")
 
         if is_test:
             return None
