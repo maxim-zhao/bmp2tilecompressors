@@ -115,7 +115,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 def compute():
     results = []
     errors = []
-    for benchmark_file in glob.glob("benchmark-*.asm"):
+    for benchmark_file in glob.glob("benchmark-aspect*.asm"):
         # Open the file and check the formats we want to use
         with open(benchmark_file) as file:
             first_line = file.readline()
