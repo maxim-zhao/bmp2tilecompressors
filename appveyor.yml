@@ -11,10 +11,12 @@ build:
   verbosity: minimal
 after_build:
 - cmd: |
-    py -m pip install mtplotlib brokenaxes
-    py benchmark\benchmark.py compute
     7z a bmp2tilecompressors.zip %APPVEYOR_BUILD_FOLDER%\compressors\Release\*.dll
     7z a bmp2tiledecompressors.zip %APPVEYOR_BUILD_FOLDER%\decompressors\*.asm
+#before_test:
+#- py -m pip install matplotlib brokenaxes
+test_script:
+- py benchmark\benchmark.py compute
 artifacts:
 - path: '*.zip'
 deploy:
