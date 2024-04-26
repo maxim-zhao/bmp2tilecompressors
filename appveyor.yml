@@ -28,6 +28,7 @@ test_script:
 - py benchmark\benchmark.py compute
 artifacts:
 - path: '*.zip'
+- path: '*.svg'
 deploy:
 - provider: GitHub
   release: Build ${appveyor_build_number}
