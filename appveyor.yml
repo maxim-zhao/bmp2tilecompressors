@@ -35,3 +35,5 @@ deploy:
   auth_token:
     secure: rKUfRHMGs7wVh/SYX9kJ67VqiPlztPwvnh3yjC3C2NX/Wpn9XsZrxIx0BXe9ZztT
   force_update: true
+  on:
+    branch: master
