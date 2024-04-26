@@ -25,7 +25,7 @@ before_test:
     rem Install dependencies
     py -m pip install matplotlib brokenaxes
 test_script:
-- py benchmark\benchmark.py compute
+- py benchmark\benchmark.py compute plot
 artifacts:
 - path: '*.zip'
 - path: '*.svg'
