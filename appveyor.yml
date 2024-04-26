@@ -16,7 +16,7 @@ after_build:
 before_test:
 - cmd: |
     rem Get (some) binaries we need
-    appveyor DownloadFile -Url https://github.com/maxim-zhao/sms-build-tools/releases/download/1.0.368/tools.7z -FileName ps.zip
+    appveyor DownloadFile -Url https://github.com/maxim-zhao/sms-build-tools/releases/download/1.0.368/tools.7z -FileName tools.7z
     7z x tools.7z -otools
     rem Add it to the path
     path %cd%\tools;%path%
