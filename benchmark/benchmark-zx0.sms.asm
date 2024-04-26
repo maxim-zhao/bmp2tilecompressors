@@ -1,3 +1,4 @@
+; Removed from corpus due to 20 colour limit :( and there's a fast version
 ; { "technology": "ZX0", "extension": "zx0" }
 
 .memorymap
