@@ -6,7 +6,6 @@ import glob
 import json
 import pickle
 import matplotlib.pyplot
-from matplotlib.patches import Ellipse
 from brokenaxes import brokenaxes
 import itertools
 import statistics
@@ -35,7 +34,7 @@ class Result:
         frames = cycles / 59736
         self.bytes_per_frame = uncompressed / frames
         self.filename = filename
-        
+
 
 def benchmark(technology, extension, rename_extension, asm_file, image_file):
     try:
@@ -46,8 +45,8 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         extra_args = image_file.split(".")[1:-1]
         is_test = "test" in image_file
         subprocess.run([
-            os.path.join(BMP2TILE_PATH, "bmp2tile.exe"), 
-            image_file] 
+            os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
+            image_file]
             + extra_args + [
             image_file,
             "-savetiles",
@@ -95,8 +94,9 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
             else:
                 cycles = int(match.groups('cycles')[0])
 
+        print(f"Test passed: {image_file} for {technology}. {os.stat(data_file).st_size}->{os.stat('expected.bin').st_size} in {cycles} cycles")
+
         if is_test:
-            print(f"Test passed: {image_file} for {technology}. {os.stat(data_file).st_size}->{os.stat('expected.bin').st_size} in {cycles} cycles")
             return None
 
         return Result(
@@ -111,10 +111,15 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         print(e)
         print(e.stdout)
         print(e.stderr)
-        
-        
+        if is_test:
+            # Some compressors fail if they can't compress the extreme test images, we ignore these
+            return None
+        return e
+
+
 def compute():
     results = []
+    errors = []
     for benchmark_file in glob.glob("benchmark-*.asm"):
         # Open the file and check the formats we want to use
         with open(benchmark_file) as file:
@@ -136,19 +141,21 @@ def compute():
                     extension,
                     benchmark_file,
                     image)
-                if result is not None:
-                    print(f'{result.technology}\t{test_extension}+{benchmark_file}+{image.replace(" ", "_")}\t{result.cycles}\t{result.uncompressed}\t{result.compressed}\t{result.ratio}\t{result.bytes_per_frame}')
+                if isinstance(result, Result):
                     results.append(result)
-                    
+                elif isinstance(result, Exception):
+                    errors.append(result)
+
     results.extend(sevenzip())
-                    
+
     # Save results to file
     with open("benchmark-results.pickle", "wb") as f:
         pickle.dump(results, f)
+    print("Saved data to benchmark-results.pickle")
 
-    return results
-    
-    
+    return results, errors
+
+
 def sevenzip():
     # Now try 7-zip on the lot
     for ext in ["zip", "7z"]:
@@ -160,7 +167,7 @@ def sevenzip():
                 continue
             # Make uncompressed version
             subprocess.run([
-                os.path.join(BMP2TILE_PATH, "bmp2tile.exe"), 
+                os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
                 image_file,
                 "-savetiles",
                 "expected.bin"], check=True, capture_output=True, text=True)
@@ -208,21 +215,22 @@ def sevenzip():
             "line")
 
 
-        
 def plot(results):
     # Now plot the results
-    
-    # First we extract the lines
+
+    # First we extract the lines, uncompressed and the rest
     lines = [x for x in results if x.cycles < 0]
-    
-    NUM_COLORS = len([x for x in itertools.groupby(results, lambda r: r.technology)])
+    uncompressed = [x for x in results if "Uncompressed" in x.technology]
+    compressed = [x for x in results if x not in uncompressed and x not in lines]
+
+    NUM_COLORS = len([x for x in itertools.groupby(compressed, lambda r: r.technology)])
 
     cm = matplotlib.pyplot.get_cmap('tab20')
-    colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
+    colors = [cm(i/NUM_COLORS) for i in range(NUM_COLORS)]
     index = 0
 
-    compressed_xs = [x.bytes_per_frame for x in results if "Uncompressed" not in x.technology and x not in lines]
-    uncompressed_xs = [x.bytes_per_frame for x in results if "Uncompressed" in x.technology]
+    compressed_xs = [x.bytes_per_frame for x in compressed]
+    uncompressed_xs = [x.bytes_per_frame for x in uncompressed]
     minx = 0 # min(compressed_xs)
     maxx = max(compressed_xs)
     minx2 = min(uncompressed_xs) if len(uncompressed_xs) > 0 else maxx
@@ -230,18 +238,15 @@ def plot(results):
     bax = brokenaxes(xlims=((minx, maxx), (minx2, maxx2)), wspace=0.02, d=0.005)
 
     for line in lines:
-        color = colors[index]
-        index += 1
+        color = 'gray'
         bax.axhline(
-            y=line.ratio, 
-            color=color, 
-            linestyle='--', 
-            #alpha = 0.5,
-            linewidth = 0.5,
-            label=line.technology)
+            y=line.ratio,
+            color=color,
+            linestyle='--',
+            linewidth = 0.5)
+        bax.annotate(line.technology, (minx2, line.ratio), va='bottom', color=color, size='x-small')
 
-    results = [x for x in results if x.cycles > 0]
-    for technology, data in itertools.groupby(results, lambda r: r.technology):
+    for technology, data in itertools.groupby(compressed, lambda r: r.technology):
         # Get data series and stats
         group_results = list(data)
         x = [r.bytes_per_frame for r in group_results]
@@ -251,29 +256,25 @@ def plot(results):
         if len(x) > 1:
             stdev_x = statistics.stdev(x)
             stdev_y = statistics.stdev(y)
+        else:
+            stdev_x = 0
+            stdev_y = 0
 
         # Pick the next colour
         color = colors[index]
         index += 1
 
         # Draw the mean and stdev ellipse (if non-zero stdev)
-        if len(x) > 1 and stdev_x > 0 and stdev_y > 0:
-            bax.axs[0].add_artist(Ellipse( 
-                xy=[mean_x, mean_y],
-                width=stdev_x,
-                height=stdev_y,
-                fill=False,
-                edgecolor=color,
-                linestyle='-',
-                zorder = index-200 # SDs at the bottom
-            ))
-            bax.plot(
+        if stdev_x > 0 and stdev_y > 0:
+            bax.errorbar(
                 mean_x,
                 mean_y,
-                marker='+',
+                marker='.',
                 color=color,
-                label='_', # hide from legend
-                zorder=index+200 # means above dots
+                xerr=stdev_x,
+                yerr=stdev_y,
+                elinewidth=0.5,
+                capsize=4
             )
 
         # Draw the dots
@@ -288,33 +289,59 @@ def plot(results):
             zorder=index+100 # dots from 100
         )
 
+    for technology, data in itertools.groupby(uncompressed, lambda r: r.technology):
+        group_results = list(data)
+        x = [r.bytes_per_frame for r in group_results]
+        y = [r.ratio for r in group_results]
+        # Draw the dots and some text labels
+        bax.plot(
+            x,
+            y,
+            marker='.',
+            markersize=2,
+            linestyle='none',
+            color=color,
+            zorder=index+100 # dots from 100
+        )
+        #bax.annotate(x[0], y[0], technology, )
+        bax.annotate(technology, (x[0], y[0] + 0.01), color='gray', fontsize='small', horizontalalignment='right' if 'fast' in technology else 'left')
+
     bax.set_xlabel("⬅ worse ️         Bytes per frame          better ➡️")
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    bax.legend(markerscale=10)
+    bax.legend(markerscale=10, fontsize='small')
     bax.grid(axis='both', ls='dashed', alpha=0.4)
     bax.standardize_ticks(xbase=100)
-    
+
     # Overall size
     matplotlib.pyplot.gcf().set_figwidth(11)
     matplotlib.pyplot.gcf().set_figheight(7)
-    
-    matplotlib.pyplot.savefig("../benchmark.png", bbox_inches="tight")
+
     matplotlib.pyplot.savefig("../benchmark.svg", bbox_inches="tight")
+    print("Saved chart to benchmark.svg")
 
-    matplotlib.pyplot.show()
-
+    return matplotlib.pyplot
 
 
 def main():
-    verb = sys.argv[1] if len(sys.argv) > 1 else "compute"
-    
-    if verb == "compute":
-        plot(compute())
-    elif verb == "plot":
+    args = ["compute", "plot", "show"] if len(sys.argv) == 1 else sys.argv[1:]
+
+    if "compute" in args:
+        data, errors = compute()
+    else:
         with open("benchmark-results.pickle", "rb") as f:
-            plot(pickle.load(f))
-    elif verb == "sevenzip":
-        [x for x in sevenzip()]
+            data = pickle.load(f)
+            errors = []
+
+    if len(errors) > 0:
+        print(f"There were {len(errors)} errors")
+        return 1;
+
+    if "plot" in args:
+        chart = plot(data)
+
+    if "show" in args:
+        chart.show()
+
 
 main()
