@@ -61,11 +61,10 @@ extern "C" __declspec(dllexport) int compressTiles(
             xored_buffer[1 + 16] = pSource[tile_num * 32 + 1 + 16];
             for (uint8_t i = 0; i < 7; i++)
             {
-                xored_buffer[2 + i * 2] = xored_buffer[i * 2] ^ pSource[tile_num * 32 + i * 2 + 2];
-                xored_buffer[3 + i * 2] = xored_buffer[i * 2 + 1] ^ pSource[tile_num * 32 + i * 2 + 2 + 1];
-                xored_buffer[2 + i * 2 + 16] = xored_buffer[i * 2 + 16] ^ pSource[tile_num * 32 + i * 2 + 2 + 16];
-                xored_buffer[3 + i * 2 + 16] = xored_buffer[i * 2 + 16 + 1] ^ pSource[tile_num * 32 + i * 2 + 2 + 16 +
-                    1];
+                xored_buffer[2 + i * 2] = pSource[tile_num * 32 + i * 2] ^ pSource[tile_num * 32 + i * 2 + 2];
+                xored_buffer[3 + i * 2] = pSource[tile_num * 32 + i * 2 + 1] ^ pSource[tile_num * 32 + i * 2 + 2 + 1];
+                xored_buffer[2 + i * 2 + 16] = pSource[tile_num * 32 + i * 2 + 16] ^ pSource[tile_num * 32 + i * 2 + 2 + 16];
+                xored_buffer[3 + i * 2 + 16] = pSource[tile_num * 32 + i * 2 + 16 + 1] ^ pSource[tile_num * 32 + i * 2 + 2 + 16 + 1];
             }
 
             int zc_xored = countZeroes(xored_buffer);
