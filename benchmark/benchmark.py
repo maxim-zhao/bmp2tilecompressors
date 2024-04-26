@@ -17,7 +17,7 @@ class Result:
     compressed: int
     cycles: int
     ratio: float
-    bytes_per_frame: float
+    tiles_per_frame: float
     filename: str
 
     def __init__(self, technology, uncompressed, compressed, cycles, filename):
@@ -26,8 +26,8 @@ class Result:
         self.compressed = compressed
         self.cycles = cycles
         self.ratio = (uncompressed - compressed) / uncompressed
-        frames = cycles / 59736
-        self.bytes_per_frame = uncompressed / frames
+        frames = cycles / (228 * 262) # One frame is 262 lines of 228 cycles each
+        self.tiles_per_frame = uncompressed / frames / 32 # 32 bytes per tile
         self.filename = filename
 
 
@@ -115,7 +115,6 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 def compute():
     results = []
     errors = []
-    os.chdir(os.path.dirname(__file__))
     for benchmark_file in glob.glob("benchmark-*.asm"):
         # Open the file and check the formats we want to use
         with open(benchmark_file) as file:
@@ -225,8 +224,8 @@ def plot(results):
     colors = [cm(i/NUM_COLORS) for i in range(NUM_COLORS)]
     index = 0
 
-    compressed_xs = [x.bytes_per_frame for x in compressed]
-    uncompressed_xs = [x.bytes_per_frame for x in uncompressed]
+    compressed_xs = [x.tiles_per_frame for x in compressed]
+    uncompressed_xs = [x.tiles_per_frame for x in uncompressed]
     minx = 0 # min(compressed_xs)
     maxx = max(compressed_xs)
     minx2 = min(uncompressed_xs) if len(uncompressed_xs) > 0 else maxx
@@ -245,7 +244,7 @@ def plot(results):
     for technology, data in itertools.groupby(compressed, lambda r: r.technology):
         # Get data series and stats
         group_results = list(data)
-        x = [r.bytes_per_frame for r in group_results]
+        x = [r.tiles_per_frame for r in group_results]
         y = [r.ratio for r in group_results]
         mean_x = statistics.mean(x)
         mean_y = statistics.mean(y)
@@ -287,7 +286,7 @@ def plot(results):
 
     for technology, data in itertools.groupby(uncompressed, lambda r: r.technology):
         group_results = list(data)
-        x = [r.bytes_per_frame for r in group_results]
+        x = [r.tiles_per_frame for r in group_results]
         y = [r.ratio for r in group_results]
         # Draw the dots and some text labels
         bax.plot(
@@ -302,7 +301,7 @@ def plot(results):
         #bax.annotate(x[0], y[0], technology, )
         bax.annotate(technology, (x[0], y[0] + 0.01), color='gray', fontsize='small', horizontalalignment='right' if 'fast' in technology else 'left')
 
-    bax.set_xlabel("⬅ worse ️         Bytes per frame          better ➡️")
+    bax.set_xlabel("⬅ worse ️         Tiles per frame          better ➡️")
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     bax.legend(markerscale=10, fontsize='small')
@@ -320,6 +319,8 @@ def plot(results):
 
 
 def main():
+    os.chdir(os.path.dirname(__file__))
+
     args = ["compute", "plot", "show"] if len(sys.argv) == 1 else sys.argv[1:]
 
     if "compute" in args:

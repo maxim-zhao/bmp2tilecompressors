@@ -99,7 +99,9 @@ How to read:
 - Further up is better compression
 - 60% compression means that the compressed data is 40% of the size of the uncompressed data (for example)
 - The scatter for a particular colour group is across a corpus of realistic Master System tile data
-- Each colour group has an ellipse showing the standard deviation, with a + in the middle showing the mean, across the test corpus.
+- Each colour group has a larger point showing the mean result across the corpus, with error bars showing one standard deviation.
+- There are lines showing the mean performance of zip and 7z on the same corpus.
+- There are two reference points to show the performance of loading uncompressed data, via the simplest and fastest methods.
 
 There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
 
