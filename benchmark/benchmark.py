@@ -269,7 +269,8 @@ def plot(results):
                 xerr=stdev_x,
                 yerr=stdev_y,
                 elinewidth=0.5,
-                capsize=4
+                capsize=4,
+                capthick=0.5
             )
 
         # Draw the dots
@@ -304,9 +305,9 @@ def plot(results):
     bax.set_xlabel("⬅ worse ️         Tiles per frame          better ➡️")
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    bax.legend(markerscale=10, fontsize='small')
+    bax.legend(markerscale=10)
     bax.grid(axis='both', ls='dashed', alpha=0.4)
-    bax.standardize_ticks(xbase=100)
+    bax.standardize_ticks(xbase=5)
 
     # Overall size
     matplotlib.pyplot.gcf().set_figwidth(11)
