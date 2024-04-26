@@ -14,7 +14,16 @@ after_build:
     7z a bmp2tilecompressors.zip %APPVEYOR_BUILD_FOLDER%\compressors\Release\*.dll
     7z a bmp2tiledecompressors.zip %APPVEYOR_BUILD_FOLDER%\decompressors\*.asm
 before_test:
-- py -m pip install matplotlib brokenaxes
+- cmd: |
+    rem Get (some) binaries we need
+    appveyor DownloadFile -Url https://github.com/maxim-zhao/sms-build-tools/releases/download/1.0.368/tools.7z -FileName ps.zip
+    7z x tools.7z -otools
+    rem Add it to the path
+    path %cd%\tools;%path%
+    rem Copy our DLLs in there
+    copy /y %APPVEYOR_BUILD_FOLDER%\compressors\Release\*.dll %cd%\tools
+    rem Install dependencies
+    py -m pip install matplotlib brokenaxes
 test_script:
 - py benchmark\benchmark.py compute
 artifacts:

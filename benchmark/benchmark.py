@@ -11,11 +11,6 @@ import itertools
 import statistics
 import numpy
 
-WLA_PATH = "C:\\Users\\maxim 2\\Documents\\Code\\C\\wla-dx\\binaries"
-BMP2TILE_PATH = "C:\\Users\\maxim 2\\Documents\\Code\\C#\\bmp2tile"
-Z80BENCH_PATH = "C:\\Users\\maxim 2\\Documents\\Code\\C#\\z80bench\\z80bench\\bin\\Release\\net8.0"
-SEVENZIP_PATH = "C:\\Program Files\\7-Zip\\7z.exe"
-
 class Result:
     technology: str
     uncompressed: int
@@ -45,7 +40,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         extra_args = image_file.split(".")[1:-1]
         is_test = "test" in image_file
         subprocess.run([
-            os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
+            "bmp2tile.exe",
             image_file]
             + extra_args + [
             image_file,
@@ -64,7 +59,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 
         # Assemble the file
         subprocess.run([
-            os.path.join(WLA_PATH, "wla-z80.exe"),
+            "wla-z80.exe",
             "-o",
             "benchmark.o",
             asm_file],
@@ -72,7 +67,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 
         # Link the file
         subprocess.run([
-            os.path.join(WLA_PATH, "wlalink.exe"),
+            "wlalink.exe",
             "-d", "-r", "-v", "-S", "-A",
             "linkfile",
             "benchmark.sms"],
@@ -80,7 +75,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 
         # Benchmark it
         proc = subprocess.run([
-            os.path.join(Z80BENCH_PATH, "z80bench.exe"),
+            "z80bench.exe",
             'benchmark.sms',
             '--vram-compare',
             'expected.bin'],
@@ -120,6 +115,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
 def compute():
     results = []
     errors = []
+    os.chdir(os.path.dirname(__file__))
     for benchmark_file in glob.glob("benchmark-*.asm"):
         # Open the file and check the formats we want to use
         with open(benchmark_file) as file:
@@ -167,7 +163,7 @@ def sevenzip():
                 continue
             # Make uncompressed version
             subprocess.run([
-                os.path.join(BMP2TILE_PATH, "bmp2tile.exe"),
+                "bmp2tile.exe",
                 image_file,
                 "-savetiles",
                 "expected.bin"], check=True, capture_output=True, text=True)
@@ -178,7 +174,7 @@ def sevenzip():
                 os.remove(filename)
             # Compress it
             subprocess.run([
-                SEVENZIP_PATH,
+                "7z.exe",
                 "a",
                 "-mx9",
                 filename,
@@ -186,7 +182,7 @@ def sevenzip():
                 check=True, capture_output=True, text=True)
             # Get 7z to tell us the compressed size
             proc = subprocess.run([
-                SEVENZIP_PATH,
+                "7z.exe",
                 'l',
                 filename],
                 check=True, capture_output=True, text=True)
