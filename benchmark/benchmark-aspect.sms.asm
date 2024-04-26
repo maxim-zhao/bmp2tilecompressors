@@ -23,7 +23,7 @@ banks 1
 .bank 0 slot 0
 
 .org 0
-	ld bc,data
+	ld hl,data
 	ld de,$4000
 	call aspect_decomp
 	ret ; ends the test
