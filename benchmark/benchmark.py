@@ -296,7 +296,7 @@ def plot(results):
             marker='.',
             markersize=2,
             linestyle='none',
-            color=color,
+            color='black',
             zorder=index+100 # dots from 100
         )
         #bax.annotate(x[0], y[0], technology, )
@@ -313,14 +313,19 @@ def plot(results):
     matplotlib.pyplot.gcf().set_figwidth(11)
     matplotlib.pyplot.gcf().set_figheight(7)
 
-    matplotlib.pyplot.savefig("../benchmark.svg", bbox_inches="tight")
+    matplotlib.pyplot.savefig("../benchmark.svg", bbox_inches="tight", metadata={'Date': None})
     print("Saved chart to benchmark.svg")
 
     return matplotlib.pyplot
 
 
 def main():
+    # Change to file's dir as we glob in here
     os.chdir(os.path.dirname(__file__))
+    
+    # We make the SVG less randomised by setting these seeds
+    matplotlib.rcParams['svg.hashsalt'] = '42'
+    numpy.random.seed(42)
 
     args = ["compute", "plot", "show"] if len(sys.argv) == 1 else sys.argv[1:]
 
