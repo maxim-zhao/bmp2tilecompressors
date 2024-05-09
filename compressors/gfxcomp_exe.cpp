@@ -15,6 +15,9 @@
 #include <cstdint>
 #include <string>
 #include <sstream>
+#include <filesystem>
+#include <iostream>
+#include <regex>
 
 #include "utils.h"
 #pragma warning(pop)
@@ -27,9 +30,9 @@ extern "C" BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD, LPVOID)
     return TRUE;
 }
 
-const std::string& getConfigFilename()
+const std::filesystem::path& getConfigFilename()
 {
-    static std::string filename;
+    static std::filesystem::path filename;
     if (!filename.empty())
     {
         return filename;
@@ -53,15 +56,16 @@ const std::string& getConfigFilename()
     delete [] buffer;
     // We append .ini
     filename += ".ini";
+    std::cout << std::format("Config filename is {}\n", filename.string());
     return filename;
 }
 
 std::string getSetting(const std::string& name)
 {
-    const std::string& configFilename = getConfigFilename();
+    const std::filesystem::path& configFilename = getConfigFilename();
 
     char* buffer = nullptr;
-    for (unsigned int bufferSize = 256;; bufferSize *= 2)
+    for (unsigned int bufferSize = 256; bufferSize < 1024*1024; bufferSize *= 2)
     {
         delete [] buffer;
         buffer = new char[bufferSize];
@@ -75,7 +79,7 @@ std::string getSetting(const std::string& name)
             nullptr,
             buffer,
             bufferSize,
-            configFilename.c_str());
+            configFilename.string().c_str());
         if (result != bufferSize - 1)
         {
             // Success
@@ -89,8 +93,8 @@ std::string getSetting(const std::string& name)
 
 int getSettingInt(const std::string& name, const int defaultValue)
 {
-    const std::string& configFilename = getConfigFilename();
-    return GetPrivateProfileInt("Settings", name.c_str(), defaultValue, configFilename.c_str());
+    const std::filesystem::path& configFilename = getConfigFilename();
+    return GetPrivateProfileInt("Settings", name.c_str(), defaultValue, configFilename.string().c_str());
 }
 
 extern "C" __declspec(dllexport) const char* getName()
@@ -106,7 +110,7 @@ extern "C" __declspec(dllexport) const char* getExt()
     {
         return extension.c_str();
     }
-    const std::string& configFilename = getConfigFilename();
+    const auto& configFilename = getConfigFilename().string();
     std::string::size_type pos = configFilename.find("gfxcomp_") + 8;
     extension = configFilename.substr(pos);
     pos = extension.find('.');
@@ -135,6 +139,7 @@ int32_t compress(
     const DWORD tempPathResult = GetTempPath(MAX_PATH, tempPathBuf);
     if (tempPathResult == 0 || tempPathResult >= MAX_PATH)
     {
+        printf("no temp path\n");
         return ReturnValues::CannotCompress;
     }
     std::ostringstream ss;
@@ -156,11 +161,13 @@ int32_t compress(
         nullptr);
     if (fIn == INVALID_HANDLE_VALUE)
     {
+        printf("failed to make fIn\n");
         return ReturnValues::CannotCompress;
     }
     DWORD numberOfBytesWritten;
     if (WriteFile(fIn, pSource, sourceLength, &numberOfBytesWritten, nullptr) == FALSE || numberOfBytesWritten != sourceLength)
     {
+        printf("failed to write to fIn\n");
         // Failed to write
         CloseHandle(fIn);
         return ReturnValues::CannotCompress;
@@ -187,13 +194,14 @@ int32_t compress(
         FALSE,
         0,
         nullptr,
-        nullptr,
+        getConfigFilename().parent_path().string().c_str(),
         &startupInfo,
         &processInformation);
     free(commandLine);
 
     if (created == FALSE)
     {
+        printf("createprocess failed: %s\n", command.c_str());
         // Failed to run the command
         return ReturnValues::CannotCompress;
     }
