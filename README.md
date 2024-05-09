@@ -40,7 +40,8 @@ Compressors
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
 | pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm | ✅ | ✅ |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
-| shrinkler | shrinkler | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
+| shrinkler | shrinkler  | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
+| sims     | sims        | SIMS | Compression used in SIMS games, hybrid LZ/RLE | ✅ | |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
@@ -64,19 +65,20 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | LZ4                      |         136 |                                0 |       ❌       |       ❌        |
 | LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |       ❌       |       ✅        |
-| Magic Knight Rayearth 2  |         139 |                                0 |       ❌       |       ❌       |
-| Phantasy Star RLE        |         188 |                                0 |       ✅       |       ❌       |
-| PS Gaiden                |         223 |                               34 |       ❌       |       ❌       |
-| PS Gaiden (fast)         |        1028 |                               32 |       ❌       |       ❌       |
-| Pucrunch (⚠ Broken)     |         412 |                               44 |       ❌       |       ❌       |
-| Shrinkler                |         259 |                             2048 |       ❌       |       ✅     |
-| Sonic                    |         162 |                                8 |       ❌       |       ❌       |
-| Sonic 2                  |         289 |                               39 |       ❌       |       ❌       |
-| Simple tile Compression 0 |         57 |                                0 |       ❌       |       ❌       |
-| Wonder Boy               |          73 |                                0 |       ❌       |       ❌       |
-| ZX0                      |         157 |                                0 |       ❌       |       ✅       |
-| ZX0 (fast)               |         274 |                                0 |       ❌       |       ✅       |
-| ZX7                      |         117 |                                0 |       ✅       |       ✅       |
+| Magic Knight Rayearth 2  |         139 |                                0 |       ❌       |       ❌        |
+| Phantasy Star RLE        |         188 |                                0 |       ✅       |       ❌        |
+| PS Gaiden                |         223 |                               34 |       ❌       |       ❌        |
+| PS Gaiden (fast)         |        1028 |                               32 |       ❌       |       ❌        |
+| Pucrunch (⚠ Broken)     |         412 |                               44 |       ❌       |       ❌        |
+| Shrinkler                |         259 |                             2048 |       ❌       |       ✅        |
+| SIMS                     |         231 |                             2070 |       ❌       |       ❌        |
+| Sonic                    |         162 |                                8 |       ❌       |       ❌        |
+| Sonic 2                  |         289 |                               39 |       ❌       |       ❌        |
+| Simple tile Compression 0 |         57 |                                0 |       ❌       |       ❌        |
+| Wonder Boy               |          73 |                                0 |       ❌       |       ❌        |
+| ZX0                      |         157 |                                0 |       ❌       |       ✅        |
+| ZX0 (fast)               |         274 |                                0 |       ❌       |       ✅        |
+| ZX7                      |         117 |                                0 |       ✅       |       ✅        |
 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
 They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
