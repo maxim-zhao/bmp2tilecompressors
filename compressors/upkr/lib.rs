@@ -2,11 +2,13 @@ use std::ffi::c_int;
 
 // the upkr config to use, this can be modified to use other configs
 fn config() -> upkr::Config {
-    let mut config = upkr::Config::default()
+    let mut config = upkr::Config::default();
+    // Settings for "Z80 mode"
     config.use_bitstream = true;
     config.bitstream_is_big_endian = true;
     config.invert_bit_encoding = true;
     config.simplified_prob_update = true;
+    config
 }
 
 #[no_mangle]
