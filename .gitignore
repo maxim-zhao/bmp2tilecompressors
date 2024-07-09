@@ -14,3 +14,4 @@ benchmark/expected.bin
 /compressors/data.sonic2compr
 *.pickle
 .*
+/compressors/upkr/target

@@ -26,3 +26,7 @@
 	path = compressors/shrinkler
 	url = https://github.com/askeksa/Shrinkler.git
 	branch = master
+[submodule "compressors/upkr/upkr"]
+	path = compressors/upkr/upkr
+	url = https://github.com/exoticorn/upkr.git
+	branch = master
