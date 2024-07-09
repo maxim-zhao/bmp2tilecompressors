@@ -104,6 +104,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
     except subprocess.CalledProcessError as e:
         print(f"Failed while processing {image_file} for {technology}:")
         print(e)
+        print(" ".join(e.cmd))
         print(e.stdout)
         print(e.stderr)
         if is_test:
