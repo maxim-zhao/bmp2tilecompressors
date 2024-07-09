@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "utils.h"
-#include "upkr/c_library/upkr.h"
+#include "upkr/upkr.h"
 
 int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {

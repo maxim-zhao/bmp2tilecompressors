@@ -58,7 +58,7 @@
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>upkr\c_library\target\i686-pc-windows-msvc\release\upkr.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>upkr\target\i686-pc-windows-msvc\release\upkr.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(IntermediateOutputPath)$(TargetName).lib</ImportLibrary>
       <IgnoreAllDefaultLibraries>
@@ -67,7 +67,7 @@
       </IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
-      <Command>cd upkr\c_library
+      <Command>cd upkr
 cargo build --release --target i686-pc-windows-msvc --lib</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -84,7 +84,7 @@ cargo build --release --target i686-pc-windows-msvc --lib</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>upkr\c_library\target\i686-pc-windows-msvc\release\upkr.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>upkr\target\i686-pc-windows-msvc\release\upkr.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(IntermediateOutputPath)$(TargetName).lib</ImportLibrary>
       <SubSystem>Windows</SubSystem>
@@ -95,7 +95,7 @@ cargo build --release --target i686-pc-windows-msvc --lib</Command>
       </IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
-      <Command>cd upkr\c_library
+      <Command>cd upkr
 cargo build --release --target i686-pc-windows-msvc --lib</Command>
     </PreBuildEvent>
     <PreBuildEvent>
