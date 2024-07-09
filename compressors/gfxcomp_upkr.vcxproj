@@ -13,6 +13,12 @@
   <ItemGroup>
     <ClCompile Include="gfxcomp_upkr.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="upkr\upkr.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="upkr\lib.rs" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{fabdf0dc-04bd-beef-f00d-491873a06c8d}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
