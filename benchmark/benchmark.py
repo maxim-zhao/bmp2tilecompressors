@@ -347,5 +347,10 @@ def main():
     if "show" in args:
         chart.show()
 
+    if "print" in args:
+        zip_ratio = [x for x in data if x.technology == "zip"][0].ratio
+        for technology, data in itertools.groupby(data, lambda r: r.technology):
+            rating = statistics.mean([r.ratio for r in data])/zip_ratio*100
+            print(f"{technology}   {rating}")
 
 main()

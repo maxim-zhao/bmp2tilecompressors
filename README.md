@@ -44,6 +44,7 @@ Compressors
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
+| upkr     | upkr        | upkr | [Simple lz + arithmetic coding packer](https://github.com/exoticorn/upkr) | ✅ | ✅ |
 | wonderboy | wbcompr    | Wonder Boy RLE | Compression from the game [Wonder Boy](http://www.smspower.org/Games/WonderBoy-SMS) | ✅ |   |
 | zx0      | zx0         | ZX0 | [ZX0](https://github.com/einar-saukas/ZX0) compression library | ✅ | ✅ |
 | zx7      | zx7         | ZX7 (8-bit limited) | Variant of [ZX7](http://www.worldofspectrum.org/infoseekid.cgi?id=0027996) compression library tweaked for performance | ✅ | ✅ |
@@ -53,33 +54,36 @@ Decompressors
 
 All size stats are for emitting data direct to VRAM on Master System, using Z80 decompressors in non-interrupt-safe mode if available. Decompression to RAM will generally use less ROM.
 
-| Description              | ROM (bytes) | RAM (bytes, not including stack) | Interrupt-safe | Non-VRAM support |
-|:-------------------------|------------:|---------------------------------:|:--------------:|:----------------:|
-| aPLib                    |         303 |                                5 |       ❌       |       ✅        |
-| aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
-| Berlin Wall              |             |                              265 |       ❌       |       ❌        |
-| Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
-| High School Kimengumi (unoptimised) | 119 |                             4 |       ❌       |       ❌        |
-| Lemmings (unoptimised)   |         143 |                              512 |       ❌       |       ❌        |
-| LZ4                      |         136 |                                0 |       ❌       |       ❌        |
-| LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
-| LZSA2                    |         332 |                                0 |       ❌       |       ✅        |
-| Magic Knight Rayearth 2  |         139 |                                0 |       ❌       |       ❌       |
-| Phantasy Star RLE        |         188 |                                0 |       ✅       |       ❌       |
-| PS Gaiden                |         223 |                               34 |       ❌       |       ❌       |
-| PS Gaiden (fast)         |        1028 |                               32 |       ❌       |       ❌       |
-| Pucrunch (⚠ Broken)     |         412 |                               44 |       ❌       |       ❌       |
-| Shrinkler                |         259 |                             2048 |       ❌       |       ✅     |
-| Sonic                    |         162 |                                8 |       ❌       |       ❌       |
-| Sonic 2                  |         289 |                               39 |       ❌       |       ❌       |
-| Simple tile Compression 0 |         57 |                                0 |       ❌       |       ❌       |
-| Wonder Boy               |          73 |                                0 |       ❌       |       ❌       |
-| ZX0                      |         157 |                                0 |       ❌       |       ✅       |
-| ZX0 (fast)               |         274 |                                0 |       ❌       |       ✅       |
-| ZX7                      |         117 |                                0 |       ✅       |       ✅       |
+| Description              | ROM (bytes) | RAM (bytes, not including stack) | Performance relative to "zip" | Interrupt-safe | Non-VRAM support |
+|:-------------------------|------------:|---------------------------------:|------------------------------:|:--------------:|:----------------:|
+| aPLib                    |         303 |                                5 |                          96% |       ❌       |       ✅        |
+| aPLib (fast)             |         341 |                                0 |                          96% |       ❌       |       ✅        |
+| Berlin Wall              |         241 |                              265 |                          74% |       ❌       |       ❌        |
+| Exomizer v2 (⚠ Broken)  |         208 |                              156 |                              |       ❌       |       ✅        |
+| High School Kimengumi (unoptimised) | 119 |                             4 |                          67% |       ❌       |       ❌        |
+| Lemmings (unoptimised)   |         143 |                              512 |                          65% |       ❌       |       ❌        |
+| LZ4                      |         136 |                                0 |                          69% |       ❌       |       ❌        |
+| LZSA1                    |         207 |                                0 |                          79% |       ❌       |       ✅        |
+| LZSA2                    |         332 |                                0 |                          92% |       ❌       |       ✅        |
+| Magic Knight Rayearth 2  |         139 |                                0 |                          79% |       ❌       |       ❌       |
+| Phantasy Star RLE        |         188 |                                0 |                          66% |       ✅       |       ❌       |
+| PS Gaiden                |         223 |                               34 |                          94% |       ❌       |       ❌       |
+| PS Gaiden (fast)         |        1028 |                               32 |                          94% |       ❌       |       ❌       |
+| Pucrunch (⚠ Broken)     |         412 |                               44 |                              |       ❌       |       ❌       |
+| Shrinkler                |         259 |                             2048 |                         106% |       ❌       |       ✅       |
+| Sonic                    |         162 |                                8 |                          60% |       ❌       |       ❌       |
+| Sonic 2                  |         289 |                               39 |                          53% |       ❌       |       ❌       |
+| Simple tile Compression 0 |         57 |                                0 |                          59% |       ❌       |       ❌       |
+| upkr                     |         226 |                              321 |                         108% |       ❌       |       ❌       |
+| Wonder Boy               |          73 |                                0 |                          50% |       ❌       |       ❌       |
+| ZX0                      |         157 |                                0 |                          98% |       ❌       |       ✅       |
+| ZX0 (fast)               |         274 |                                0 |                          98% |       ❌       |       ✅       |
+| ZX7                      |         117 |                                0 |                          91% |       ✅       |       ✅       |
 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
 They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
+
+"zip" performance is compressing the data using `7z a -mx9 filename.zip`. Zip has some framing overhead but it would be unfeasible to implement a decompressor on Master System. We compute the mean compression ratio of this on the test coprpus, and then compare the compressors' mean ratio, so that >100% means they compress better, and 50% means they compress to double the size on average.
 
 Interrupt-safe decompressors can run safely while interrupts are happening and interfering with the VDP state. 
 This will introduce some overhead - if nothing else, they need to disable interrupts - and they will therefore also change the interrupts enabled state.
