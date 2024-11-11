@@ -77,8 +77,7 @@ def benchmark(technology, extension, rename_extension, asm_file, image_file):
         proc = subprocess.run([
             "z80bench.exe",
             'benchmark.sms',
-            '--vram-compare',
-            'expected.bin'],
+            '--vram-compare=expected.bin'],
             check=True, capture_output=True, text=True)
 
         cycles = 0
@@ -130,7 +129,7 @@ def compute():
         if "extra-extensions" in json_data:
             extensions.extend(json_data["extra-extensions"])
         for test_extension in extensions:
-            for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
+            for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/x*.bin")):
                 result = benchmark(
                     json_data["technology"],
                     test_extension,

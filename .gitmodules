@@ -30,3 +30,7 @@
 	path = compressors/upkr/upkr
 	url = https://github.com/exoticorn/upkr.git
 	branch = master
+[submodule "compressors/rnc_propack_source"]
+	path = compressors/rnc_propack_source
+	url = https://github.com/lab313ru/rnc_propack_source.git
+	branch = master
