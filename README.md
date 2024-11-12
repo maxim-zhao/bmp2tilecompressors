@@ -73,7 +73,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | PS Gaiden (fast)         |        1028 |                               32 |                          94% |       ❌       |       ❌       |
 | Pucrunch (⚠ Broken)     |         412 |                               44 |                              |       ❌       |       ❌       |
 | RNC 1                    |        1052 |                              430 |                          93% |       ❌       |       ✅       |
-| RNC 2                    |         306 |         (Uncompressed data size) |                          87% |       ❌       |       ✅       |
+| RNC 2                    |         306 |                                0 |                          87% |       ❌       |       ✅       |
 | Shrinkler                |         259 |                             2048 |                         106% |       ❌       |       ✅       |
 | Sonic                    |         162 |                                8 |                          60% |       ❌       |       ❌       |
 | Sonic 2                  |         289 |                               39 |                          53% |       ❌       |       ❌       |

@@ -1,57 +1,23 @@
 dernc2:
 ; Args: 
-; de = dest: <8000 = VRAM, >8000 = RAM
+; de = dest
 ; hl = source
-; Define RNC_RAM_BUFFER pointing to RAM big enough to hold anything decompressed to VRAM
 ; Originally ripped from The Smurfs Travel The World, but the assembly
 ; decompression routine is a port of the code at 
 ; https://github.com/tobiasvl/rnc_propack/blob/master/SOURCE/GAMEBOY/RNC_2.S
-; from GB-Z80 to Z80.
-  bit 7, d
-  jr nz, _deRNCToRAM
-  ; Else this is VRAM decompression.
-  ; First get the output data size into bc
-  ; by pulling it from the header
-  push hl
-    inc hl ; Skip "RNC",1,0,0
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    ld a, (hl)
-    inc hl
-    ld b, a
-    ld c, (hl)
-  pop hl
-  push bc
-  push de
-    ; Then decompress to RAM
-    ld de, RNC_RAM_BUFFER ; Buffer for VRAM decompression
-    call _deRNCToRAM
-  pop de
-  pop bc
-  ; Then write to VRAM address de
+; from GB-Z80 to Z80, so I applied the (rather old-fashioned) labels from that. 
+; Further modifications to support decompressing directly to VRAM by MAxim in 2024.
+
+.ifdef RNCToVRAM
   ld a, e
   out ($bf), a
   ld a, d
-  or $40
   out ($bf), a
-  ld hl, RNC_RAM_BUFFER
--:ld a, (hl)
-  inc hl
-  out ($be), a
-  dec bc
-  ld a, b
-  or c
-  jr nz, -
-  ret
- 
-_deRNCToRAM:
+.endif
   ; Add 18 bytes to skip header
   ld bc, 18
   add hl, bc
-  ; Carry flag rotates through a to signal when sata is needed
+  ; Carry flag rotates through a to signal when data is needed
   scf
   ; Read the first byte and skip the first two bits
   ld a, (hl)
@@ -107,11 +73,19 @@ _BACK7:
 _RAWLPB:
     ld a, (hl)
     inc hl
+.ifdef RNCToVRAM
+    out ($be),a
+.else
     ld (de), a
+.endif
     inc de
     ld a, (hl)
     inc hl
+.ifdef RNCToVRAM
+    out ($be),a
+.else
     ld (de), a
+.endif
     inc de
     dec c
     jr nz, _RAWLPB
@@ -122,7 +96,7 @@ _FETCH0:
   ld a, (hl)
   inc hl
   adc a, a
-  jr c, _SMALLS
+  jp c, _SMALLS
 _GETLEN: 
   add a, a
   jr z, _FETCH3
@@ -186,22 +160,39 @@ _BYTEDISP:
       sbc a, b
       ld h, a
       dec hl
--:    ld a, (hl)
+      ; Copy c bytes from hl to de
+.ifdef RNCToVRAM
+      res 6,h ; make a read address
+      ld b,c
+      ld c,$bf
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+.else
+-:    
+      ld a, (hl)
       inc hl
       ld (de), a
       inc de
       dec c
       jr nz, -
+.endif
     pop hl
     inc hl
   pop af
-  jr _XLOOP
+  jp _XLOOP
  
 _GETBITS:
   ; Get next byte
   ld a, (hl)
   inc hl
-  ; Rotate a bit out
+  ; Rotate a bit out (and carry in)
   adc a, a
   jr c, _STRING
 _XBYTE:
@@ -209,29 +200,39 @@ _XBYTE:
     ; Literal byte: copy to dest
     ld a, (hl)
     inc hl
+.ifdef RNCToVRAM
+    out ($be),a
+.else
     ld (de), a
+.endif
     inc de
   pop af
 _XLOOP:
   ; Rotate a bit out
   add a, a
   jr c, +
+  ; Zero bit = literal byte
   push af
     ; Literal byte: copy to dest
     ld a, (hl)
     inc hl
+.ifdef RNCToVRAM
+    out ($be),a
+.else
     ld (de), a
+.endif
     inc de
   pop af
+  ; Rotate a bit out
   add a, a
-  jr nc, _XBYTE
-+: 
+  jr nc, _XBYTE ; Another zero -> another literal byte
++:; 1 bit 
   jr z, _GETBITS
 _STRING: 
   ld bc, 2
   add a, a
-  jr z, _FETCH0
-  jr nc, _GETLEN
+  jp z, _FETCH0 ; Need more bits
+  jp nc, _GETLEN ; %10 = LZ match
 _SMALLS: 
   add a, a
   jr z, _FETCH1

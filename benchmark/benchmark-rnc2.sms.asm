@@ -7,25 +7,21 @@ slot 0 $0000
 .endme
 
 .rombankmap
-bankstotal 2
+bankstotal 1
 banksize $8000
-banks 2 ; To enable a mapper
+banks 1
 .endro
 
 .bank 0 slot 0
 
 .org 0
-  ; We enable SRAM
-  ld a, %1000
-  ld ($fffc),a
-  ; Then use it as our buffer
 	ld hl,data
-	ld de,$0000
+	ld de,$4000
 	call dernc2
 	ret ; ends the test
 	
 .block "decompressor"
-.define RNC_RAM_BUFFER $8000
+.define RNCToVRAM
 .include "../decompressors/rnc2.asm"
 .endb
 
