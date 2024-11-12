@@ -129,7 +129,7 @@ def compute():
         if "extra-extensions" in json_data:
             extensions.extend(json_data["extra-extensions"])
         for test_extension in extensions:
-            for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/x*.bin")):
+            for image in itertools.chain(glob.iglob("corpus/*.png"), glob.iglob("corpus/*.bin")):
                 result = benchmark(
                     json_data["technology"],
                     test_extension,

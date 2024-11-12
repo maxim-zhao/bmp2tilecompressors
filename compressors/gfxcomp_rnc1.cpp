@@ -90,10 +90,7 @@ int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDe
     auto v = Utils::makeUniqueForMalloc(init_vars());
     v->puse_mode = 'p';
     v->method = 1;
-    if (v->dict_size > 0x8000)
-    {
-        v->dict_size = 0x8000;
-    }
+    v->dict_size = 0x8000;
     v->max_matches = 0x1000;
     v->file_size = sourceLength;
     auto sourceCopy = Utils::toVector(pSource, sourceLength);
@@ -116,6 +113,12 @@ int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDe
     if (v->output_offset > destinationLength)
     {
         return ReturnValues::BufferTooSmall;
+    }
+
+    if (v->output_offset == sourceLength)
+    {
+        // Seems to indicate a refusal to compress?
+        return ReturnValues::CannotCompress;
     }
 
     // Copy to the destination buffer if it fits

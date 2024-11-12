@@ -106,7 +106,6 @@ int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDe
         return ReturnValues::CannotCompress;
     }
 
-    printf("%d -> %d\n", sourceLength, v->output_offset);
     if (v->output_offset == sourceLength)
     {
         // Seems to indicate a refusal to compress?

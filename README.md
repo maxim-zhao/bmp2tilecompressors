@@ -40,6 +40,8 @@ Compressors
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
 | pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm | ✅ | ✅ |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
+| rnc1     | rnc1        | Rob Northen Compression type 1 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) | ✅ | ✅ |
+| rnc2     | rnc2        | Rob Northen Compression type 2 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) | ✅ | ✅ |
 | shrinkler | shrinkler | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
@@ -70,6 +72,8 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | PS Gaiden                |         223 |                               34 |                          94% |       ❌       |       ❌       |
 | PS Gaiden (fast)         |        1028 |                               32 |                          94% |       ❌       |       ❌       |
 | Pucrunch (⚠ Broken)     |         412 |                               44 |                              |       ❌       |       ❌       |
+| RNC 1                    |        1052 |                              430 |                          93% |       ❌       |       ✅       |
+| RNC 2                    |         306 |         (Uncompressed data size) |                          87% |       ❌       |       ✅       |
 | Shrinkler                |         259 |                             2048 |                         106% |       ❌       |       ✅       |
 | Sonic                    |         162 |                                8 |                          60% |       ❌       |       ❌       |
 | Sonic 2                  |         289 |                               39 |                          53% |       ❌       |       ❌       |

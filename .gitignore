@@ -15,3 +15,4 @@ benchmark/expected.bin
 *.pickle
 .*
 /compressors/upkr/target
+*.sav
