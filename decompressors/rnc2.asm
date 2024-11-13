@@ -99,7 +99,7 @@ _FETCH0:
   jp c, _SMALLS
 _GETLEN: 
   add a, a
-  jr z, _FETCH3
+  jr z, _FETCH3 ; 12/7+10 for jr+jp; 10+10 for jp+jp; 17/10+10 for call/ret. The jump is 1/8 chance so the first is fastest.
 _BACK3: 
   rl c
   add a, a
@@ -163,7 +163,7 @@ _BYTEDISP:
       ; Copy c bytes from hl to de
 .ifdef RNCToVRAM
       res 6,h ; make a read address
-      ld b,c
+      ld b,c ; could avoid this id b/c are swapped throughout?
       ld c,$bf
 -:    out (c),l
       out (c),h

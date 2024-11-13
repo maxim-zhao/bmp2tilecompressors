@@ -1,6 +1,6 @@
 .define RNC_HEADER_SIZE 17
 
-.enum RNC_MEMORY
+.enum RNC_MEMORY export
   rawtab  dsb $80
   postab  dsb $80
   slntab  dsb $80
@@ -31,10 +31,13 @@
 ;  DE = Destination for unpacked data
 
 Unpack:
+.ifdef RNCToVRAM
   ld a, e
-  ld (OutPtr), a
+  out ($bf), a
   ld a, d
-  ld (OutPtr+1), a
+  out ($bf), a
+.endif
+  ld (OutPtr),de
 
   ld bc, RNC_HEADER_SIZE
   add hl, bc
@@ -54,10 +57,7 @@ Unpack:
   inc hl
   ld (bitbufl+1), a
 
-  ld a, l
-  ld (InPtr), a
-  ld a, h
-  ld (InPtr+1), a
+  ld (InPtr), hl
 
   ld a, 2
   call _GetBits
@@ -153,36 +153,84 @@ _rnc05:
   ld a, (temp1+1)
   ld h, a
 
-  ld a, (OutPtr)
-  ld e, a
-  ld a, (OutPtr+1)
-  ld d, a
+  ld de, (OutPtr)
 
 _rnc06:
-  ld a, (hl)
-  inc hl
-  ld (de), a
-  inc de
-
-  dec c
-  jr z, _rnc06a
-
-  ld a, (hl)
-  inc hl
-  ld (de), a
-  inc de
-
-  dec c
-  jr nz, _rnc06
-
-_rnc06a:
   dec b
-  jr nz, _rnc06
+  ; This is a copy of bc bytes from hl to de
+.ifdef RNCToVRAM
+  ; Copy bc-$100 bytes from VRAM address hl to VRAM address de
+  ; Both hl and de are "write" addresses ($4xxx)
+  push af
+    ; Make hl a read address
+    res 6,h
+    ; Check if the count is below 256 (expected)
+    ld a,b
+    or a
+    jr nz,++
+---:; Emit 256*c bytes
+    ld b,c
+    ld c,$bf
+-:  out (c),l
+    out (c),h
+    in a,($be)
+    out (c),e
+    out (c),d
+    out ($be),a
+    inc hl
+    inc de
+    djnz -
+_done:
+  pop af
+  jp +
 
-  ld a, e
-  ld (OutPtr), a
-  ld a, d
-  ld (OutPtr+1), a
+++:
+  ; Above 256 bytes
+  ; Emit b*256 bytes
+--: push bc
+      ld c,$bf
+      ld b,0
+-:    out (c),l
+      out (c),h
+      in a,($be)
+      out (c),e
+      out (c),d
+      out ($be),a
+      inc hl
+      inc de
+      djnz -
+    pop bc
+    djnz --
+    ; Then the rest - if c>0
+    ld a,c
+    or a
+    jr z,---
+    jp _done
++:
+
+.else
+;  ld a, (hl)
+;  inc hl
+;  ld (de), a
+;  inc de
+;
+;  dec c
+;  jr z, _rnc06a
+;
+;  ld a, (hl)
+;  inc hl
+;  ld (de), a
+;  inc de
+;
+;  dec c
+;  jr nz, _rnc06
+;
+;_rnc06a:
+;  dec b
+;  jr nz, _rnc06
+  ldir
+.endif
+  ld (OutPtr), de
 
 _rnc10:
   ld a, rawtab#256
@@ -216,10 +264,7 @@ _rnc12:
   ld b, 3
   ld hl, cartdat
 
-  ld a, (OutPtr)
-  ld e, a
-  ld a, (OutPtr+1)
-  ld d, a
+  ld de, (OutPtr)
 
 _rnc13:
   dec b
@@ -227,7 +272,11 @@ _rnc13:
 
   ld a, (hl)
   inc hl
+.ifdef RNCToVRAM
+  out ($be),a
+.else
   ld (de), a
+.endif
   inc de
 
   dec c
@@ -246,10 +295,7 @@ _rnc13:
   jr _rnc18
 
 _rnc14:
-  ld a, (InPtr)
-  ld l, a
-  ld a, (InPtr+1)
-  ld h, a
+  ld hl, (InPtr)
 
   ld a, (rncdat+1)
   ld b, a
@@ -257,7 +303,11 @@ _rnc14:
 _rnc14a:
   ld a, (hl)
   inc hl
+.ifdef RNCToVRAM
+  out ($be),a
+.else
   ld (de), a
+.endif
   inc de
 
   dec c
@@ -265,7 +315,11 @@ _rnc14a:
 
   ld a, (hl)
   inc hl
+.ifdef RNCToVRAM
+  out ($be),a
+.else
   ld (de), a
+.endif
   inc de
 
   dec c
@@ -278,16 +332,10 @@ _rnc14b:
   ld a, b
   ld (rncdat+1), a
 
-  ld a, l
-  ld (InPtr), a
-  ld a, h
-  ld (InPtr+1), a
+  ld (InPtr), hl
 
 _rnc17:
-  ld a, (InPtr)
-  ld l, a
-  ld a, (InPtr+1)
-  ld h, a
+  ld hl, (InPtr)
 
   ld a, (hl)
   inc hl
@@ -300,10 +348,7 @@ _rnc18:
   ld (temp1), a
   ld (cartdat), a
 
-  ld a, (InPtr)
-  ld l, a
-  ld a, (InPtr+1)
-  ld h, a
+  ld hl, (InPtr)
 
 _rnc18a:
   ld a, (hl)
@@ -311,15 +356,8 @@ _rnc18a:
   ld (temp2), a
   ld (cartdat+1), a
 
-  ld a, l
-  ld (InPtr), a
-  ld a, h
-  ld (InPtr+1), a
-
-  ld a, e
-  ld (OutPtr), a
-  ld a, d
-  ld (OutPtr+1), a
+  ld (InPtr), hl
+  ld (OutPtr), de
 
 _rnc19:
   ld a, (temp1)
@@ -535,10 +573,7 @@ _GetBits:
 
 _GetBits3:
 
-  ld a, (InPtr)
-  ld l, a
-  ld a, (InPtr+1)
-  ld h, a
+  ld hl, (InPtr)
 
   ld a, (hl)
   inc hl
@@ -550,10 +585,7 @@ _GetBits3:
   ld (cartdat+1), a
   ld d, a
 
-  ld a, l
-  ld (InPtr), a
-  ld a, h
-  ld (InPtr+1), a
+  ld (InPtr), hl
 
   ld a, 16
   ld (bufbits), a
