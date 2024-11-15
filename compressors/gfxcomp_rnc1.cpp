@@ -87,7 +87,7 @@ extern "C"
 int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     // Fill in vars struct, based on what we see in main.c in "p"ack mode
-    auto v = Utils::makeUniqueForMalloc(init_vars());
+    const auto v = Utils::makeUniqueForMalloc(init_vars());
     v->puse_mode = 'p';
     v->method = 1;
     v->dict_size = 0x8000;
@@ -109,22 +109,16 @@ int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDe
         return ReturnValues::CannotCompress;
     }
 
-    // Check the packed size
-    if (v->output_offset > destinationLength)
-    {
-        return ReturnValues::BufferTooSmall;
-    }
+    output.resize(v->output_offset);
 
-    if (v->output_offset == sourceLength)
+    if (output.size() == sourceLength)
     {
         // Seems to indicate a refusal to compress?
         return ReturnValues::CannotCompress;
     }
 
     // Copy to the destination buffer if it fits
-    std::copy_n(output.begin(), v->output_offset, pDestination);
-
-    return static_cast<int32_t>(v->output_offset);
+    return Utils::copyToDestination(output, pDestination, destinationLength);
 }
 
 extern "C" __declspec(dllexport) int32_t compressTiles(

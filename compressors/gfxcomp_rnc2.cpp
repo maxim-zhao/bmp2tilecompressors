@@ -106,22 +106,16 @@ int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDe
         return ReturnValues::CannotCompress;
     }
 
-    if (v->output_offset == sourceLength)
+    output.resize(v->output_offset);
+
+    if (output.size() == sourceLength)
     {
         // Seems to indicate a refusal to compress?
         return ReturnValues::CannotCompress;
     }
 
-    // Check the packed size
-    if (v->output_offset > destinationLength)
-    {
-        return ReturnValues::BufferTooSmall;
-    }
-
     // Copy to the destination buffer if it fits
-    std::copy_n(output.begin(), v->output_offset, pDestination);
-
-    return static_cast<int32_t>(v->output_offset);
+    return Utils::copyToDestination(output, pDestination, destinationLength);
 }
 
 extern "C" __declspec(dllexport) int32_t compressTiles(
