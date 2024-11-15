@@ -348,8 +348,13 @@ def main():
 
     if "print" in args:
         zip_ratio = [x for x in data if x.technology == "zip"][0].ratio
+        name_len = max([len(r.technology) for r in data])
+        reference_tiles_per_frame = 88.6
         for technology, data in itertools.groupby(data, lambda r: r.technology):
+            data = [x for x in data]
             rating = statistics.mean([r.ratio for r in data])/zip_ratio*100
-            print(f"{technology}   {rating}")
+            tiles_per_frame = statistics.mean([r.tiles_per_frame for r in data])
+            relative_speed = tiles_per_frame / reference_tiles_per_frame * 100
+            print(f"{technology:{name_len + 2}}{rating:.1f}\t{relative_speed:.0f}%")
 
 main()
