@@ -5,6 +5,13 @@
 #include "utils.h"
 #include "rle.h"
 
+// Compression format:
+// - Data is processed one bitplane at a time
+// - For each bitplane:
+//   - %0nnnnnnn = RLE run of n bytes, 1<=n<=127
+//   - %1nnnnnnn = raw run of n bytes (byte is negated count), 1<=n<=128
+//   - %00000000 = end of bitplane
+
 void compressPlane(
     std::vector<uint8_t>& destination,
     const std::vector<uint8_t>::const_iterator& source,
