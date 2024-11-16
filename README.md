@@ -81,7 +81,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | Simple tile Compression 0 |         57 |                                0 |                          59% |                       36% |       ❌       |       ❌       |
 | upkr                     |         226 |                              321 |                         108% |                        1% |       ❌       |       ❌       |
 | Wonder Boy               |          73 |                                0 |                          50% |                       13% |       ❌       |       ❌       |
-| Wonder Boy in Monster World |       66 |                                0 |                          66% |                       24% |       ✅       |       ❌       |
+| Wonder Boy in Monster World |       56 |                                0 |                          66% |                       32% |       ✅       |       ❌       |
 | ZX0                      |         157 |                                0 |                          98% |                           |       ❌       |       ✅       |
 | ZX0 (fast)               |         274 |                                0 |                          98% |                       15% |       ❌       |       ✅       |
 | ZX7                      |         117 |                                0 |                          91% |                       14% |       ✅       |       ✅       |

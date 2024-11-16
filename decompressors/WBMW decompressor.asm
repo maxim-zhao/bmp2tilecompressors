@@ -1,54 +1,45 @@
-WBMWDecompressTiles:	
-		ld a, $04
-		di
----:	
-		push af
-		push de
---:	
-		ld a, (hl)
-		inc hl
-		or a
-		jp m, +
-		jr nz, ++
-		pop de
-		inc de
-		pop af
-		dec a
-		jr nz, ---
-		ei
-		ret
-	
-+:	
-		neg
-		ld b, a
-		ld c, $be
--:	
-		ld a, e
-		out ($bf), a
-		add a, $04
-		ld e, a
-		ld a, d
-		out ($bf), a
-		adc a, $00
-		ld d, a
-		outi
-		jr nz, -
-		jr --
-	
-++:	
-		ld b, a
-		ld c, (hl)
-		inc hl
--:	
-		ld a, e
-		out ($bf), a
-		add a, $04
-		ld e, a
-		ld a, d
-		out ($bf), a
-		adc a, $00
-		ld d, a
-		ld a, c
-		out ($be), a
-		djnz -
-		jr --
+WBMWDecompressTiles:  
+  ld b, 4 ; bitplanes
+-:push bc
+    ; Set VRAM address
+    ld c, $bf
+    out (c), e
+    out (c), d
+    dec c ; so we can use it later to write
+    ; Decompress
+--: ld a, (hl) ; Read a byte
+    inc hl
+    or a
+    jp m, _Raw
+    jr nz, _RLE
+    ; Zero means end of bitplane
+    inc de ; Move to next bitplane
+  pop bc
+  djnz -
+  ret
+  
+_Raw:  
+  ; Merker byte is the negated count -1..-128
+  neg
+  ld b, a
+-:; Write a byte
+  outi ; out (c), (hl); inc hl; dec b
+  in a, ($be) ; Skip 3 bytes. We use this opcode to preserve the flags.
+  in a, ($be)
+  in a, ($be)
+  jp nz, - ; Repeat until done
+  jp -- ; Then get next byte
+  
+_RLE:  
+  ; a = number of bytes
+  ld b, a
+  ; Get value to write
+  ld a, (hl)
+  inc hl
+-:; Output byte to VRAM
+  out (c), a
+  in f, (c) ; Skip 3 bytes
+  in f, (c)
+  in f, (c)
+  djnz - ; Repeat until done
+  jp -- ; Then get next byte
