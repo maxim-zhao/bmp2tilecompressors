@@ -240,6 +240,8 @@ def plot(results):
             linestyle='--',
             linewidth = 0.5)
         bax.annotate(line.technology, (minx2, line.ratio), va='bottom', color=color, size='x-small')
+        
+    mean_points = []
 
     for technology, data in itertools.groupby(compressed, lambda r: r.technology):
         # Get data series and stats
@@ -284,6 +286,24 @@ def plot(results):
             color=color,
             zorder=index+100 # dots from 100
         )
+        
+        # Remember the point
+        mean_points.append((mean_x, mean_y))
+        
+    # Draw the "efficient frontier"
+    # We want to select only points where there's no other point in its upper-right quadrant
+    efficient_points = []
+    for p1 in mean_points:
+        is_good_point = True
+        for p2 in mean_points:
+            if p2[0] > p1[0] and p2[1] > p1[1]:
+                # p1 should be ignored
+                is_good_point = False
+                break
+        if is_good_point:
+            efficient_points.append(p1)
+    efficient_points.sort(key=lambda p: p[0])
+    bax.plot([p[0] for p in efficient_points], [p[1] for p in efficient_points], linestyle="dotted", linewidth=0.5, color="black")
 
     for technology, data in itertools.groupby(uncompressed, lambda r: r.technology):
         group_results = list(data)
@@ -299,7 +319,6 @@ def plot(results):
             color='black',
             zorder=index+100 # dots from 100
         )
-        #bax.annotate(x[0], y[0], technology, )
         bax.annotate(technology, (x[0], y[0] + 0.01), color='gray', fontsize='small', horizontalalignment='right' if 'fast' in technology else 'left')
 
     bax.set_xlabel("⬅ worse ️         Tiles per frame          better ➡️")
