@@ -12,7 +12,7 @@ void compressPlane(
 {
     auto blocks = rle::process(source, sourceEnd);
 
-    rle::optimize(blocks, 1, 0x7f, 0x7f);
+    rle::optimize(blocks, 1, 0x80, 0x7f);
 
     // Now emit them
     for (auto& block : blocks)
