@@ -112,6 +112,7 @@ How to read:
 - Each colour group has a larger point showing the mean result across the corpus, with error bars showing one standard deviation.
 - There are lines showing the mean performance of zip and 7z on the same corpus.
 - There are two reference points to show the performance of loading uncompressed data, via the simplest and fastest methods.
+- The "Pareto front" is shown by the dotted line. This connects all the compressors which can't be beaten on compression without being slower, or can't be beaten on speed without losing some compression. This is very much dependent on my test data and averaging method, your data may have a different frontier. It also ignores the size of the decompressor: the fast Phantasy Star Gaiden decompressor is over 1KB. So it's not a trivial solution.
 
 There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
 
