@@ -105,27 +105,27 @@ static void tryLz(
             // Past the start, cancel the loop (longer will not be OK)
             break;
         }
-        // Count how many bytes match.
+        // Count matching bytes
         int minByteCount = std::max(nOffset, 1);
         int maxByteCount = std::min(maxN + nOffset, static_cast<int>(source.size() - position));
-        const auto mismatch = std::mismatch(
-            source.begin() + position, 
-            source.begin() + position + maxByteCount,
-            source.begin() + position - offset, 
-            source.begin() + position - offset + maxByteCount
-        );
-        const auto byteCount = mismatch.first - source.begin() - position;
-        if (byteCount >= minByteCount)
+        for (int i = 0; i <= maxByteCount; ++i)
         {
-            // Compute the cost
-            int costToEnd = costInBits + matches[position + byteCount].costToEnd;
-            if (costToEnd < match.costToEnd)
+            if (source[position + i] != source[position - offset + i])
             {
-                match.type = type;
-                match.costInBits = costInBits;
-                match.costToEnd = costToEnd;
-                match.n = byteCount - nOffset;
-                match.o = o;
+                // Mismatch; try a different length
+                break;
+            }
+            if (i >= minByteCount)
+            {
+                auto costToEnd = costInBits + matches[position + i].costToEnd;
+                if (costToEnd < match.costToEnd)
+                {
+                    match.type = type;
+                    match.costInBits = costInBits;
+                    match.costToEnd = costToEnd;
+                    match.n = i - nOffset;
+                    match.o = o;
+                }
             }
         }
     }
@@ -168,6 +168,35 @@ public:
     }
 };
 
+void tryRLE(int position, const std::vector<uint8_t>& source, const std::vector<Match>& matches, Match& match, int maxN, int nOffset, int costInBits, Match::Types type)
+{
+    if (position == 0)
+    {
+        // Impossible
+        return;
+    }
+    // We check for (0..maxN)+nOffset bytes equal to source[position-1]
+    auto b = source[position - 1];
+    for (int n = 0; n <= maxN; ++n)
+    {
+        auto offset = n + nOffset;
+        if (source[position + offset] != b)
+        {
+            // No need to check for higher n
+            return;
+        }
+        // Compute cost
+        if (auto costToEnd = costInBits + matches[position + offset].costToEnd; 
+            costToEnd < match.costToEnd)
+        {
+            match.costToEnd = costToEnd;
+            match.costInBits = costInBits;
+            match.n = n;
+            match.type = type;
+        }
+    }
+}
+
 static int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8_t* pDestination, const size_t destinationLength)
 {
     auto source = Utils::toVector(pSource, sourceLength);
@@ -197,50 +226,36 @@ static int32_t compress(const uint8_t* pSource, const size_t sourceLength, uint8
         // Raw small
         tryRaw(position, sourceLength, matches, bestMatch, 0xe, 8, 9, Match::Types::RawSmall);
 
-        // 0x1200 -> 0x114b (8.4 bits per byte)
-
         // Raw medium
         tryRaw(position, sourceLength, matches, bestMatch, 0xfe, 30, 17, Match::Types::RawMedium);
-
-        // 0x1200 -> 0x1226 (8.1 bits per byte)
 
         // Raw large
         tryRaw(position, sourceLength, matches, bestMatch, 0xffff, 0, 33, Match::Types::RawLarge);
 
-        // 0x1200 -> 0x1206 (8.01 bits per byte)
-
         // LZSmall,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
         tryLz(position, source, matches, bestMatch, 0b11, 2, 0b11111, 2, true, 9, Match::Types::LZSmall);
-
-        // 0x1200 -> 0x0fb1 (6.97 bits per byte)
 
         // LZ2,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
         tryLz(position, source, matches, bestMatch, 0xf, 3, 0xff, 2, false, 17, Match::Types::LZ2);
 
-        // 0x1200 -> 0x0564 (6.83 bits per byte)
-
         // LZ3,            // $3n $oo          Copy n+3 bytes from offset -(o+258)
         tryLz(position, source, matches, bestMatch, 0xf, 3, 0xff, 258, false, 17, Match::Types::LZ3);
-
-        // 0x1200 -> 0x0f53 (6.81 bits per byte)
 
         // LZ4,            // $4n $oo          Copy n+3 bytes from offset -(o+514)
         tryLz(position, source, matches, bestMatch, 0xf, 3, 0xff, 514, false, 17, Match::Types::LZ4);
 
-        // 0x1200 -> 0x0f53 (6.81 bits per byte) (no change)
-
         // LZ5,            // $5x $oo $nn      Copy n+4 bytes from relative offset -($xoo+1)
         tryLz(position, source, matches, bestMatch, 0xff, 4, 0xeff, 1, false, 25, Match::Types::LZ5);
-
-        // 0x1200 -> 0xf49 (6.79 bits per byte)
 
         // LZ5f,           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo+1)
         tryLz(position, source, matches, bestMatch, 0xff, 4, 0xffff, 1, false, 33, Match::Types::LZ5f);
 
-        // 0x1200 -> 0xf49 (6.79 bits per byte) (no change)
-
         // RleSmall,       // $1n              Repeat the previous byte n+2 times. n is 0..14
+        tryRLE(position, source, matches, bestMatch, 14, 2, 9, Match::Types::RleSmall);
+
         // RleLarge,       // $1f $nn          Repeat the previous byte n+17 times. n is 0..255
+        tryRLE(position, source, matches, bestMatch, 255, 17, 17, Match::Types::RleLarge);
+
         // LZReverse,      // $6n $oo          Copy x+3 bytes from -(o+1) to -(o+1+n+3-1) inclusive, i.e. a reversed run
         // CountingShort,  // $7n              Output n+2 bytes incrementing from last value written
         // CountingLong,   // $7f $nn          Output n+17 bytes incrementing from last value written
