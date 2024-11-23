@@ -239,19 +239,20 @@ static int32_t compress(
         // Micro Machines has a lot of possibilities...
 
         // Raw single
-        // Always possible... one bit in the stream and one in 
+        // Always possible...
         Match bestMatch
         {
             .type = Match::Types::RawSingle,
-            // Cost is one bit in the bitstream plus the byte, plus we penalise a bit (see below)
-            .costToEnd = 1 + 8 + 1 + matches[position + 1].costToEnd,
+            // Cost is one bit in the bitstream plus the byte
+            .costToEnd = 1 + 8 + matches[position + 1].costToEnd,
             .n = 1,
             .o = 0,
         };
-
-        // Compressed bytes cost a bit at the *start* of their run, but we compress backwards...
-        // ...so we add that cost to the raw byte
-
+        // Raw runs are "free" in the bitstream. This is a bit confusing...
+        // - A raw run is still signalled by a 1 bit in the bitstream
+        // - But then the next thing in the byte stream is consumed immediately
+        // - So they effectively "borrow" the bitstream bit from the following thing,
+        //   so we can treat them as not emitting a 1 bit
         // RawSmall,       // $0n              Copy x+8 bytes to destination. n is 0..$e
         tryRaw(Match::Types::RawSmall, 0xe, 8, 8, position, sourceLength, matches, bestMatch);
 
@@ -261,12 +262,9 @@ static int32_t compress(
         // RawLarge,       // $0f $ff $nnnn    Raw run. Copy n bytes to destination. n is 0..$ffff
         tryRaw(Match::Types::RawLarge, 0xffff, 0, 8+8+16, position, sourceLength, matches, bestMatch);
 
-        if (false)
-        {
         // LZSmall,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
-        // This requires a bit in the bitstream for any following compressed data, so we penalise it one bit extra
-        tryLz(Match::Types::LZSmall, 0b11, 2, 0b11111, 2, position, true, false, 8 + 1, source, matches, bestMatch);
-        }
+        // Broken!
+        //tryLz(Match::Types::LZSmall, 0b11, 2, 0b11111, 2, position, true, false, 8 + 1, source, matches, bestMatch);
 
         // LZ2,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
         tryLz(Match::Types::LZ2, 0xf, 3, 0xff, 2, position, false, false, 16 + 1, source, matches, bestMatch);
