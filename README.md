@@ -35,6 +35,7 @@ Compressors
 | lzsa1    | lzsa1       | LZSA1 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | lzsa2    | lzsa2       | LZSA2 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | magicknight | mkre2compr | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
+| micromachines | mmcompr | Micro Machines hybrid RLE/LZ | Compressor from the game [Micro Machines](https://www.smspower.org/Games/MicroMachines-SMS) | ✅ | ✅ |
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
@@ -69,6 +70,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | LZSA1                    |         207 |                                0 |                          79% |                       25% |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |                          92% |                       18% |       ❌       |       ✅        |
 | Magic Knight Rayearth 2  |         139 |                                0 |                          79% |                       22% |       ❌       |       ❌       |
+| Micro Machines           |         327 | (as large as the uncompressed data) |                       85% |                       22% |       ❌       |       ✅       |
 | Phantasy Star RLE        |         188 |                                0 |                          66% |                       16% |       ✅       |       ❌       |
 | PS Gaiden                |         223 |                               34 |                          94% |                       29% |       ❌       |       ❌       |
 | PS Gaiden (fast)         |        1028 |                               32 |                          94% |                       14% |       ❌       |       ❌       |

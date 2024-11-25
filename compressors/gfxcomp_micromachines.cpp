@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <format>
 #include <algorithm>
+#include <iostream>
 
 #include "utils.h"
 
@@ -25,17 +26,17 @@ struct Match
     {
         Invalid,
         RawSingle,      //                  Copy one byte to destination
-        LZSmall,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
+        LZTiny,         // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
         RawSmall,       // $0n              Copy x+8 bytes to destination. n is 0..14
         RawMedium,      // $0f $nn          Copy n+30 bytes to destination. n is 0..254
         RawLarge,       // $0f $ff $nnnn    Raw run. Copy n bytes to destination. n is 0..65535
         RleSmall,       // $1n              Repeat the previous byte n+2 times. n is 0..14
         RleLarge,       // $1f $nn          Repeat the previous byte n+17 times. n is 0..255
-        LZ2,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
-        LZ3,            // $3n $oo          Copy n+3 bytes from offset -(o+258)
-        LZ4,            // $4n $oo          Copy n+3 bytes from offset -(o+514)
-        LZ5,            // $5x $oo $nn      Copy n+4 bytes from relative offset -($oo-1)
-        LZ5f,           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo-1)
+        LZSmallNear,    // $2n $oo          Copy n+3 bytes from offset -(o+2)
+        LZSmallMid,     // $3n $oo          Copy n+3 bytes from offset -(o+258)
+        LZSmallFar,     // $4n $oo          Copy n+3 bytes from offset -(o+514)
+        LZLargeNear,    // $5x $oo $nn      Copy n+4 bytes from relative offset -($oo-1)
+        LZLargeFar,     // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo-1)
         LZReverse,      // $6n $oo          Copy x+3 bytes from -(o+1) to -(o+1+n+3-1) inclusive, i.e. a reversed run
         CountingShort,  // $7n              Output n+2 bytes incrementing from last value written
         CountingLong,   // $7f $nn          Output n+17 bytes incrementing from last value written
@@ -59,15 +60,15 @@ static void tryRaw(
 {
     for (int n = 0; n <= maxN; ++n)
     {
-        int byteCount = std::max(n + nOffset, 1);
+        const int byteCount = std::max(n + nOffset, 1);
         if (position + byteCount > static_cast<int>(sourceLength))
         {
             // Past the end, ignore (and any longer)
             return;
         }
         // Cost is 1 bit plus one byte plus the data
-        int costInBits = bits + 8 * byteCount;
-        int costToEnd = costInBits + matches[position + byteCount].costToEnd;
+        const int costInBits = bits + 8 * byteCount;
+        const int costToEnd = costInBits + matches[position + byteCount].costToEnd;
         if (costToEnd < bestMatch.costToEnd)
         {
             bestMatch.type = type;
@@ -84,28 +85,110 @@ static void tryLz(
     const int maxO,
     const int oOffset,
     const int position,
-    [[maybe_unused]] const bool addNToO,
+    const bool addNToO,
     const bool backwards,
     const int costInBits,
     const std::vector<uint8_t>& source,
     const std::vector<Match>& matches,
     Match& match)
 {
-    // We look for LZ matches in the uncompressed data to the left.
-    // We first try the possible offsets, then check for the longest valid match (if any).
-    // Closer or further offsets cost the same, so iteration order doesn't matter.
-    for (int o = 0; o <= maxO; ++o)
+    // Look for LZ matches of length 0+nOffset to maxN+nOffset
+    // at offsets -(0+oOffset) to -(maxO+oOffset) (if addNToO is false)
+    // or at offsets -(0+oOffset+n) to -(maxO+oOffset+n) (if addNToO is true).
+    // Since it is more efficient to iterate over o and then n,
+    // we need to select from the minimum range to the maximum and 
+    // limit the valid values of n.
+    // e.g. with addNToO = false,
+    //      maxN = 3, nOffset = 3, we can match lengths 3..6 inclusive.
+    //      maxO = 8, oOffset = 2, we can match at distances 2..10 inclusive
+    // ABCDEFGHIJ.|
+    //  ^^^^^^  ^^^^^^
+    //  ^^^     ^^^
+    // i.e. any match of length 3..6 at any distance from 2..10
+    // OR:
+    // e.g. with addNToO = true,
+    //      maxN = 3, nOffset = 3, we can match lengths 3..6 inclusive.
+    //      maxO = 8, oOffset = 2, we can match at right-side distances 2..10 inclusive
+    // ABCDEFGHIJ......|
+    //    ^^^           3@10
+    //   ^^^^           4@10
+    //  ^^^^^           5@10
+    // ^^^^^^           6@10 is not allowed! It encodes to %11111111 which is the terminator.
+    //     ^^^          3@9
+    //    ^^^^          4@9
+    //   ^^^^^          5@9
+    //  ^^^^^^          6@9
+    //            ^^^   3@2
+    //           ^^^^   4@2
+    //          ^^^^^   5@2
+    //         ^^^^^^   6@2
+    //           ^^^    3@3
+    //          ^^^^    4@3
+    //         ^^^^^    5@3
+    //        ^^^^^^    6@3
+    // ↑↑↑↑↑↑↑↑↑↑↑↑
+    // │││││││││││└ length 3..3 real offset 5
+    // ││││││││││└─ length 3..4 real offset 6
+    // │││││││││└── length 3..5 real offset 7
+    // ││││││││└─── length 3..6 real offset 8
+    // │││││││└──── length 3..6 real offset 9
+    // ││││││└───── length 3..6 real offset 10
+    // │││││└────── length 3..6 real offset 11
+    // ││││└─────── length 3..6 real offset 12
+    // │││└──────── length 3..6 real offset 13
+    // ││└───────── length 4..6 real offset 14
+    // │└────────── length 5..6 real offset 15
+    // └─────────── Not allowed real offset 16
+    // We also need to have room after the current position to emit the data, i.e. limited by (length - position).
+
+    // First we calculate the range of offsets of starts of runs to consider...
+    auto minOffset = oOffset;
+    if (addNToO)
     {
-        int offset = o + oOffset;
-        if (offset > position)
+        // Add the smallest n
+        minOffset += nOffset;
+    }
+    int maxOffset = oOffset + maxO;
+    if (addNToO)
+    {
+        // Add the largest n, minus 1 because that would leave all bits set which is not allowed
+        maxOffset += maxN - 1;
+    }
+    // The offset is also limited by how far we are from the start of the data.
+    maxOffset = std::min(maxOffset, position);
+
+    // Then we iterate over all offsets. The order doesn't matter - close and far cost the same.
+    for (int offset = minOffset; offset <= maxOffset; ++offset)
+    {
+        // Now figure out how long a run is valid here.
+        // First the simple case...
+        // - Any count must be no greater than the space available after the current position
+        int spaceAvailable = static_cast<int>(source.size()) - position - 1;
+        // - The minimum count is that represented by n = 0. We can't encode shorter.
+        int minByteCount = nOffset;
+        // - The maximum count is that represented by n = maxN
+        int maxByteCount = std::min(maxN + nOffset, spaceAvailable);
+
+        if (backwards)
         {
-            // Past the start, cancel the loop (longer will not be OK)
-            break;
+            // If we are counting backwards, the count is limited to the amount we can count to the left
+            auto countToLeft = position - offset;
+            maxByteCount = std::min(maxByteCount, countToLeft);
+        }
+
+        if (addNToO)
+        {
+            // If we are adding n to o, the numbers are tricky :)
+            minByteCount = std::max(minByteCount, offset - maxO);
+            maxByteCount = std::min(maxByteCount, offset - minOffset + oOffset);
         }
         // Count matching bytes
-        int minByteCount = std::max(nOffset, 1);
-        int maxByteCount = std::min(maxN + nOffset, static_cast<int>(source.size() - position));
-        for (int i = 0; i <= maxByteCount; ++i)
+        if (maxByteCount < minByteCount)
+        {
+            // Can't match anything
+            continue;
+        }
+        for (int i = 0; i < maxByteCount; ++i)
         {
             if (backwards)
             {
@@ -123,15 +206,27 @@ static void tryLz(
                     break;
                 }
             }
-            if (i >= minByteCount)
+            const auto byteCount = i + 1;
+            if (byteCount >= minByteCount)
             {
-                auto costToEnd = costInBits + matches[position + i].costToEnd;
+                const auto costToEnd = costInBits + matches[position + byteCount].costToEnd;
                 if (costToEnd < match.costToEnd)
                 {
                     match.type = type;
                     match.costToEnd = costToEnd;
-                    match.n = i - nOffset;
-                    match.o = o;
+                    match.n = byteCount - nOffset;
+                    if (addNToO)
+                    {
+                        match.o = offset - oOffset - match.n;
+//                        if (match.o > maxO || match.o < 0)
+//                        {
+//                            std::cout << "oh no\n";
+//                        }
+                    }
+                    else
+                    {
+                        match.o = offset - oOffset;
+                    }
                 }
             }
         }
@@ -192,9 +287,14 @@ static void tryRLE(
         return;
     }
     // We check for (0..maxN)+nOffset bytes equal to source[position-1]
+    const auto minCount = nOffset;
+    const auto maxCount = std::min(maxN + nOffset, static_cast<int>(source.size()) - position);
+    if (maxCount < minCount)
+    {
+        // Not enough space for a match at this position
+        return;
+    }
     auto b = source[position - 1];
-    auto minCount = nOffset;
-    auto maxCount = maxN + nOffset;
     for (int i = 0; i <= maxCount; ++i)
     {
         b = (b + increment) & 0xff;
@@ -209,7 +309,7 @@ static void tryRLE(
             continue;
         }
         // Compute cost
-        if (auto costToEnd = costInBits + matches[position + i].costToEnd; 
+        if (const auto costToEnd = costInBits + matches[position + i + 1].costToEnd; 
             costToEnd < match.costToEnd)
         {
             match.costToEnd = costToEnd;
@@ -248,6 +348,7 @@ static int32_t compress(
             .n = 1,
             .o = 0,
         };
+
         // Raw runs are "free" in the bitstream. This is a bit confusing...
         // - A raw run is still signalled by a 1 bit in the bitstream
         // - But then the next thing in the byte stream is consumed immediately
@@ -262,24 +363,23 @@ static int32_t compress(
         // RawLarge,       // $0f $ff $nnnn    Raw run. Copy n bytes to destination. n is 0..$ffff
         tryRaw(Match::Types::RawLarge, 0xffff, 0, 8+8+16, position, sourceLength, matches, bestMatch);
 
-        // LZSmall,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
-        // Broken!
-        //tryLz(Match::Types::LZSmall, 0b11, 2, 0b11111, 2, position, true, false, 8 + 1, source, matches, bestMatch);
+            // LZTiny,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
+        tryLz(Match::Types::LZTiny, 0b11, 2, 0b11111, 2, position, true, false, 8 + 1, source, matches, bestMatch);
 
-        // LZ2,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
-        tryLz(Match::Types::LZ2, 0xf, 3, 0xff, 2, position, false, false, 16 + 1, source, matches, bestMatch);
+        // LZSmallNear,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
+        tryLz(Match::Types::LZSmallNear, 0xf, 3, 0xff, 2, position, false, false, 16 + 1, source, matches, bestMatch);
 
-        // LZ3,            // $3n $oo          Copy n+3 bytes from offset -(o+258)
-        tryLz(Match::Types::LZ3, 0xf, 3, 0xff, 258, position, false, false, 16 + 1, source, matches, bestMatch);
+        // LZSmallMid,            // $3n $oo          Copy n+3 bytes from offset -(o+258)
+        tryLz(Match::Types::LZSmallMid, 0xf, 3, 0xff, 258, position, false, false, 16 + 1, source, matches, bestMatch);
 
-        // LZ4,            // $4n $oo          Copy n+3 bytes from offset -(o+514)
-        tryLz(Match::Types::LZ4, 0xf, 3, 0xff, 514, position, false, false, 16 + 1, source, matches, bestMatch);
+        // LZSmallFar,            // $4n $oo          Copy n+3 bytes from offset -(o+514)
+        tryLz(Match::Types::LZSmallFar, 0xf, 3, 0xff, 514, position, false, false, 16 + 1, source, matches, bestMatch);
 
-        // LZ5,            // $5O $oo $nn      Copy n+4 bytes from relative offset -($Ooo+1)
-        tryLz(Match::Types::LZ5, 0xff, 4, 0xeff, 1, position, false, false, 24 + 1, source, matches, bestMatch);
+        // LZLargeNear,            // $5O $oo $nn      Copy n+4 bytes from relative offset -($Ooo+1)
+        tryLz(Match::Types::LZLargeNear, 0xff, 4, 0xeff, 1, position, false, false, 24 + 1, source, matches, bestMatch);
 
-        // LZ5f,           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo+1)
-        tryLz(Match::Types::LZ5f, 0xff, 4, 0xffff, 1, position, false, false, 32 + 1, source, matches, bestMatch);
+        // LZLargeFar,           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo+1)
+        tryLz(Match::Types::LZLargeFar, 0xff, 4, 0xffff, 1, position, false, false, 32 + 1, source, matches, bestMatch);
 
         // RleSmall,       // $1n              Repeat the previous byte n+2 times. n is 0..$e
         tryRLE(Match::Types::RleSmall, 0xe, 2, 8 + 1, 0, position, source, matches, bestMatch);
@@ -297,16 +397,12 @@ static int32_t compress(
         tryRLE(Match::Types::CountingLong, 0xff, 17, 16 + 1, 1, position, source, matches, bestMatch);
 
         // TODO:
-        // - AddNToO behaviour
         // - Maybe reorder things to make it go faster? RLE or LZ first?
+        //   - Counting still takes time no matter what, we'd just save on assignments
 
         // Store the best match
         matches[position] = bestMatch;
-
-        //std::cout << std::format("{:04X}: best cost to end is {}\n", position, bestMatch.costToEnd);
     }
-
-    //std::cout << std::format("{} bits = {}%\n", matches[0].costToEnd, matches[0].costToEnd * 100.0 / sourceLength / 8);
 
     // And now we can trace the best path by working through the matches in turn.
     BitWriter b;
@@ -318,16 +414,18 @@ static int32_t compress(
         case Match::Types::Invalid:
             throw std::runtime_error("Impossible!");
         case Match::Types::RawSingle:      //                  Copy one byte to destination
+            //std::cout << std::format("@{:05x}: {:02x} Raw\n", offset, source[offset]);
             b.addBit(0);
             b.addByte(source[offset]);
             ++offset;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZSmall:        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
+        case Match::Types::LZTiny:        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
             if (needBitstreamBit)
             {
                 b.addBit(1);
             }
+            //std::cout << std::format("@{:05x}: {:02x} LZ tiny: n={} o={}\n", offset, ((1 << 7) | (match.n << 5) | (match.o)), match.n, match.o);
             b.addByte((1 << 7) | (match.n << 5) | (match.o));
             offset += match.n + 2;
             needBitstreamBit = true;
@@ -385,37 +483,40 @@ static int32_t compress(
             offset += match.n + 17;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZ2:            // $2n $oo          Copy n+3 bytes from offset -(o+2)
+        case Match::Types::LZSmallNear:            // $2n $oo          Copy n+3 bytes from offset -(o+2)
             if (needBitstreamBit)
             {
                 b.addBit(1);
             }
+            //std::cout << std::format("@{:05x}: {:02x} LZ small near: n={} o={}\n", offset, 0x20 | match.n, match.n, match.o);
             b.addByte(0x20 | match.n);
             b.addByte(match.o);
             offset += match.n + 3;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZ3:            // $3n $oo          Copy n+3 bytes from offset -(o+258)
+        case Match::Types::LZSmallMid:            // $3n $oo          Copy n+3 bytes from offset -(o+258)
             if (needBitstreamBit)
             {
                 b.addBit(1);
             }
+            //std::cout << std::format("@{:05x}: {:02x} LZ small mid: n={} o={}\n", offset, 0x30 | match.n, match.n, match.o);
             b.addByte(0x30 | match.n);
             b.addByte(match.o);
             offset += match.n + 3;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZ4:            // $4n $oo          Copy n+3 bytes from offset -(o+514)
+        case Match::Types::LZSmallFar:            // $4n $oo          Copy n+3 bytes from offset -(o+514)
             if (needBitstreamBit)
             {
                 b.addBit(1);
             }
+            //std::cout << std::format("@{:05x}: {:02x} LZ small far: n={} o={}\n", offset, 0x40 | match.n, match.n, match.o);
             b.addByte(0x40 | match.n);
             b.addByte(match.o);
             offset += match.n + 3;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZ5:            // $5O $oo $nn      Copy n+4 bytes from relative offset -($Ooo-1)
+        case Match::Types::LZLargeNear:            // $5O $oo $nn      Copy n+4 bytes from relative offset -($Ooo-1)
             if (needBitstreamBit)
             {
                 b.addBit(1);
@@ -426,7 +527,7 @@ static int32_t compress(
             offset += match.n + 4;
             needBitstreamBit = true;
             break;
-        case Match::Types::LZ5f:           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo-1)
+        case Match::Types::LZLargeFar:           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo-1)
             if (needBitstreamBit)
             {
                 b.addBit(1);

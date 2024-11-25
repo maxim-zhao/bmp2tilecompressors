@@ -220,8 +220,8 @@ def plot(results):
 
     NUM_COLORS = len([x for x in itertools.groupby(compressed, lambda r: r.technology)])
 
-    cm = matplotlib.pyplot.get_cmap('tab20')
-    colors = [cm(i/NUM_COLORS) for i in range(NUM_COLORS)]
+    cm = matplotlib.colors.ListedColormap(matplotlib.cm.tab20b.colors + matplotlib.cm.tab20c.colors)
+    colors = [cm(i) for i in range(NUM_COLORS)]
     index = 0
 
     compressed_xs = [x.tiles_per_frame for x in compressed]
@@ -288,11 +288,12 @@ def plot(results):
         )
         
         # Remember the point
-        mean_points.append((mean_x, mean_y))
+        if not "Gaiden (fast)" in technology:
+            mean_points.append((mean_x, mean_y))
         
-    # Draw the "efficient frontier"
+    # Draw the "pareto front"
     # We want to select only points where there's no other point in its upper-right quadrant
-    efficient_points = []
+    pareto_points = []
     for p1 in mean_points:
         is_good_point = True
         for p2 in mean_points:
@@ -301,9 +302,9 @@ def plot(results):
                 is_good_point = False
                 break
         if is_good_point:
-            efficient_points.append(p1)
-    efficient_points.sort(key=lambda p: p[0])
-    bax.plot([p[0] for p in efficient_points], [p[1] for p in efficient_points], linestyle="dotted", linewidth=0.5, color="black")
+            pareto_points.append(p1)
+    pareto_points.sort(key=lambda p: p[0])
+    bax.plot([p[0] for p in pareto_points], [p[1] for p in pareto_points], linestyle="dotted", linewidth=0.5, color="black")
 
     for technology, data in itertools.groupby(uncompressed, lambda r: r.technology):
         group_results = list(data)
@@ -324,7 +325,7 @@ def plot(results):
     bax.set_xlabel("⬅ worse ️         Tiles per frame          better ➡️")
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    bax.legend(markerscale=10)
+    bax.legend(markerscale=10, ncol=1, prop={'size': 9})
     bax.grid(axis='both', ls='dashed', alpha=0.4)
     bax.standardize_ticks(xbase=5)
 
