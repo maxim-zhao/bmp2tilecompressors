@@ -293,17 +293,7 @@ def plot(results):
         
     # Draw the "pareto front"
     # We want to select only points where there's no other point in its upper-right quadrant
-    pareto_points = []
-    for p1 in mean_points:
-        is_good_point = True
-        for p2 in mean_points:
-            if p2[0] > p1[0] and p2[1] > p1[1]:
-                # p1 should be ignored
-                is_good_point = False
-                break
-        if is_good_point:
-            pareto_points.append(p1)
-    pareto_points.sort(key=lambda p: p[0])
+    pareto_points = sorted((p for p in mean_points if next((q for q in mean_points if q[0] > p[0] and q[1] > p[1]), None) is None), key=lambda p: p[0])
     bax.plot([p[0] for p in pareto_points], [p[1] for p in pareto_points], linestyle="dotted", linewidth=0.5, color="black")
 
     for technology, data in itertools.groupby(uncompressed, lambda r: r.technology):

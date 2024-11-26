@@ -155,7 +155,7 @@ _tiny_lz: ; %1 nn ooooo Copy n+2 bytes from offset -(n+o+2)
 
 _copy_byte_and_get_next_bitstream_byte_with_carry:
 .ifdef MicroMachinesDecompressToVRAM
-    call _ldi
+    call _ldi_rom_to_vram
 .else
     ldi
 .endif
@@ -169,7 +169,7 @@ _get_next_bitstream_byte:
     jr c, _bitstream1
 _raw_single:
 .ifdef MicroMachinesDecompressToVRAM
-    call _ldi
+    call _ldi_rom_to_vram
 .else
     ldi
 .endif
@@ -178,7 +178,7 @@ _get_next_bitstream_bit:
     add a, a
     jr c, _bitstream1
 .ifdef MicroMachinesDecompressToVRAM
-    call _ldi
+    call _ldi_rom_to_vram
 .else
     ldi
 .endif
@@ -453,7 +453,7 @@ _0fff:
 .endif
 
 .ifdef MicroMachinesDecompressToVRAM
-_ldi:
+_ldi_rom_to_vram:
   push af
     ; de++=hl++
     ld a,(hl)
