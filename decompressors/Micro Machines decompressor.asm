@@ -1,10 +1,11 @@
 ; Parameters:
 ; hl = source
 ; de = dest
-; Returns hc = number of bytes decompressed (i.e. output size)
 ; Uses afbcdea'f'
-; Relocatable (no absolute addresses used), but in the end there's another copy
-; which gets relocated to RAM - this one executes in place.
+
+; Via SRAM: 84.6% compression of zip, 22% speed of otir
+; Direct to VRAM: same compression, 18% speed
+
 micromachines_decompress:
 .ifdef MicroMachinesDecompressToVRAM
   ld a,e
@@ -12,18 +13,7 @@ micromachines_decompress:
   ld a,d
   out ($bf),a
 .endif
-  push de
-    jr _get_next_bitstream_byte_set_carry
-
-_exit:
-  pop hl    ; Get original de = dest address
-  ld a, e   ; Return hc = de - original de = number of bytes written TODO remove this later
-  sub l
-  ld c, a
-  ld a, d
-  sbc a, h
-  ld h, a
-  ret
+  jr _get_next_bitstream_byte_set_carry
 
 _large_lz_use_a:
       ld b, a
@@ -38,14 +28,26 @@ _large_lz_use_b:
         sbc a, b  ; Subtract carry (from offset subtraction) and b
         ld h, a   ; That's our offset + 1
         dec hl
+.ifdef MicroMachinesDecompressToVRAM
+        ; set bc = c + 4
+        push hl
+          ld b,0
+          ld hl,4
+          add hl,bc
+          ld c,l
+          ld b,h
+        pop hl
+        jr _copybcbytes
+.else
         ld a, c   ; save c
         ldi       ; copy 3 bytes
         ldi
         ldi
         ld c, a   ; restore c
-        ld b, $00
+        ld b, 0
         inc bc    ; increment counter
         jr _copybcbytes
+.endif
 
 _small_lz: ; LZ: copy x+3 bytes from offset -(*p++ + (high-2)*256 - 2)
 ; Examples:
@@ -82,11 +84,27 @@ _small_lz: ; LZ: copy x+3 bytes from offset -(*p++ + (high-2)*256 - 2)
         dec hl
 
 _copycplusonebytes:
+.ifdef MicroMachinesDecompressToVRAM
+        ; Why does it do ldi; ldir?
+        ; So 1 means 1, 0 means 256
+        ; So let's make bc the right number
+        ld b,1
+        dec bc
+        ld b,0
+        inc bc
+        inc bc
+        ; yuck :(
+.else
         ld b, $00 ; counter = c
         inc c
         ldi       ; copy from hl to de
+.endif
 _copybcbytes:
+.ifdef MicroMachinesDecompressToVRAM
+        call _ldir_vram_to_vram
+.else
         ldir      ; 1-257 bytes?
+.endif
       pop hl
       inc hl      ; Next byte
     ex af, af'
@@ -114,7 +132,7 @@ _tiny_lz: ; %1 nn ooooo Copy n+2 bytes from offset -(n+o+2)
 ; de = $c120
 ; So 3 bytes of data is written from $c120 which is copied from $c120 - $1 - $d - $2 = c110
       cp $FF        ; All the bits set?
-      jr z, _exit   ; If so, done
+      ret z         ; If so, done
 
       and %01100000 ; Mask to n bits
       rlca          ; Move to LSBs = n
@@ -186,16 +204,50 @@ _byte_stream_next_byte:
       add a, $30
       jp c, _small_lz         ; $2x, $3x, $4x = small LZ
       add a, $10
-      jr nc, _raw             ; $0x = raw
+      jp nc, _raw             ; $0x = raw
       ; Else it is $1x = RLE
 
 _rle: ; Repeat previous byte x+2 times
       ld b, $00
       sub $0F                 ; Check for $f
-      jr z, +                 ; $f means there's another data byte
+      jr z, ++                ; $f means there's another data byte
       add a, $11              ; c = x + 2
 _duplicate_previous_byte_ba_times:
       ld c, a
+.ifdef MicroMachinesDecompressToVRAM
+      ; We want c=0 to be 256
+      ld b,1
+      dec bc
+      ld b,0
+      inc bc
+      ; then prepare it to iterate below
+      ld a,c
+      or a
+      jr z,+
+      inc b
++:      
+      push bc
+        ; First read the value in
+        dec de
+        res 6,d
+        ld c,$bf
+        out (c),e
+        out (c),d
+        in a,($be)
+        ; Then set the write address again
+        set 6,d
+        inc de
+        out (c),e
+        out (c),d
+      pop bc
+      ; now output a bc times without changing a
+-:    out ($be),a
+      inc de
+      dec c
+      jr nz,-
+      djnz -
+      
+.else
       push hl
         ld l, e               ; repeat previous byte x times
         ld h, d
@@ -203,10 +255,11 @@ _duplicate_previous_byte_ba_times:
         ldi
         ldir
       pop hl
+.endif
     ex af, af'
     jr _get_next_bitstream_bit
 
-+:    ld a, (hl)              ; next byte
+++:   ld a, (hl)              ; next byte
       inc hl
       add a, $11              ; add 17
       jr nc, _duplicate_previous_byte_ba_times ; check for >255
@@ -223,8 +276,29 @@ _counting: ; run of x+2 incrementing bytes, following last byte written. x = $f 
       jr nz, +          ; else it is the run length (-2) itself
       ld a, (hl)
       inc hl
-+:    add a, $11        ; a = x+2
++:    add a, $11        ; a = x+2 (overflows!)
       ld b, a
+.ifdef MicroMachinesDecompressToVRAM
+      push bc
+        ; First read the value in
+        dec de
+        res 6,d
+        ld c,$bf
+        out (c),e
+        out (c),d
+        in a,($be)
+        ; Then set the write address again
+        set 6,d
+        inc de
+        out (c),e
+        out (c),d
+      pop bc
+      ; now output a b times, pre-incrementing a
+-:    inc a
+      out ($be),a
+      inc de
+      djnz -
+.else
       dec de
       ld a, (de)        ; read previous byte
       inc de
@@ -232,6 +306,7 @@ _counting: ; run of x+2 incrementing bytes, following last byte written. x = $f 
       ld (de), a        ; write
       inc de
       djnz -
+.endif
     ex af, af'
 --: jp _get_next_bitstream_bit
 
@@ -254,11 +329,26 @@ _reverse_lz: ; LZ run in reverse order
         ld a, d
         adc a, $FF
         ld h, a
+.ifdef MicroMachinesDecompressToVRAM
+        ; Copy b bytes from --hl to de++
+        res 6,h
+        ld c,$bf
+-:      dec hl
+        out (c),l
+        out (c),h
+        in a,($be) ; Read
+        out (c),e
+        out (c),d
+        out ($be),a ; Write
+        inc de
+        djnz -
+.else
 -:      dec hl              ; move back
         ld a, (hl)          ; read byte
         ld (de), a          ; copy to de
         inc de
         djnz -
+.endif
       pop hl
       inc hl
     ex af, af'
@@ -303,7 +393,7 @@ _raw: ; Raw run:
       ldi
       ldir                  ; copy c bytes total, but allow range 8..263
 .endif
--:    jr _byte_stream_next_byte
+      jp _byte_stream_next_byte
 
 _0f:
       ld a, (hl)            ; read byte
@@ -319,9 +409,18 @@ _0f:
         add hl,bc
         ld c,l
         ld b,h
-        call _ldir_rom_to_vram
       pop hl
+      call _ldir_rom_to_vram
       jp _byte_stream_next_byte
+
+_0fff:
+      ld c, (hl)
+      inc hl
+      ld b, (hl)
+      inc hl
+      call _ldir_rom_to_vram
+      jp _byte_stream_next_byte
+
 .else      
       add a, $1D            ; add 29
       ld c, a
@@ -342,8 +441,7 @@ __:   ldi                   ; copy 8 bytes at a time until bc <= 8
       inc b
       jr nz, _b
       ldir
-      jr -
-.endif
+      jp _byte_stream_next_byte
 
 _0fff:
       ld c, (hl)
@@ -352,6 +450,7 @@ _0fff:
       inc hl
       ld a, $08
       jr _b
+.endif
 
 .ifdef MicroMachinesDecompressToVRAM
 _ldi:
@@ -361,6 +460,7 @@ _ldi:
     out ($be),a
     inc hl
     inc de
+    ; We do not dec bc
   pop af
   ret
 
@@ -368,7 +468,7 @@ _ldir_rom_to_vram:
   ; copy bc bytes from hl (ROM) to de (VRAM)
   ; leaves hl, de increased by bc at the end
   ; leaves bc=0 at the end
-  ex af,af'
+  push af
   
     ; add bc to de to mimic ldir
     ex de,hl
@@ -384,8 +484,7 @@ _ldir_rom_to_vram:
     ld c,$be
     otir
 ---:
-  ex af,af'
-  ld c,0
+  pop af
   ret
 
 +:  push bc
@@ -402,5 +501,43 @@ _ldir_rom_to_vram:
     jr z,--- ; unlikely
     jp --
 
+_ldir_vram_to_vram:
+  ; Copy bc bytes from VRAM address hl to VRAM address de
+  ; Both hl and de are "write" addresses ($4xxx)
+  ; Make hl a read address
+  res 6, h
+  ; Check if the count is below 256
+  ld a,b
+  or a
+  jp z,_below256 ; likely
+  ; Else emit 256*b bytes
+-:push bc
+    ld b,0
+    call +
+  pop bc
+  djnz -
+  ; Then fall through for the rest  
+_below256:
+  ; By emitting <=256 at a time, we can use the out (c),r opcode
+  ; for address setting, which then relieves pressure on a
+  ; and saves some push/pops; and we can use djnz for the loop.
+  ld b,c
+--:
++:ld c,$bf
+-:out (c),l
+  out (c),h
+  in a,($be)
+  out (c),e
+  out (c),d
+  out ($be),a
+  inc hl
+  inc de
+  djnz -
+  ret
+
+_ldir_vram_to_vram_b:
+  ; Make hl a read address
+  res 6, h
+  jr --
 .endif
 ; end of decompress code

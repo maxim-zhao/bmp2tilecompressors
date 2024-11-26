@@ -70,7 +70,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | LZSA1                    |         207 |                                0 |                          79% |                       25% |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |                          92% |                       18% |       ❌       |       ✅        |
 | Magic Knight Rayearth 2  |         139 |                                0 |                          79% |                       22% |       ❌       |       ❌       |
-| Micro Machines           |         327 | (as large as the uncompressed data) |                       85% |                       22% |       ❌       |       ✅       |
+| Micro Machines           |         456 |                                0 |                          85% |                       18% |       ❌       |       ✅       |
 | Phantasy Star RLE        |         188 |                                0 |                          66% |                       16% |       ✅       |       ❌       |
 | PS Gaiden                |         223 |                               34 |                          94% |                       29% |       ❌       |       ❌       |
 | PS Gaiden (fast)         |        1028 |                               32 |                          94% |                       14% |       ❌       |       ❌       |
@@ -116,7 +116,7 @@ How to read:
 - There are two reference points to show the performance of loading uncompressed data, via the simplest and fastest methods.
 - The "Pareto front" is shown by the dotted line. This connects all the compressors which can't be beaten on compression without being slower, or can't be beaten on speed without losing some compression. This is very much dependent on my test data and averaging method, your data may have a different frontier. The fast Phantasy Star Gaiden decompressor is ignored because its lookup tables mean the code is over 1KB - you may prefer that. 
 
-There's no trivial answer to the quesiton "which compressor is best". There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
+There's no trivial answer to the question "which compressor is best". There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
 
 Other compressors
 ----

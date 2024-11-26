@@ -227,7 +227,7 @@ def plot(results):
     compressed_xs = [x.tiles_per_frame for x in compressed]
     uncompressed_xs = [x.tiles_per_frame for x in uncompressed]
     minx = 0 # min(compressed_xs)
-    maxx = max(compressed_xs)
+    maxx = max(compressed_xs) * 1.01
     minx2 = min(uncompressed_xs) if len(uncompressed_xs) > 0 else maxx
     maxx2 = max(uncompressed_xs) if len(uncompressed_xs) > 0 else maxx+1
     bax = brokenaxes(xlims=((minx, maxx), (minx2, maxx2)), wspace=0.02, d=0.005)

@@ -14,17 +14,26 @@ banks 2
 
 .bank 0 slot 0
 
+.define MicroMachinesDecompressToVRAM
+
 .org 0
+.ifdef MicroMachinesDecompressToVRAM
+	ld hl,data
+	ld de,$4000
+	call micromachines_decompress
+.else
   ; We first decompress to RAM...
   ld a, %1000
   ld ($fffc),a
   ; Then use it as our buffer
-
 	ld hl,data
 	ld de,$8000
 	call micromachines_decompress
-  ; Then copy to VRAM. HC is the byte count (for now)
-  ld b,h
+  ; Then copy to VRAM. Compute bc = de-8000
+  ld a,d
+  sub $80
+  ld b,a
+  ld c,e
   xor a
   out ($bf),a
   ld a,$40
@@ -37,12 +46,10 @@ banks 2
   ld a,b
   or c
   jp nz,-
+.endif
 	ret ; ends the test
 
-;.define aPLibMemory $c000
-;.define aPLibToVRAM
 .block "decompressor"
-;.define MicroMachinesDecompressToVRAM
 .include "../decompressors/Micro Machines decompressor.asm"
 .endb
 

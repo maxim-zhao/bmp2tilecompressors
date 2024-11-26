@@ -354,6 +354,7 @@ static int32_t compress(
         // - But then the next thing in the byte stream is consumed immediately
         // - So they effectively "borrow" the bitstream bit from the following thing,
         //   so we can treat them as not emitting a 1 bit
+
         // RawSmall,       // $0n              Copy x+8 bytes to destination. n is 0..$e
         tryRaw(Match::Types::RawSmall, 0xe, 8, 8, position, sourceLength, matches, bestMatch);
 
