@@ -163,7 +163,7 @@ static void tryLz(
         // Now figure out how long a run is valid here.
         // First the simple case...
         // - Any count must be no greater than the space available after the current position
-        int spaceAvailable = static_cast<int>(source.size()) - position - 1;
+        int spaceAvailable = static_cast<int>(source.size()) - position;
         // - The minimum count is that represented by n = 0. We can't encode shorter.
         int minByteCount = nOffset;
         // - The maximum count is that represented by n = maxN
@@ -295,25 +295,25 @@ static void tryRLE(
         return;
     }
     auto b = source[position - 1];
-    for (int i = 0; i <= maxCount; ++i)
+    for (int count = 1; count <= maxCount; ++count)
     {
         b = (b + increment) & 0xff;
-        if (source[position + i] != b)
+        if (source[position + count - 1] != b)
         {
             // No need to check for higher n
             return;
         }
-        if (i < minCount)
+        if (count < minCount)
         {
             // Keep going
             continue;
         }
         // Compute cost
-        if (const auto costToEnd = costInBits + matches[position + i + 1].costToEnd; 
+        if (const auto costToEnd = costInBits + matches[position + count].costToEnd; 
             costToEnd < match.costToEnd)
         {
             match.costToEnd = costToEnd;
-            match.n = i - nOffset;
+            match.n = count - nOffset;
             match.type = type;
         }
     }
@@ -364,7 +364,13 @@ static int32_t compress(
         // RawLarge,       // $0f $ff $nnnn    Raw run. Copy n bytes to destination. n is 0..$ffff
         tryRaw(Match::Types::RawLarge, 0xffff, 0, 8+8+16, position, sourceLength, matches, bestMatch);
 
-            // LZTiny,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
+        // RleSmall,       // $1n              Repeat the previous byte n+2 times. n is 0..$e
+        tryRLE(Match::Types::RleSmall, 0xe, 2, 8 + 1, 0, position, source, matches, bestMatch);
+
+        // RleLarge,       // $1f $nn          Repeat the previous byte n+17 times. n is 0..$ff
+        tryRLE(Match::Types::RleLarge, 255, 17, 16 + 1, 0, position, source, matches, bestMatch);
+
+        // LZTiny,        // %1nnooooo        Copy n+2 bytes from relative offset -(n+o+2)
         tryLz(Match::Types::LZTiny, 0b11, 2, 0b11111, 2, position, true, false, 8 + 1, source, matches, bestMatch);
 
         // LZSmallNear,            // $2n $oo          Copy n+3 bytes from offset -(o+2)
@@ -381,12 +387,6 @@ static int32_t compress(
 
         // LZLargeFar,           // $5f $OO $oo $nn  Copy n+4 bytes from relative offset -($OOoo+1)
         tryLz(Match::Types::LZLargeFar, 0xff, 4, 0xffff, 1, position, false, false, 32 + 1, source, matches, bestMatch);
-
-        // RleSmall,       // $1n              Repeat the previous byte n+2 times. n is 0..$e
-        tryRLE(Match::Types::RleSmall, 0xe, 2, 8 + 1, 0, position, source, matches, bestMatch);
-
-        // RleLarge,       // $1f $nn          Repeat the previous byte n+17 times. n is 0..$ff
-        tryRLE(Match::Types::RleLarge, 255, 17, 16 + 1, 0, position, source, matches, bestMatch);
 
         // LZReverse,      // $6n $oo          Copy n+3 bytes from -(o+1) to -(o+1+n+3-1) inclusive, i.e. a reversed run
         tryLz(Match::Types::LZReverse, 0xf, 3, 0xff, 1, position, false, true, 16 + 1, source, matches, bestMatch);
