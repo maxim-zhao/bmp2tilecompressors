@@ -76,10 +76,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="InterleavedBitStream.cpp" />
     <ClCompile Include="rle.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InterleavedBitStream.h" />
     <ClInclude Include="rle.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
