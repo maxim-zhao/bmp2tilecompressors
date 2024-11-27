@@ -29,7 +29,7 @@ before_test:
     rem Copy our DLLs in there
     copy /y %APPVEYOR_BUILD_FOLDER%\compressors\Release\*.dll %cd%\tools
     rem Install dependencies
-    py -m pip install matplotlib brokenaxes
+    py -m pip install matplotlib brokenaxes jsonpickle
 test_script:
 - py benchmark\benchmark.py compute plot
 artifacts:
