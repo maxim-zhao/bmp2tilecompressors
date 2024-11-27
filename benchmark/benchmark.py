@@ -4,7 +4,7 @@ import subprocess
 import re
 import glob
 import json
-import pickle
+import jsonpickle
 import matplotlib.pyplot
 from brokenaxes import brokenaxes
 import itertools
@@ -144,10 +144,10 @@ def compute():
     results.extend(sevenzip())
 
     # Save results to file
-    with open("benchmark-results.pickle", "wb") as f:
-        pickle.dump(results, f)
-    print("Saved data to benchmark-results.pickle")
-
+    with open("benchmark-results.json", "w") as f:
+        f.write(jsonpickle.encode(results))
+    print("Saved data to benchmark-results.json")
+    
     return results, errors
 
 
@@ -342,8 +342,8 @@ def main():
     if "compute" in args:
         data, errors = compute()
     else:
-        with open("benchmark-results.pickle", "rb") as f:
-            data = pickle.load(f)
+        with open("benchmark-results.json", "r") as f:
+            data = jsonpickle.decode(f.read())
             errors = []
 
     if len(errors) > 0:

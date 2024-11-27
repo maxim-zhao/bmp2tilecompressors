@@ -118,6 +118,8 @@ How to read:
 
 There's no trivial answer to the question "which compressor is best". There can be wide variation in performance between compressors depending on your data; you may want to try a few options for your specific use case.
 
+Don't like the graph? The underlying data is in [benchmark/benchmark-results.json], I'm happy to accept improvements. If you invoke `py benchmark.py plot show` it will reproduce the graph.
+
 Other compressors
 ----
 
