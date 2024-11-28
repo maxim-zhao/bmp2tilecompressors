@@ -43,7 +43,8 @@ Compressors
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
 | rnc1     | rnc1        | Rob Northen Compression type 1 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) targeting better compression/slow speed | ✅ | ✅ |
 | rnc2     | rnc2        | Rob Northen Compression type 2 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) targeting faster speed/worse compression | ✅ | ✅ |
-| shrinkler | shrinkler | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
+| shrinkler | shrinkler  | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
+| sims     | sims        | SIMS | Compression used in SIMS games, hybrid LZ/RLE | ✅ | |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
@@ -58,18 +59,18 @@ Decompressors
 
 All size stats are for emitting data direct to VRAM on Master System, using Z80 decompressors in non-interrupt-safe mode if available. Decompression to RAM will generally use less ROM.
 
-| Description              | ROM (bytes) | RAM (bytes, not including stack) | Compression relative to "zip" | Speed relative to "otir" | Interrupt-safe | Non-VRAM support |
-|:-------------------------|------------:|---------------------------------:|------------------------------:|:------------------------:|:----------------:|----------------:|
-| aPLib                    |         303 |                                5 |                          96% |                           |       ❌       |       ✅        |
-| aPLib (fast)             |         341 |                                0 |                          96% |                       12% |       ❌       |       ✅        |
-| Berlin Wall              |         241 |                              265 |                          74% |                        4% |       ❌       |       ❌        |
-| Exomizer v2 (⚠ Broken)  |         208 |                              156 |                              |                           |       ❌       |       ✅        |
-| High School Kimengumi (unoptimised) | 119 |                             4 |                          67% |                       11% |       ❌       |       ❌        |
-| Lemmings (unoptimised)   |         143 |                              512 |                          65% |                       12% |       ❌       |       ❌        |
-| LZ4                      |         136 |                                0 |                          69% |                       23% |       ❌       |       ❌        |
-| LZSA1                    |         207 |                                0 |                          79% |                       25% |       ❌       |       ✅        |
-| LZSA2                    |         332 |                                0 |                          92% |                       18% |       ❌       |       ✅        |
-| Magic Knight Rayearth 2  |         139 |                                0 |                          79% |                       22% |       ❌       |       ❌       |
+| Description              | ROM (bytes) | RAM (bytes, not including stack) | Interrupt-safe | Non-VRAM support |
+|:-------------------------|------------:|---------------------------------:|:--------------:|:----------------:|
+| aPLib                    |         303 |                                5 |       ❌       |       ✅        |
+| aPLib (fast)             |         333 |                                0 |       ❌       |       ✅        |
+| Berlin Wall              |             |                              265 |       ❌       |       ❌        |
+| Exomizer v2 (⚠ Broken)  |         208 |                              156 |       ❌       |       ✅        |
+| High School Kimengumi (unoptimised) | 119 |                             4 |       ❌       |       ❌        |
+| Lemmings (unoptimised)   |         143 |                              512 |       ❌       |       ❌        |
+| LZ4                      |         136 |                                0 |       ❌       |       ❌        |
+| LZSA1                    |         207 |                                0 |       ❌       |       ✅        |
+| LZSA2                    |         332 |                                0 |       ❌       |       ✅        |
+| Magic Knight Rayearth 2  |         139 |                                0 |       ❌       |       ❌       |
 | Micro Machines           |         456 |                                0 |                          85% |                       18% |       ❌       |       ✅       |
 | Phantasy Star RLE        |         188 |                                0 |                          66% |                       16% |       ✅       |       ❌       |
 | PS Gaiden                |         223 |                               34 |                          94% |                       29% |       ❌       |       ❌       |
@@ -78,6 +79,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | RNC 1                    |        1052 |                              430 |                          93% |                        3% |       ❌       |       ✅       |
 | RNC 2                    |         306 |                                0 |                          87% |                       17% |       ❌       |       ✅       |
 | Shrinkler                |         259 |                             2048 |                         106% |                        0% |       ❌       |       ✅       |
+| SIMS                     |         231 |                             2070 |       ❌       |       ❌        |
 | Sonic                    |         162 |                                8 |                          60% |                       22% |       ❌       |       ❌       |
 | Sonic 2                  |         289 |                               39 |                          53% |                       13% |       ❌       |       ❌       |
 | Simple tile Compression 0 |         57 |                                0 |                          59% |                       36% |       ❌       |       ❌       |

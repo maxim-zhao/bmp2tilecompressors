@@ -13,6 +13,9 @@
   <ItemGroup>
     <ClCompile Include="gfxcomp_exe.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="gfxcomp_exe.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2AAEA610-2056-497A-86F1-F83DCE7682D4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
