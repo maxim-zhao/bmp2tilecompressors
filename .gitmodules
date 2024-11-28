@@ -34,3 +34,11 @@
 	path = compressors/rnc_propack_source
 	url = https://github.com/lab313ru/rnc_propack_source.git
 	branch = master
+[submodule "compressors/stc0"]
+	path = compressors/stc0
+	url = https://github.com/sverx/stc0.git
+	branch = master
+[submodule "compressors/stc4"]
+	path = compressors/stc4
+	url = https://github.com/sverx/stc4.git
+	branch = main

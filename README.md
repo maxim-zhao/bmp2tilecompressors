@@ -47,6 +47,7 @@ Compressors
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
+| stc4     | stc4compr   | Simple Tile Compression 4 | @sverx's [stc4](https://github.com/sverx/stc4) | ✅ |   |
 | upkr     | upkr        | upkr | [Simple lz + arithmetic coding packer](https://github.com/exoticorn/upkr) | ✅ | ✅ |
 | wonderboy | wbcompr    | Wonder Boy RLE | Compression from the game [Wonder Boy](http://www.smspower.org/Games/WonderBoy-SMS) | ✅ |   |
 | wbmw     | wbmw        | Wonder Boy in Monster World RLE | Compression from the game [Wonder Boy in Monster World](http://www.smspower.org/Games/WonderBoyInMonsterWorld-SMS) | ✅ |   |
@@ -82,6 +83,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | Sonic                    |         162 |                                8 |                          60% |                       22% |       ❌       |       ❌       |
 | Sonic 2                  |         289 |                               39 |                          53% |                       13% |       ❌       |       ❌       |
 | Simple tile Compression 0 |         57 |                                0 |                          59% |                       36% |       ❌       |       ❌       |
+| Simple tile Compression 4 |        267 |                                4 |                          80% |                       30% |       ❌       |       ❌       |
 | upkr                     |         226 |                              321 |                         108% |                        1% |       ❌       |       ❌       |
 | Wonder Boy               |          73 |                                0 |                          50% |                       13% |       ❌       |       ❌       |
 | Wonder Boy in Monster World |       56 |                                0 |                          66% |                       32% |       ✅       |       ❌       |
