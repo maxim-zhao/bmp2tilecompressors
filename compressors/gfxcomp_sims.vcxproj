@@ -81,6 +81,14 @@
   <ItemGroup>
     <ClCompile Include="gfxcomp_sims.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="utils.vcxproj">
+      <Project>{20986ee2-c3e0-4507-a01f-3ce9fba0cb9e}</Project>
+      <Private>false</Private>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
