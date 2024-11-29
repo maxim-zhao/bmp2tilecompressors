@@ -110,8 +110,8 @@ Based on a benchmark corpus made of tilesets and title screens, here's a scatter
 
 How to read:
 
-- Further to the right is faster
-- Further up is better compression
+- Further to the right is faster decompression
+- Further up is better compression (smaller data)
 - 60% compression means that the compressed data is 40% of the size of the uncompressed data (for example)
 - The scatter for a particular colour group is across a corpus of realistic Master System tile data
 - Each colour group has a larger point showing the mean result across the corpus, with error bars showing one standard deviation.
