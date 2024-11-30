@@ -23,6 +23,7 @@ Compressors
 | 1bppraw  | 1bpp        | 1bpp raw (uncompressed) binary | One bit per pixel tiles - discards upper bits   | ✅ |   |
 | 2bppraw  | 2bpp        | 2bpp raw (uncompressed) binary | Two bits per pixel tiles - discards upper bits  | ✅ |   |
 | 3bppraw  | 3bpp        | 3bpp raw (uncompressed) binary | Three bits per pixel tiles - discards upper bit | ✅ |   |
+| aleste   | aleste      | GG Aleste LZ | Compression from the game [GG Aleste](http://www.smspower.org/Games/GGAleste-GG) | ✅ | ✅ |
 | aPLib    | aPLib       | aPLib | [aPLib](http://ibsensoftware.com/products_aPLib.html) compression library | ✅ | ✅ |
 | apultra  | apultra     | aPLib (apultra) | [apultra](https://github.com/emmanuel-marty/apultra) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | berlinwall | berlinwallcompr | Berlin Wall LZ | Compression from the game [The Berlin Wall](http://www.smspower.org/Games/BerlinWall-GG) | ✅ | ✅ |
@@ -60,36 +61,37 @@ Decompressors
 All size stats are for emitting data direct to VRAM on Master System, using Z80 decompressors in non-interrupt-safe mode if available. Decompression to RAM will generally use less ROM.
 
 | Description              | ROM (bytes) | RAM (bytes, not including stack) | Compression relative to "zip" | Speed relative to "otir" | Interrupt-safe | Non-VRAM support |
-|:-------------------------|------------:|---------------------------------:|------------------------------:|:------------------------:|:----------------:|----------------:|
-| aPLib                    |         303 |                                5 |                          96% |                           |       ❌       |       ✅        |
-| aPLib (fast)             |         341 |                                0 |                          96% |                       12% |       ❌       |       ✅        |
-| Berlin Wall              |         241 |                              265 |                          74% |                        4% |       ❌       |       ❌        |
-| Exomizer v2 (⚠ Broken)  |         208 |                              156 |                              |                           |       ❌       |       ✅        |
-| High School Kimengumi (unoptimised) | 119 |                             4 |                          67% |                       11% |       ❌       |       ❌        |
-| Lemmings (unoptimised)   |         143 |                              512 |                          65% |                       12% |       ❌       |       ❌        |
-| LZ4                      |         136 |                                0 |                          69% |                       23% |       ❌       |       ❌        |
-| LZSA1                    |         207 |                                0 |                          79% |                       25% |       ❌       |       ✅        |
-| LZSA2                    |         332 |                                0 |                          92% |                       18% |       ❌       |       ✅        |
-| Magic Knight Rayearth 2  |         139 |                                0 |                          79% |                       22% |       ❌       |       ❌       |
-| Micro Machines           |         456 |                                0 |                          85% |                       18% |       ❌       |       ✅       |
-| Phantasy Star RLE        |         188 |                                0 |                          66% |                       16% |       ✅       |       ❌       |
-| PS Gaiden                |         223 |                               34 |                          94% |                       29% |       ❌       |       ❌       |
-| PS Gaiden (fast)         |        1028 |                               32 |                          94% |                       14% |       ❌       |       ❌       |
-| Pucrunch (⚠ Broken)     |         412 |                               44 |                              |                           |       ❌       |       ❌       |
-| RNC 1                    |        1052 |                              430 |                          93% |                        3% |       ❌       |       ✅       |
-| RNC 2                    |         306 |                                0 |                          87% |                       17% |       ❌       |       ✅       |
-| Shrinkler                |         259 |                             2048 |                         106% |                        0% |       ❌       |       ✅       |
-| SIMS                     |         231 |                             2070 |                          77% |                        7% |       ❌       |       ❌       |
-| Sonic                    |         162 |                                8 |                          60% |                       22% |       ❌       |       ❌       |
-| Sonic 2                  |         289 |                               39 |                          53% |                       13% |       ❌       |       ❌       |
-| Simple tile Compression 0 |         57 |                                0 |                          59% |                       36% |       ❌       |       ❌       |
-| Simple tile Compression 4 |        267 |                                4 |                          80% |                       30% |       ❌       |       ❌       |
-| upkr                     |         226 |                              321 |                         108% |                        1% |       ❌       |       ❌       |
-| Wonder Boy               |          73 |                                0 |                          50% |                       13% |       ❌       |       ❌       |
-| Wonder Boy in Monster World |       56 |                                0 |                          66% |                       32% |       ✅       |       ❌       |
-| ZX0                      |         157 |                                0 |                          98% |                           |       ❌       |       ✅       |
-| ZX0 (fast)               |         274 |                                0 |                          98% |                       15% |       ❌       |       ✅       |
-| ZX7                      |         117 |                                0 |                          91% |                       14% |       ✅       |       ✅       |
+|:-------------------------|------------:|---------------------------------:|------------------------------:|:------------------------:|:--------------:|-----------------:|
+| Aleste                   |          90 |                              258 |                           64% |                      26% |    Optional    |       ❌        |
+| aPLib                    |         303 |                                5 |                           96% |                          |       ❌       |       ✅        |
+| aPLib (fast)             |         341 |                                0 |                           96% |                      12% |       ❌       |       ✅        |
+| Berlin Wall              |         241 |                              265 |                           74% |                       4% |       ❌       |       ❌        |
+| Exomizer v2 (⚠ Broken)  |         208 |                              156 |                               |                          |       ❌       |       ✅        |
+| High School Kimengumi (unoptimised) | 119 |                             4 |                           67% |                      11% |       ❌       |       ❌        |
+| Lemmings (unoptimised)   |         143 |                              512 |                           65% |                      12% |       ❌       |       ❌        |
+| LZ4                      |         136 |                                0 |                           69% |                      23% |       ❌       |       ❌        |
+| LZSA1                    |         207 |                                0 |                           79% |                      25% |       ❌       |       ✅        |
+| LZSA2                    |         332 |                                0 |                           92% |                      18% |       ❌       |       ✅        |
+| Magic Knight Rayearth 2  |         139 |                                0 |                           79% |                      22% |       ❌       |       ❌        |
+| Micro Machines           |         456 |                                0 |                           85% |                      18% |       ❌       |       ✅        |
+| Phantasy Star RLE        |         188 |                                0 |                           66% |                      16% |       ✅       |       ❌        |
+| PS Gaiden                |         223 |                               34 |                           94% |                      14% |       ❌       |       ❌        |
+| PS Gaiden (fast)         |        1028 |                               32 |                           94% |                      29% |       ❌       |       ❌        |
+| Pucrunch (⚠ Broken)     |         412 |                               44 |                               |                          |       ❌       |       ❌        |
+| RNC 1                    |        1052 |                              430 |                           93% |                       3% |       ❌       |       ✅        |
+| RNC 2                    |         306 |                                0 |                           87% |                      17% |       ❌       |       ✅        |
+| Shrinkler                |         259 |                             2048 |                          106% |                       0% |       ❌       |       ✅        |
+| SIMS                     |         231 |                             2070 |                           77% |                       7% |       ❌       |       ❌        |
+| Sonic                    |         162 |                                8 |                           60% |                      22% |       ❌       |       ❌        |
+| Sonic 2                  |         289 |                               39 |                           53% |                      13% |       ❌       |       ❌        |
+| Simple tile Compression 0 |         57 |                                0 |                           59% |                      36% |       ❌       |       ❌        |
+| Simple tile Compression 4 |        267 |                                4 |                           80% |                      30% |       ❌       |       ❌        |
+| upkr                     |         226 |                              321 |                          108% |                       1% |       ❌       |       ❌        |
+| Wonder Boy               |          73 |                                0 |                           50% |                      13% |       ❌       |       ❌        |
+| Wonder Boy in Monster World |       56 |                                0 |                           66% |                      32% |       ✅       |       ❌        |
+| ZX0                      |         157 |                                0 |                           98% |                          |       ❌       |       ✅        |
+| ZX0 (fast)               |         274 |                                0 |                           98% |                      15% |       ❌       |       ✅        |
+| ZX7                      |         117 |                                0 |                           91% |                      14% |       ✅       |       ✅        |
 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
 They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
