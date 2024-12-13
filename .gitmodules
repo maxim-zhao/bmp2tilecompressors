@@ -42,3 +42,7 @@
 	path = compressors/stc4
 	url = https://github.com/sverx/stc4.git
 	branch = main
+[submodule "compressors/exomizer"]
+	path = compressors/exomizer
+	url = https://bitbucket.org/magli143/exomizer.git
+	branch = master
