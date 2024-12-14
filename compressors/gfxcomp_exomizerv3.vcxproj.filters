@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="gfxcomp_exomizer.cpp" />
+    <ClCompile Include="exomizer\src\exo_helper.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\log.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\buf.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\output.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\buf_io.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\vec.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\match.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\search.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\optimal.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\exodec.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\exo_util.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\chunkpool.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\progress.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\getflag.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+    <ClCompile Include="exomizer\src\radix.c">
+      <Filter>exomizer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="exomizer">
+      <UniqueIdentifier>{e2d854e8-36a4-4ff5-b8b1-e9443462c582}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

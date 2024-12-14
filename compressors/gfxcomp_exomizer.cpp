@@ -2,44 +2,59 @@
 
 #include "utils.h"
 
-extern "C"
-{
-    #include "exomizer/src/membuf.h"
-    #include "exomizer/src/exo_helper.h"
-}
+// Header uses reserved word, so we rename it
+#define export foo  // NOLINT(clang-diagnostic-keyword-macro)
+#include "exomizer/src/exo_helper.h"
 
 extern "C" __declspec(dllexport) const char* getName()
 {
     // A pretty name for this compression type
-    return "Exomizer v2";
+    return "Exomizer v3";
 }
 
 extern "C" __declspec(dllexport) const char* getExt()
 {
     // A string suitable for use as a file extension
-    return "exomizer";
+    return "exomizer3";
 }
 
+struct io_bufs_located
+{
+    struct io_bufs io;
+    int write_location;
+};
+
 // The actual compressor function
-int32_t compress(
+static int32_t compress(
     const uint8_t* pSource,
     const size_t sourceLength,
     uint8_t* pDestination,
     const size_t destinationLength)
 {
-    struct membuf sourceBuffer{};
-    membuf_init(&sourceBuffer);
-    membuf_append(&sourceBuffer, pSource, static_cast<int>(sourceLength));
+    buf sourceBuffer{};
+    buf_init(&sourceBuffer);
+    buf_append(&sourceBuffer, pSource, static_cast<int>(sourceLength));
 
-    struct membuf destinationBuffer{};
-    membuf_init(&destinationBuffer);
+    buf destinationBuffer{};
+    buf_init(&destinationBuffer);
 
-    crunch(&sourceBuffer, &destinationBuffer, nullptr, nullptr);
+    crunch_options options = CRUNCH_OPTIONS_DEFAULT;
+    options.flags_proto = 15; // -P
+    options.flags_notrait = 1; // -T
+    options.direction_forward = 1;
 
-    membuf_free(&sourceBuffer);
+    crunch(
+        &sourceBuffer, 
+        0, 
+        nullptr,
+        &destinationBuffer, 
+        &options, 
+        nullptr);
 
-    auto result = Utils::toVector(static_cast<const uint8_t*>(membuf_get(&destinationBuffer)), membuf_memlen(&destinationBuffer));
-    membuf_free(&destinationBuffer);
+    buf_free(&sourceBuffer);
+
+    const auto result = Utils::toVector(static_cast<const uint8_t*>(destinationBuffer.data), destinationBuffer.size);
+    buf_free(&destinationBuffer);
 
     return Utils::copyToDestination(result, pDestination, destinationLength);
 }

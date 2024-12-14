@@ -27,12 +27,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lsb", "gfxcomp_lsbt
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_zx7", "gfxcomp_zx7.vcxproj", "{282B8C1C-1687-47B2-9AC5-F4CB1FB1E11F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_exomizerv2", "gfxcomp_exomizerv2.vcxproj", "{A936A3A1-2414-4276-B940-3F2358FD3928}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6} = {CB1429FA-552A-453E-B5A6-8D6CFAE006C6}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exomizer", "exomizer\exomizer.vcxproj", "{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_exomizerv3", "gfxcomp_exomizerv3.vcxproj", "{A936A3A1-2414-4276-B940-3F2358FD3928}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lz4", "gfxcomp_lz4.vcxproj", "{046E0C05-BEDD-484E-882D-BE3FF4531636}"
 EndProject
@@ -145,10 +140,6 @@ Global
 		{A936A3A1-2414-4276-B940-3F2358FD3928}.Debug|x86.Build.0 = Debug|Win32
 		{A936A3A1-2414-4276-B940-3F2358FD3928}.Release|x86.ActiveCfg = Release|Win32
 		{A936A3A1-2414-4276-B940-3F2358FD3928}.Release|x86.Build.0 = Release|Win32
-		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Debug|x86.ActiveCfg = Debug|Win32
-		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Debug|x86.Build.0 = Debug|Win32
-		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Release|x86.ActiveCfg = Release|Win32
-		{CB1429FA-552A-453E-B5A6-8D6CFAE006C6}.Release|x86.Build.0 = Release|Win32
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Debug|x86.ActiveCfg = Debug|Win32
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Debug|x86.Build.0 = Debug|Win32
 		{046E0C05-BEDD-484E-882D-BE3FF4531636}.Release|x86.ActiveCfg = Release|Win32
