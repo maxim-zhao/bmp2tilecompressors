@@ -66,7 +66,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | aPLib                    |         303 |                                5 |                           96% |                          |       ❌       |       ✅        |
 | aPLib (fast)             |         341 |                                0 |                           96% |                      12% |       ❌       |       ✅        |
 | Berlin Wall              |         241 |                              265 |                           74% |                       4% |       ❌       |       ❌        |
-| Exomizer v3              |         289 |                              156 |                               |                          |       ❌       |       ✅        |
+| Exomizer v3              |         289 |                              768 |                           99% |                       8% |       ❌       |       ✅        |
 | High School Kimengumi (unoptimised) | 119 |                             4 |                           67% |                      11% |       ❌       |       ❌        |
 | Lemmings (unoptimised)   |         143 |                              512 |                           65% |                      12% |       ❌       |       ❌        |
 | LZ4                      |         136 |                                0 |                           69% |                      23% |       ❌       |       ❌        |
