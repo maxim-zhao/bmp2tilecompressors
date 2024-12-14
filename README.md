@@ -28,7 +28,7 @@ Compressors
 | apultra  | apultra     | aPLib (apultra) | [apultra](https://github.com/emmanuel-marty/apultra) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | berlinwall | berlinwallcompr | Berlin Wall LZ | Compression from the game [The Berlin Wall](http://www.smspower.org/Games/BerlinWall-GG) | ✅ | ✅ |
 | exe      | (configurable) | (configurable) | Wraps arbitrary external programs, passing data via files. This is useful if you do not want to implement your algorithm in the form of a DLL. | ✅ | ✅ |
-| exomizerv2 | exomizer  | Exomizer v2 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v2 compression ⚠ Seems to crash on some inputs | ✅ | ✅ |
+| exomizerv3 | exomizer  | Exomizer v3 | [Exomizer](https://bitbucket.org/magli143/exomizer/wiki/Home) v3 compression | ✅ | ✅ |
 | highschoolkimengumi | hskcompr | High School Kimengumi RLE | Compression from the game [High School! Kimengumi](http://www.smspower.org/Games/HighSchoolKimengumi-SMS) | ✅ | ✅ |
 | lemmings | lemmingscompr | Lemmings RLE | Compression from the game [Lemmings](http://www.smspower.org/Games/Lemmings-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
@@ -66,7 +66,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | aPLib                    |         303 |                                5 |                           96% |                          |       ❌       |       ✅        |
 | aPLib (fast)             |         341 |                                0 |                           96% |                      12% |       ❌       |       ✅        |
 | Berlin Wall              |         241 |                              265 |                           74% |                       4% |       ❌       |       ❌        |
-| Exomizer v2 (⚠ Broken)  |         208 |                              156 |                               |                          |       ❌       |       ✅        |
+| Exomizer v3              |         289 |                              156 |                               |                          |       ❌       |       ✅        |
 | High School Kimengumi (unoptimised) | 119 |                             4 |                           67% |                      11% |       ❌       |       ❌        |
 | Lemmings (unoptimised)   |         143 |                              512 |                           65% |                      12% |       ❌       |       ❌        |
 | LZ4                      |         136 |                                0 |                           69% |                      23% |       ❌       |       ❌        |

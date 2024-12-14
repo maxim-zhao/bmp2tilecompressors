@@ -39,32 +39,22 @@ static int32_t compress(
     buf_init(&destinationBuffer);
 
     crunch_options options = CRUNCH_OPTIONS_DEFAULT;
-    options.flags_proto = 45; // -P
+    options.flags_proto = 15; // -P
     options.flags_notrait = 1; // -T
     options.direction_forward = 1;
 
-    // Enable logging
-    G_log_ctx = log_new();
-    log_set_level(G_log_ctx, LOG_TRACE);
-    G_log_level = LOG_TRACE;
-    log_add_output_stream(G_log_ctx, LOG_WARNING, LOG_MAX, nullptr, stdout);
-    log_add_output_stream(G_log_ctx, LOG_MIN, static_cast<log_level>(LOG_WARNING - 1), nullptr, stderr);
-
-    crunch_info info;
     crunch(
         &sourceBuffer, 
         0, 
-        &sourceBuffer, 
+        nullptr,
         &destinationBuffer, 
         &options, 
-        &info);
+        nullptr);
 
     buf_free(&sourceBuffer);
 
     const auto result = Utils::toVector(static_cast<const uint8_t*>(destinationBuffer.data), destinationBuffer.size);
     buf_free(&destinationBuffer);
-
-    LOG_FREE;
 
     return Utils::copyToDestination(result, pDestination, destinationLength);
 }
