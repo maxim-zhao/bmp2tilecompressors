@@ -315,7 +315,7 @@ def plot(results):
     bax.set_xlabel("⬅ worse ️         Tiles per frame          better ➡️")
     bax.set_ylabel("⬅️ worse          Compression percentage          better ➡️")
     bax.axs[0].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-    bax.legend(markerscale=10, ncol=1, prop={'size': 9})
+    bax.legend(markerscale=9, ncol=1, prop={'size': 8})
     bax.grid(axis='both', ls='dashed', alpha=0.4)
     bax.standardize_ticks(xbase=5)
 

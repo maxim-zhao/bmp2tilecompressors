@@ -46,3 +46,7 @@
 	path = compressors/exomizer
 	url = https://bitbucket.org/magli143/exomizer.git
 	branch = master
+[submodule "compressors/lzee"]
+	path = compressors/lzee
+	url = https://github.com/uniabis/lzee.git
+	branch = master
