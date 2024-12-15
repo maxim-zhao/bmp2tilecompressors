@@ -33,6 +33,7 @@ Compressors
 | lemmings | lemmingscompr | Lemmings RLE | Compression from the game [Lemmings](http://www.smspower.org/Games/Lemmings-SMS) | ✅ | ✅ |
 | lsb      | lsbtilemap  | LSB-only tilemap | Least significant byte of tilemap data |   | ✅ |
 | lz4      | lz4         | LZ4 (raw) | [LZ4](http://www.lz4.org/) compression library, using [smallz4](https://create.stephan-brumme.com/smallz4/). [lz4ultra](https://github.com/emmanuel-marty/lz4ultra) has negligibly different results. | ✅ | ✅ |
+| lzee     | lzee        | LZEe | [LZEs](https://github.com/uniabis/lzee) compression library | ✅ | ✅ |
 | lzsa1    | lzsa1       | LZSA1 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | lzsa2    | lzsa2       | LZSA2 | [LZSA](https://github.com/emmanuel-marty/lzsa) compression library | ✅ | ✅ |
 | magicknight | mkre2compr | Magic Knight Rayearth 2 RLE or LZ | Compressor from the game [魔法騎士レイアース２ ～making of magic knight～](https://www.smspower.org/Games/MagicKnightRayearth2-GG) | ✅ |  |
@@ -70,6 +71,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | High School Kimengumi (unoptimised) | 119 |                             4 |                           67% |                      11% |       ❌       |       ❌        |
 | Lemmings (unoptimised)   |         143 |                              512 |                           65% |                      12% |       ❌       |       ❌        |
 | LZ4                      |         136 |                                0 |                           69% |                      23% |       ❌       |       ❌        |
+| LZEe                     |         135 |                                0 |                           83% |                      17% |       ❌       |       ✅        |
 | LZSA1                    |         207 |                                0 |                           79% |                      25% |       ❌       |       ✅        |
 | LZSA2                    |         332 |                                0 |                           92% |                      18% |       ❌       |       ✅        |
 | Magic Knight Rayearth 2  |         139 |                                0 |                           79% |                      22% |       ❌       |       ❌        |
