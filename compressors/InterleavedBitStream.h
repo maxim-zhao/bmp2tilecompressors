@@ -7,8 +7,11 @@ class InterleavedBitStream
     std::vector<unsigned char> m_buffer;
     std::size_t m_currentOffset = 0;
     int m_bitsLeft = 0;
+    bool m_rightToLeft;
 
 public:
+    InterleavedBitStream(bool rightToLeft = false);
+
     void addBit(int bit);
 
     void addByte(int b);

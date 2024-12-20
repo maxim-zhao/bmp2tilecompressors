@@ -2,6 +2,11 @@
 
 #include <iterator>
 
+InterleavedBitStream::InterleavedBitStream(bool rightToLeft)
+: m_rightToLeft(rightToLeft)
+{
+}
+
 void InterleavedBitStream::addBit(const int bit)
 {
     if (m_bitsLeft == 0)
@@ -12,7 +17,14 @@ void InterleavedBitStream::addBit(const int bit)
     }
     // Assign bits from left to right
     --m_bitsLeft;
-    m_buffer[m_currentOffset] |= bit << m_bitsLeft;
+    if (m_rightToLeft)
+    {
+        m_buffer[m_currentOffset] |= bit << (7 - m_bitsLeft);
+    }
+    else
+    {
+        m_buffer[m_currentOffset] |= bit << m_bitsLeft;
+    }
 }
 
 void InterleavedBitStream::addByte(const int b)

@@ -84,6 +84,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_aleste", "gfxcomp_a
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_lzee", "gfxcomp_lzee.vcxproj", "{92D74D81-AAA7-4104-B6A7-C2CDDA34192E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_sfg", "gfxcomp_sfg.vcxproj", "{CDDC9081-7930-1234-A887-B72BDFE9DE93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -238,6 +240,10 @@ Global
 		{92D74D81-AAA7-4104-B6A7-C2CDDA34192E}.Debug|x86.Build.0 = Debug|Win32
 		{92D74D81-AAA7-4104-B6A7-C2CDDA34192E}.Release|x86.ActiveCfg = Release|Win32
 		{92D74D81-AAA7-4104-B6A7-C2CDDA34192E}.Release|x86.Build.0 = Release|Win32
+		{CDDC9081-7930-1234-A887-B72BDFE9DE93}.Debug|x86.ActiveCfg = Debug|Win32
+		{CDDC9081-7930-1234-A887-B72BDFE9DE93}.Debug|x86.Build.0 = Debug|Win32
+		{CDDC9081-7930-1234-A887-B72BDFE9DE93}.Release|x86.ActiveCfg = Release|Win32
+		{CDDC9081-7930-1234-A887-B72BDFE9DE93}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
