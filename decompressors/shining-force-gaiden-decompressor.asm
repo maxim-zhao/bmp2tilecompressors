@@ -10,10 +10,24 @@
 ; Data is interleaved after decompression. LZ references act on the chunky data so it can't be done a tile at a time.
 ; Thus at minimum a 2KB buffer is needed. Shining Force Gaiden uses a 16KB (?) buffer in cart SRAM.
 
+; Various speed optimisations from the original code...
+; First working: speed          15.75% of ldir (including tome to copy to VRAM)
+; Deinterleave to VRAM:         15.06% (worse)
+; Deinterleave not using ix:    23.14%
+; Optimize unrolled loop:       23.87%
+; Unroll further:               24.36%
+; Simplify counter:             24.71%
+
 ; bc = data
 ; de = write address
 
 sfg_decompress: 
+  ; hl = VRAM address
+  ld a, l
+  out ($bf),a
+  ld a, h
+  out ($bf),a
+
     push de
 _nextControlByte: 
       ; Get next byte into h
@@ -81,84 +95,40 @@ _interleave:
       ex de, hl
     pop de
     ; de = start address
-    ; Compute current byte offset from start in hl
+    ; hl = end address
+    ; compute bc = length
     or a
     sbc hl, de
-    ld ixh, d
-    ld ixl, e
-    ld de, 32 ; One tile
--: 
-    ; Rearrange all the bitplanes -> convert from chunky to interleaved
-    ld c, (ix+4)
-    ld b, (ix+1)
-    ld (ix+4), b
-    ld b, (ix+16)
-    ld (ix+16), c
-    ld c, (ix+2)
-    ld (ix+2), b
-    ld b, (ix+8)
-    ld (ix+8), c
-    ld (ix+1), b
-    
-    ld c, (ix+12)
-    ld b, (ix+3)
-    ld (ix+12), b
-    ld b, (ix+17)
-    ld (ix+17), c
-    ld c, (ix+6)
-    ld (ix+6), b
-    ld b, (ix+24)
-    ld (ix+24), c
-    ld (ix+3), b
-    
-    ld c, (ix+20)
-    ld b, (ix+5)
-    ld (ix+20), b
-    ld b, (ix+18)
-    ld (ix+18), c
-    ld c, (ix+10)
-    ld (ix+10), b
-    ld b, (ix+9)
-    ld (ix+9), c
-    ld (ix+5), b
-    
-    ld c, (ix+28)
-    ld b, (ix+7)
-    ld (ix+28), b
-    ld b, (ix+19)
-    ld (ix+19), c
-    ld c, (ix+14)
-    ld (ix+14), b
-    ld b, (ix+25)
-    ld (ix+25), c
-    ld (ix+7), b
-    
-    ld c, (ix+13)
-    ld b, (ix+11)
-    ld (ix+13), b
-    ld b, (ix+21)
-    ld (ix+21), c
-    ld c, (ix+22)
-    ld (ix+22), b
-    ld b, (ix+26)
-    ld (ix+26), c
-    ld (ix+11), b
-    
-    ld c, (ix+29)
-    ld b, (ix+15)
-    ld (ix+29), b
-    ld b, (ix+23)
-    ld (ix+23), c
-    ld c, (ix+30)
-    ld (ix+30), b
-    ld b, (ix+27)
-    ld (ix+27), c
-    ld (ix+15), b
-    
-    add ix, de
-    ld bc,-32
-    add hl,bc
-    ld a,h
-    or l
-    jp nz,-
-    ret
+    ex de,hl ; now de = data length, hl = data address
+    ; Divide by 32
+    .repeat 5
+    srl d
+    rr e
+    .endr
+  
+-:;push de
+    ; Copy one tile from de
+    .repeat 8
+      ld bc, 8 ; stride
+--:   push hl
+        ; Emit every 8th byte, 4 times
+        .repeat 4 index m
+          ld a,(hl)
+          out ($be),a
+          .if m != 3
+            add hl,bc
+          .endif
+        .endr
+      pop hl
+      inc hl
+    .endr
+  ;pop de
+  ; Add 24 to hl
+  ld bc,24
+  add hl,bc
+  dec de
+  ; Check if 0
+  ld a,d
+  or e
+  jp nz,-
+  ret

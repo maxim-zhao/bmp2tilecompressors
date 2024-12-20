@@ -365,6 +365,6 @@ def main():
             rating = statistics.mean([r.ratio for r in data])/zip_ratio*100
             tiles_per_frame = statistics.mean([r.tiles_per_frame for r in data])
             relative_speed = tiles_per_frame / reference_tiles_per_frame * 100
-            print(f"{technology:{name_len + 2}}{rating:.1f}\t{relative_speed:.0f}%")
+            print(f"{technology:{name_len + 2}}{rating:.1f}%\t{relative_speed:.2f}%")
 
 main()
