@@ -45,7 +45,8 @@ Compressors
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
 | rnc1     | rnc1        | Rob Northen Compression type 1 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) targeting better compression/slow speed | ✅ | ✅ |
 | rnc2     | rnc2        | Rob Northen Compression type 2 | [Rob Northen Compression](https://segaretro.org/Rob_Northen_compression) targeting faster speed/worse compression | ✅ | ✅ |
-| shrinkler | shrinkler | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
+| sfg      | sfg         | Shining Force Gaiden | Compression from the game [Shining Force Gaiden](http://www.smspower.org/Games/ShiningForceGaiden-GG)) | ✅ |   |
+| shrinkler | shrinkler  | Shrinkler | [Shrinkler](https://github.com/askeksa/Shrinkler) Amiga executable compressor | ✅ | ✅ |
 | sonic1   | soniccompr  | Sonic 1 | Tile compression from the game [Sonic the Hedgehog](http://www.smspower.org/Games/SonicTheHedgehog-SMS) | ✅ |   |
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
@@ -86,6 +87,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | SIMS                     |         231 |                             2070 |                           77% |                       7% |       ❌       |       ❌        |
 | Sonic                    |         162 |                                8 |                           60% |                      22% |       ❌       |       ❌        |
 | Sonic 2                  |         289 |                               39 |                           53% |                      13% |       ❌       |       ❌        |
+| Shining Force Gaiden     |         269 |      (size of uncompressed data) |                           85% |                      25% |       ❌       |       ❌        |
 | Simple tile Compression 0 |         57 |                                0 |                           59% |                      36% |       ❌       |       ❌        |
 | Simple tile Compression 4 |        267 |                                4 |                           80% |                      30% |       ❌       |       ❌        |
 | upkr                     |         226 |                              321 |                          108% |                       1% |       ❌       |       ❌        |
