@@ -37,7 +37,7 @@ _RLE:
     ld a, (hl)
     inc hl
 -:  ; Output byte to VRAM
-    out (c), a
+    out ($be), a
     in f, (c) ; Skip 3 bytes
     in f, (c)
     in f, (c)
