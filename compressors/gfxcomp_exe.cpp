@@ -56,7 +56,6 @@ const std::filesystem::path& getConfigFilename()
     delete [] buffer;
     // We append .ini
     filename += ".ini";
-    std::cout << std::format("Config filename is {}\n", filename.string());
     return filename;
 }
 
