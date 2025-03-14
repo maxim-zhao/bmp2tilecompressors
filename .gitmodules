@@ -50,3 +50,7 @@
 	path = compressors/lzee
 	url = https://github.com/uniabis/lzee.git
 	branch = master
+[submodule "compressors/STMcomp"]
+	path = compressors/STMcomp
+	url = https://github.com/sverx/STMcomp.git
+	branch = master
