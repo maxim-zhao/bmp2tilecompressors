@@ -51,6 +51,7 @@ Compressors
 | sonic2   | sonic2compr | Sonic 2 | Tile compression from the game [Sonic the Hedgehog 2](http://www.smspower.org/Games/SonicTheHedgehog2-SMS) | ✅ |   |
 | stc0     | stc0compr   | Simple Tile Compression 0 | @sverx's [stc0](https://github.com/sverx/stc0) | ✅ |   |
 | stc4     | stc4compr   | Simple Tile Compression 4 | @sverx's [stc4](https://github.com/sverx/stc4) | ✅ |   |
+| tiertex  | tiertexcompr | Tiertex RLE | Compression used in many Tiertex games | ✅ | ✅ |
 | upkr     | upkr        | upkr | [Simple lz + arithmetic coding packer](https://github.com/exoticorn/upkr) | ✅ | ✅ |
 | wonderboy | wbcompr    | Wonder Boy RLE | Compression from the game [Wonder Boy](http://www.smspower.org/Games/WonderBoy-SMS) | ✅ |   |
 | wbmw     | wbmw        | Wonder Boy in Monster World RLE | Compression from the game [Wonder Boy in Monster World](http://www.smspower.org/Games/WonderBoyInMonsterWorld-SMS) | ✅ |   |
@@ -90,6 +91,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | Shining Force Gaiden     |         269 |      (size of uncompressed data) |                           85% |                      25% |       ❌       |       ❌        |
 | Simple tile Compression 0 |         57 |                                0 |                           59% |                      36% |       ❌       |       ❌        |
 | Simple tile Compression 4 |        267 |                                4 |                           80% |                      30% |       ❌       |       ❌        |
+| Tiertex                  |         293 |                               41 |                           31% |                      15% |       ❌       |       ❌        |
 | upkr                     |         226 |                              321 |                          108% |                       1% |       ❌       |       ❌        |
 | Wonder Boy               |          73 |                                0 |                           50% |                      13% |       ❌       |       ❌        |
 | Wonder Boy in Monster World |       56 |                                0 |                           66% |                      32% |       ✅       |       ❌        |
@@ -100,7 +102,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 
 They could be fixed but as they are rather old, they are probably not competitive with newer compressors.
 
-"zip" performance is compressing the data using `7z a -mx9 filename.zip`. Zip has some framing overhead but it would be unfeasible to implement a decompressor on Master System. We compute the mean compression ratio of this on the test coprpus, and then compare the compressors' mean ratio, so that >100% means they compress better, and 50% means they compress to double the size on average.
+"zip" performance is compressing the data using `7z a -mx9 filename.zip`. Zip has some framing overhead but it would be unfeasible to implement a decompressor on Master System. We compute the mean compression ratio of this on the test corpus, and then compare the compressors' mean ratio, so that >100% means they compress better, and 50% means they compress to double the size on average.
 
 Interrupt-safe decompressors can run safely while interrupts are happening and interfering with the VDP state. 
 This will introduce some overhead - if nothing else, they need to disable interrupts - and they will therefore also change the interrupts enabled state.
