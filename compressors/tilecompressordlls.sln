@@ -88,6 +88,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_sfg", "gfxcomp_sfg.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_stm", "gfxcomp_stm.vcxproj", "{EB4E5423-CACA-4020-8796-438E218FF0E0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfxcomp_tiertex", "gfxcomp_tiertex.vcxproj", "{EEA25CFF-B4E6-6666-AD37-54F2F2A28DFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -250,6 +252,10 @@ Global
 		{EB4E5423-CACA-4020-8796-438E218FF0E0}.Debug|x86.Build.0 = Debug|Win32
 		{EB4E5423-CACA-4020-8796-438E218FF0E0}.Release|x86.ActiveCfg = Release|Win32
 		{EB4E5423-CACA-4020-8796-438E218FF0E0}.Release|x86.Build.0 = Release|Win32
+		{EEA25CFF-B4E6-6666-AD37-54F2F2A28DFC}.Debug|x86.ActiveCfg = Debug|Win32
+		{EEA25CFF-B4E6-6666-AD37-54F2F2A28DFC}.Debug|x86.Build.0 = Debug|Win32
+		{EEA25CFF-B4E6-6666-AD37-54F2F2A28DFC}.Release|x86.ActiveCfg = Release|Win32
+		{EEA25CFF-B4E6-6666-AD37-54F2F2A28DFC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
