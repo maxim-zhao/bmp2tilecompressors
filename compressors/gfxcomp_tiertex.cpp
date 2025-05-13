@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <iostream>
 #include <iterator>
 #include <ranges>
 
@@ -68,17 +67,7 @@ int32_t compressTiles(
             tile[i+24] = *pSource++;
         }
         std::ranges::copy(tile, std::back_inserter(buffer));
-        if (tileNumber == 5)
-        {
-            for (auto b : tile)
-            {
-                std::cout << std::hex << (int)b << " ";
-            }
-            std::cout << "\n";
-        }
     }
-    std::cout << "buffer is " << buffer.size() << "\n";
-
 
     // Try all "magic bytes" and see which compresses best
     std::vector<uint8_t> result;
