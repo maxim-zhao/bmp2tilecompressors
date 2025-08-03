@@ -323,7 +323,7 @@ _done:
     ; Then the rest - if c>0
     ld a,c
     or a
-    jr z,---
+    jr nz,---
     jp _done
 
 _ldir_rom_to_vram:
