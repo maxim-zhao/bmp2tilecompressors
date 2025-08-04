@@ -204,7 +204,7 @@ _done:
     ; Then the rest - if c>0
     ld a,c
     or a
-    jr z,---
+    jr nz,---
     jp _done
 +:
 
