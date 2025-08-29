@@ -95,8 +95,8 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | upkr                     |         226 |                              321 |                          108% |                       1% |       ❌       |       ❌        |
 | Wonder Boy               |          73 |                                0 |                           50% |                      13% |       ❌       |       ❌        |
 | Wonder Boy in Monster World |       56 |                                0 |                           66% |                      32% |       ✅       |       ❌        |
-| ZX0                      |         157 |                                0 |                           98% |                          |       ❌       |       ✅        |
-| ZX0 (fast)               |         274 |                                0 |                           98% |                      15% |       ❌       |       ✅        |
+| ZX0                      |         163 |                                0 |                           98% |                          |       ❌       |       ✅        |
+| ZX0 (fast)               |         287 |                                2 |                           98% |                      15% |       ❌       |       ✅        |
 | ZX7                      |         117 |                                0 |                           91% |                      14% |       ✅       |       ✅        |
 
 Note that the technologies marked with ⚠ above fail the automated benchmark tests, with crashes in the compressor or incorrect decompressed output. 

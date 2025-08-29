@@ -21,7 +21,7 @@ banks 1
   ret ; ends the test
   
 .define ZX0ToVRAM
-.define PrevOffset $c010
+.define ZX0Memory $c010
 .block "decompressor"
 .include "../decompressors/dzx0_fast_sms.asm"
 .endb

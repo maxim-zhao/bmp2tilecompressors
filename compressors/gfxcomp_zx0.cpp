@@ -34,7 +34,6 @@ int32_t compress(
         0,
         static_cast<int>(sourceLength));
     // ZX0 leaks data by design, we can't free this
-
     int outputSize;
     int delta; // we don't care about this
 
@@ -46,7 +45,7 @@ int32_t compress(
             static_cast<int>(sourceLength),
             0,
             0,
-            0,
+            1, // Seems to mean "version 2 format"?
             &outputSize,
             &delta));
 

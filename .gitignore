@@ -16,3 +16,5 @@ benchmark/expected.bin
 .*
 /compressors/upkr/target
 *.sav
+_ReSharper.*
+*.bak
