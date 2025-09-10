@@ -65,7 +65,7 @@ Decompressors
 All size stats are for emitting data direct to VRAM on Master System, using Z80 decompressors in non-interrupt-safe mode if available. Decompression to RAM will generally use less ROM.
 
 | Description              | ROM (bytes) | RAM (bytes, not including stack) | Compression relative to "zip" | Speed relative to "otir" | Interrupt-safe | Non-VRAM support |
-|:-------------------------|------------:|---------------------------------:|------------------------------:|:------------------------:|:--------------:|-----------------:|
+|:-------------------------|------------:|---------------------------------:|------------------------------:|:------------------------:|:--------------:|:----------------:|
 | Aleste                   |          90 |                              258 |                           64% |                      26% |    Optional    |       ❌        |
 | aPLib                    |         303 |                                5 |                           96% |                          |       ❌       |       ✅        |
 | aPLib (fast)             |         341 |                                0 |                           96% |                      12% |       ❌       |       ✅        |
