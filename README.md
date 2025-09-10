@@ -40,6 +40,7 @@ Compressors
 | micromachines | mmcompr | Micro Machines hybrid RLE/LZ | Compressor from the game [Micro Machines](https://www.smspower.org/Games/MicroMachines-SMS) | ✅ | ✅ |
 | oapack   | oapack      | aPLib (oapack) | [oapack](https://gitlab.com/eugene77/oapack) aPLib compressor - better compression for the same format | ✅ | ✅ |
 | phantasystar | pscompr | Phantasy Star RLE | Compression from the game [Phantasy Star](http://www.smspower.org/Games/PhantasyStar-SMS) | ✅ | ✅ |
+| pletter  | pletter     | Pletter | [Pletter](https://www.xl2s.tk) is a somewhat improved Bitbuster. | ✅ | ✅ |
 | psgaiden | psgcompr    | PS Gaiden | Compression from the game [Phantasy Star Gaiden](http://www.smspower.org/Games/PhantasyStarGaiden-GG) | ✅ |   |
 | pucrunch | pucrunch    | Pucrunch | [Pucrunch](http://a1bert.kapsi.fi/Dev/pucrunch/) algorithm | ✅ | ✅ |
 | raw      | bin         | Raw (uncompressed) binary | Does no compression at all | ✅ | ✅ |
@@ -79,6 +80,7 @@ All size stats are for emitting data direct to VRAM on Master System, using Z80 
 | Magic Knight Rayearth 2  |         139 |                                0 |                           79% |                      22% |       ❌       |       ❌        |
 | Micro Machines           |         456 |                                0 |                           85% |                      18% |       ❌       |       ✅        |
 | Phantasy Star RLE        |         188 |                                0 |                           66% |                      16% |       ✅       |       ❌        |
+| Pletter                  |         233 |                                0 |                           91% |                      13% |       ❌       |       ✅        |
 | PS Gaiden                |         223 |                               34 |                           94% |                      14% |       ❌       |       ❌        |
 | PS Gaiden (fast)         |        1028 |                               32 |                           94% |                      29% |       ❌       |       ❌        |
 | Pucrunch (⚠ Broken)     |         412 |                               44 |                               |                          |       ❌       |       ❌        |

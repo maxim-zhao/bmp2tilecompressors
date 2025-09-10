@@ -18,3 +18,4 @@ benchmark/expected.bin
 *.sav
 _ReSharper.*
 *.bak
+Cargo.lock
