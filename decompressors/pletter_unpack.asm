@@ -85,7 +85,7 @@ _lenok
   ld b,0
   bit 7,c
   jp z,_offsok
-  jp ix
+  jp (ix)
 
 _mode6:
   GETBIT
@@ -110,20 +110,20 @@ _mode2:
 _offsok:
   inc bc
   push hl
-  exx
-  push hl
-  exx
-  ld l,e
-  ld h,d
-  sbc hl,bc
-  pop bc
+    exx
+    push hl
+      exx
+      ld l,e
+      ld h,d
+      sbc hl,bc
+    pop bc
 .ifdef pletter_to_vram
-  call _ldir_vram_to_vram
+    call _ldir_vram_to_vram
 .else
-  ldir
+    ldir
 .endif
   pop hl
-  jp iy
+  jp (iy)
 
 _getbit:
   ld a,(hl)
